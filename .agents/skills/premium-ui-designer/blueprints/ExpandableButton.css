@@ -1,0 +1,65 @@
+.btn-expand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: var(--btn-collapsed-size, 36px);
+  height: var(--btn-collapsed-size, 36px);
+  border: 1px solid var(--btn-border-color, currentColor);
+  border-radius: 9999px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--btn-bg, transparent);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.3s ease, 
+              border-color 0.3s ease;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.btn-expand__icon {
+  width: calc(var(--btn-collapsed-size, 36px) - 2px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  color: var(--btn-icon-color, currentColor);
+}
+
+.btn-expand__text {
+  position: absolute;
+  left: var(--btn-collapsed-size, 36px);
+  white-space: nowrap;
+  opacity: 0;
+  font-size: var(--btn-font-size, 11px);
+  font-weight: 500;
+  color: var(--btn-text-color, currentColor);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+/* Hover State */
+.btn-expand:hover {
+  width: var(--btn-expanded-width, 120px);
+  background-color: var(--btn-bg-hover, #000000);
+  border-color: var(--btn-border-hover, #000000);
+}
+
+.btn-expand:hover .btn-expand__icon {
+  color: var(--btn-text-hover, #ffffff);
+  padding-left: 4px;
+}
+
+.btn-expand:hover .btn-expand__text {
+  opacity: 1;
+  left: calc(var(--btn-collapsed-size, 36px) - 4px);
+  color: var(--btn-text-hover, #ffffff);
+}
+
+/* Dynamic active state */
+.btn-expand:active {
+  transform: scale(0.95);
+}

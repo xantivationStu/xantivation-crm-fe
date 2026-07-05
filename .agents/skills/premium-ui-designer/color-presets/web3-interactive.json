@@ -1,0 +1,53 @@
+{
+  "id": "web3-interactive",
+  "name": "Web3 Interactive",
+  "description": "Mint green accent, deep purple highlights, dark space background. Suitable for Web3, creative portfolios, and agencies.",
+  "fonts": {
+    "sans": "Space Grotesk, sans-serif",
+    "serif": "Syne, sans-serif",
+    "mono": "JetBrains Mono, monospace"
+  },
+  "radius": "1rem",
+  "light": {
+    "background": "#F5F5F7",
+    "foreground": "#090B15",
+    "card": "#FAFBFD",
+    "card-foreground": "#090B15",
+    "popover": "#FAFBFD",
+    "popover-foreground": "#090B15",
+    "primary": "#5D3CFA",
+    "primary-foreground": "#FFFFFF",
+    "secondary": "#00FFA3",
+    "secondary-foreground": "#090B15",
+    "muted": "#EBEBEF",
+    "muted-foreground": "#686C80",
+    "accent": "#E5E1FC",
+    "accent-foreground": "#5D3CFA",
+    "destructive": "#FF4B4B",
+    "destructive-foreground": "#FFFFFF",
+    "border": "#E2E4E9",
+    "input": "#E2E4E9",
+    "ring": "#5D3CFA"
+  },
+  "dark": {
+    "background": "#0B0D19",
+    "foreground": "#F5F5F7",
+    "card": "#12162B",
+    "card-foreground": "#F5F5F7",
+    "popover": "#12162B",
+    "popover-foreground": "#F5F5F7",
+    "primary": "#00FFA3",
+    "primary-foreground": "#0B0D19",
+    "secondary": "#5D3CFA",
+    "secondary-foreground": "#FFFFFF",
+    "muted": "#1C203E",
+    "muted-foreground": "#8F95B2",
+    "accent": "#1A3530",
+    "accent-foreground": "#00FFA3",
+    "destructive": "#FF4B4B",
+    "destructive-foreground": "#FFFFFF",
+    "border": "#252B4D",
+    "input": "#252B4D",
+    "ring": "#00FFA3"
+  }
+}

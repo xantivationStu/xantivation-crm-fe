@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Section Skill Schema",
+  "description": "Standard schema for a section in the Skills Library",
+  "type": "object",
+  "required": ["id", "name", "category", "order_weight", "animations"],
+  "properties": {
+    "id": { "type": "string", "description": "kebab-case unique ID" },
+    "name": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": ["navigation", "entry", "trust", "value", "proof", "conversion", "support", "exit", "utility"]
+    },
+    "order_weight": {
+      "type": "number",
+      "description": "Default position in flow (1-100). Used for automatic sorting."
+    },
+    "reusability": {
+      "type": "string",
+      "enum": ["universal", "high", "medium", "very-high", "project-specific"]
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "content": {
+      "type": "object",
+      "properties": {
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "required": { "type": "boolean" },
+              "type": { "type": "string", "enum": ["text", "rich-text", "image", "video", "array", "component", "boolean", "select"] },
+              "notes": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "layout_variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "visual_specs": {
+            "type": "object",
+            "required": ["typography", "spacing", "colors", "layout"],
+            "properties": {
+              "typography": { "type": "string" },
+              "spacing": { "type": "string" },
+              "colors": { "type": "string" },
+              "layout": { "type": "string" }
+            }
+          },
+          "code_blueprint": {
+            "type": "object",
+            "properties": {
+              "gsap_timeline": { "type": "string" },
+              "scroll_trigger": { "type": "string" },
+              "interactive_hover": { "type": "string" },
+              "css_classes": { "type": "string" }
+            }
+          },
+          "anti_patterns": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "animations": {
+      "type": "object",
+      "properties": {
+        "entrance": {
+          "type": "object",
+          "description": "Animation when the section first appears (page load or scroll into viewport)"
+        },
+        "scroll_parallax": {
+          "type": "object",
+          "description": "Parallax animation when scrolling through the section"
+        },
+        "interactive": {
+          "type": "object",
+          "description": "Interactive animations on hover, click, or focus"
+        },
+        "decorative": {
+          "type": "object",
+          "description": "Background continuous decorative animations (floating, gradient shift...)"
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "description": "Visual transition style between this section and adjacent sections",
+      "properties": {
+        "in": { "type": "object", "description": "Transition from preceding section to this section" },
+        "out": { "type": "object", "description": "Transition from this section to succeeding section" }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "properties": {
+        "follows": {
+          "type": ["array", "null"],
+          "description": "Valid section IDs that can precede this section. null = can be first."
+        },
+        "recommended_next": {
+          "type": "array",
+          "description": "Recommended section IDs to follow this section (in order of priority)"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "true = can be omitted when building minimal templates"
+        },
+        "required_in_template": {
+          "type": "boolean",
+          "description": "true = this section is required in all templates"
+        }
+      }
+    },
+    "tech": {
+      "type": "object",
+      "properties": {
+        "animation_lib": { "type": "string", "enum": ["framer-motion", "gsap", "css-only", "none"] },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "cms_fields": { "type": "array", "description": "Payload CMS field names" }
+      }
+    }
+  }
+}

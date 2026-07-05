@@ -1,0 +1,20 @@
+.parent-trigger {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.icon-pop {
+  opacity: 0;
+  transform: scale(var(--pop-scale-init, 0.4)) rotate(var(--pop-angle-init, -90deg));
+  transition: opacity 0.25s ease, 
+              transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              color 0.25s ease;
+  pointer-events: none;
+}
+
+.parent-trigger:hover .icon-pop {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  color: var(--primary, #093C5D);
+}

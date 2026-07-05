@@ -1,0 +1,97 @@
+{
+  "id": "portfolio-agency",
+  "name": "Portfolio / Agency Landing Template",
+  "description": "Showcase-centric template for design studios, agencies, and freelancers.",
+  "project_type": "agency-portfolio",
+  "target_audience": "clients, creative leads, directors",
+  "sections": [
+    {
+      "id": "navbar",
+      "variant": "minimal-trigger",
+      "config": {
+        "cta_button": true,
+        "announcement_bar": false
+      }
+    },
+    {
+      "id": "hero",
+      "variant": "swiss-minimal-editorial",
+      "config": {
+        "badge": false,
+        "trust_line": true,
+        "media_type": "video",
+        "background": "white"
+      },
+      "transition_out": "gradient-fade-bridge"
+    },
+    {
+      "id": "features-grid",
+      "variant": "interactive-ui-bento",
+      "config": {
+        "feature_count": 5,
+        "background": "bg-gray-50"
+      },
+      "transition_in": "background-change",
+      "transition_out": "gradient-fade"
+    },
+    {
+      "id": "showcase",
+      "variant": "minimalist-outlined-list",
+      "config": {
+        "background": "white",
+        "media_type": "list-images",
+        "item_count": 5
+      },
+      "transition_in": "continuation",
+      "transition_out": "gradient-fade"
+    },
+    {
+      "id": "how-it-works",
+      "variant": "sinusoidal-spline-path",
+      "config": {
+        "step_count": 4,
+        "background": "bg-gray-50"
+      },
+      "transition_in": "background-change",
+      "transition_out": "gradient-fade"
+    },
+    {
+      "id": "testimonials",
+      "variant": "bento-masonry",
+      "config": {
+        "testimonial_count": 5,
+        "background": "white"
+      },
+      "transition_in": "continuation",
+      "transition_out": "gradient-fade"
+    },
+    {
+      "id": "cta-banner",
+      "variant": "split-dual-profile-reveal",
+      "config": {
+        "background": "bg-gray-900",
+        "trust_signals": ["Let's build together", "Based in Vietnam", "Available globally"]
+      },
+      "transition_in": "strong-visual-break",
+      "transition_out": "footer-blend"
+    },
+    {
+      "id": "footer",
+      "variant": "klarheit-dot-grid",
+      "config": {
+        "newsletter_form": true,
+        "social_links": true,
+        "background": "bg-gray-950"
+      },
+      "transition_in": "continuation"
+    }
+  ],
+  "color_scheme": {
+    "preset": "editorialgold"
+  },
+  "animation_strategy": {
+    "library": "framer-motion",
+    "global_principle": "High editorial aesthetic, using typography reveals, layout breakouts, and custom scroll connectors.",
+    "performance_budget": "LCP < 2.5s — above fold content has minimal animation, below-fold features use staggered reveals"
+  }
+}

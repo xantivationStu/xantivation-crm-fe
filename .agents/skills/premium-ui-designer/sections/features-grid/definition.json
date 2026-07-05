@@ -1,0 +1,271 @@
+{
+  "id": "features-grid",
+  "name": "Features / Benefits Grid",
+  "category": "value",
+  "order_weight": 30,
+  "reusability": "high",
+  "tags": [
+    "features",
+    "benefits",
+    "grid",
+    "cards",
+    "value-prop",
+    "bento"
+  ],
+  "content": {
+    "slots": [
+      {
+        "name": "eyebrow",
+        "required": false,
+        "type": "text",
+        "notes": "Small label above the title. e.g. 'Features', 'Why choose us'"
+      },
+      {
+        "name": "section_title",
+        "required": true,
+        "type": "rich-text",
+        "notes": "Section title, supports LineReveal effect on scroll"
+      },
+      {
+        "name": "section_subtitle",
+        "required": false,
+        "type": "text",
+        "notes": "1-2 sentence supporting description for the main title"
+      },
+      {
+        "name": "features",
+        "required": true,
+        "type": "array",
+        "notes": "List of feature cards: { icon, title, description, grid_size, bg_color?, content_type, custom_widget_type }"
+      }
+    ]
+  },
+  "layout_variants": [
+    {
+      "id": "interactive-grid-slideshow",
+      "name": "Interactive Grid Slideshow (Ref 1 - Custom)",
+      "description": "Diverse grid layout combined with staggered cover revealer transitions, mouse parallax scaled by distance, and a 3-layer hover color sweep.",
+      "visual_specs": {
+        "typography": "Ultra-large uppercase Heading Kanit (font-bold text-[7vw] leading-[0.8] tracking-[-0.03em] uppercase), vertical title (writing-mode: vertical-lr), compact body text layout (text-sm max-w-[280px]).",
+        "spacing": "Fixed gap between grid items at 20px. 3em border padding. Fixed height layout of 80vh.",
+        "colors": "Soothing neutral light/dark background. Hover sweep overlay consists of 3 matching color layers: layer 1 (#093C5D), layer 2 (#165780), layer 3 (rgba(9,59,93,0.45)).",
+        "layout": "CSS Grid divided into 30 columns / 30 rows. Child elements are assigned precise asymmetric grid-area coordinates (e.g. grid-area: 8/5/22/15 for the main image)."
+      },
+      "code_blueprint": {
+        "gsap_timeline": "Use Promises and a slide transition timeline: 1. scale3d(0->1) the .revealer class of the current card to cover it (ease: 'power3.inOut', duration: 0.8s, stagger delay based on data-delay from 40ms to 500ms). 2. Change the active slide index. 3. scale3d(1->0) the .revealer class of the new card to reveal the new content.",
+        "scroll_trigger": "gsap.to('.grid-section-title', { scrollTrigger: { trigger: '.grid-section', start: 'top 90%', end: 'top 75%', scrub: 1 }, y: 0, opacity: 1, ease: 'none' })",
+        "interactive_hover": "1. Mousemove: const transX = (2 * maxTransX / win.width) * mouse.x - maxTransX; const dist = Math.sqrt(dx*dx + dy*dy); const tx = (transX / win.width) * (dist + 200); gsap.to(item, { x: tx, y: ty, duration: 0.3, ease: 'power2.out' }). 2. Hover layers: Run CSS keyframes gridHoverFill (translateX(-102% -> 0%)) and gridHoverPush (translateX(0 -> 102%)) with out-of-phase delays.",
+        "css_classes": ".grid__item { position: relative; overflow: hidden; transition: transform 0.2s ease-out; } .revealer { position: absolute; inset: -2px; background: var(--bg); transform-origin: 100% 50%; opacity: 0; } .grid__item-hover-layer { position: absolute; inset: 0; transform: translate3d(-102%, 0, 0); }"
+      },
+      "anti_patterns": [
+        "Do not use equally split grids (like 3 or 4 equal columns).",
+        "Do not animate width/height directly; use scale3d/translate3d instead.",
+        "Do not use outdated box-shadows or neon-colored border-left styles on cards."
+      ]
+    },
+    {
+      "id": "interactive-ui-bento",
+      "name": "Interactive UI Bento Grid (Ref 2)",
+      "description": "A 2-row bento grid with 5 asymmetric cards integrated with interactive animated widgets: self-drawing flowcharts and a typewriter code block.",
+      "visual_specs": {
+        "typography": "Bold geometric sans-serif heading font, elegant Mono font for the code block.",
+        "spacing": "Gap-6 between bento cards. Internal padding for each card py-6 px-8.",
+        "colors": "Minimalist black background. Neon oklch(0.75 0.15 140) connection lines with 20% opacity.",
+        "layout": "Bento Grid split into 2 rows: row 1 consists of 2 large cards (span 3/6 and span 3/6), row 2 consists of 3 small cards (span 2/6 each)."
+      },
+      "code_blueprint": {
+        "gsap_timeline": "Auto typewriter typing timeline (Typewriter effect) for code block: gsap.to('.code-text', { text: { value: 'const user = invite();' }, duration: 1.5, ease: 'none', delay: 0.5 }).",
+        "scroll_trigger": "ScrollTrigger draws flowchart: gsap.fromTo('.svg-flow-path', { strokeDashoffset: 1000 }, { strokeDashoffset: 0, scrollTrigger: { trigger: '.bento-container', start: 'top 80%', end: 'bottom 40%', scrub: true } })",
+        "interactive_hover": "Card hover: gsap.to(card, { y: -6, duration: 0.4, ease: 'power3.out' }) combined with MouseMove Spotlight under glassmorphism background.",
+        "css_classes": ".bento-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.5rem; } .svg-flow-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; }"
+      },
+      "anti_patterns": [
+        "Do not use border-radius larger than 16px for bento cards.",
+        "Do not use thick colored border-left as an accent.",
+        "Do not abuse typewriter effects on all bento text; limit it to code widgets only."
+      ]
+    },
+    {
+      "id": "typographic-editorial-bento",
+      "name": "Typographic Editorial Bento Grid (2D Swiss)",
+      "description": "Minimalist 2D bento grid in fashion magazine/editorial style. Cards are separated by thin 1px oklch lines with high contrast. Uses bold Kanit display font, text-wrap: balance. Animations: Headings use staggered LineReveal slide-up on scroll. Cards use subtle bottom-up ScrollReveal.",
+      "visual_specs": {
+        "typography": "Display Heading using ultra-bold Kanit or Inter (font-black text-[5vw] leading-none), body paragraphs limited to 60ch.",
+        "spacing": "Bento grid gap-px (uses 1px thin divider lines instead of large gaps). Internal cell padding py-12 px-10.",
+        "colors": "Neutral light oklch(0.98 0.002 240) or dark oklch(0.12 0.005 240) with minimal brand tints. 1px thin divider borders in oklch(0.85 0.005 240).",
+        "layout": "Asymmetrically scaled 2D Bento Grid (e.g. span 4/12, span 8/12, span 6/12) creating a balanced editorial layout."
+      },
+      "code_blueprint": {
+        "gsap_timeline": "LineReveal slide-up animation for main heading: gsap.fromTo('.line-reveal-word', { yPercent: 100, opacity: 0.1 }, { yPercent: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: '.features-grid', start: 'top 85%', end: 'top 60%', scrub: 1 } })",
+        "scroll_trigger": "ScrollReveal outer wrapper for bento items: gsap.fromTo(item, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: item, start: 'top 95%', once: true } })",
+        "interactive_hover": "When hovering over each bento cell, trigger a minimalist micro-interaction (e.g. text horizontal translation of 4px: gsap.to(text, { x: 4, duration: 0.2, ease: 'power2.out' }) and a subtle border color transition).",
+        "css_classes": ".bento-container { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1px; background-color: var(--border-color); } .bento-item { background-color: var(--bg-color); transition: background-color 0.3s; }"
+      },
+      "anti_patterns": [
+        "Do not use border-radius larger than 8px for Swiss-style bento cells (Swiss style requires sharp corners or tiny 4px-8px radii).",
+        "Do not use diffused shadows (box-shadow) on bento cards; Swiss layouts rely on flat 2D divider lines.",
+        "Do not blend too many different colors on the bento background; keep a Restrained palette (neutrals + 1 accent)."
+      ]
+    }
+  ],
+  "animations": {
+    "entrance": {
+      "line_reveal_header": {
+        "intent": "Heading and description text reveal line-by-line (LineReveal component) on scroll: Splits text into words grouped by actual browser offsetTop for responsiveness, sliding up gently (y: 24px -> 0px) and fading in from opacity 0.1 to 1.0 based on scroll position. Scroll reverse: Slides back down and fades out.",
+        "spec": {
+          "type": "gsap ScrollTrigger scrub per offsetTop row",
+          "y_from": "24px",
+          "y_to": "0px",
+          "opacity_from": 0.1,
+          "opacity_to": 1.0,
+          "start": "top 90%",
+          "end": "top 75%",
+          "scrub": 1,
+          "scroll_reverse": true
+        }
+      },
+      "staggered_cards_reveal": {
+        "intent": "Grid cards reveal sequentially in a staggered diagonal wave pattern from bottom to top.",
+        "spec": {
+          "y_from": "30px",
+          "y_to": "0px",
+          "opacity_from": 0,
+          "opacity_to": 1,
+          "stagger_ms": 80,
+          "duration_ms": 550,
+          "ease": [
+            0.25,
+            0.1,
+            0.25,
+            1
+          ],
+          "scroll_reverse": true
+        }
+      },
+      "flowchart_svg_draw": {
+        "intent": "Draws flowchart connecting lines between step cards, tracing scroll progress dynamically.",
+        "spec": {
+          "type": "SVG stroke-dashoffset scroll-driven",
+          "dasharray": 1000,
+          "scroll_reverse": true
+        }
+      }
+    },
+    "scroll_parallax": {
+      "widget_3d_float": {
+        "intent": "3D models (chips, helical spheres) and phone mockups floating vertically with scroll speed to create parallax depth.",
+        "spec": {
+          "speed_multiplier": 0.25,
+          "y_offset_max_px": 50,
+          "scroll_reverse": true
+        }
+      },
+      "background_mesh_parallax": {
+        "intent": "Background dot grid/mesh moves deeply at a 0.15 parallax ratio on scroll to create spatial depth.",
+        "spec": {
+          "speed_multiplier": 0.15,
+          "scroll_reverse": true
+        }
+      }
+    },
+    "interactive": {
+      "spotlight_follow_mouse": {
+        "intent": "On card hover: An emerald/neon circular gradient glow (Spotlight) tracks the mouse coordinates under the glassmorphic card.",
+        "spec": {
+          "glow_radius_px": 150,
+          "glow_color": "rgba(var(--primary-rgb), 0.15)",
+          "transition_ms": 150
+        }
+      },
+      "mouse_3d_tilt": {
+        "intent": "3D Mouse Tilt effect on card hover: Measures mouse coordinates relative to the card center and rotates the X and Y axes up to 6 degrees using spring physics.",
+        "spec": {
+          "rotate_x_max_deg": 6,
+          "rotate_y_max_deg": 6,
+          "spring_preset": "bouncy"
+        }
+      },
+      "chart_bars_pulse": {
+        "intent": "On hovering a card containing a 3D bar chart: Bars pulse up and down continuously to create a dynamic rhythm.",
+        "spec": {
+          "scale_y_range": [
+            0.8,
+            1.2
+          ],
+          "stagger_ms": 40,
+          "duration_ms": 300
+        }
+      },
+      "badge_tag_spring": {
+        "intent": "On hovering a card with badge tags: badge tags bounce and scale with spring physics.",
+        "spec": {
+          "scale": 1.08,
+          "spring": "stiffness: 400, damping: 12"
+        }
+      }
+    },
+    "decorative": {
+      "model_3d_rotation_loop": {
+        "intent": "3D spiral sphere models and blockchain icons rotating slowly indefinitely.",
+        "spec": {
+          "type": "CSS 3D rotateY loop",
+          "duration_s": 18,
+          "direction": "normal"
+        }
+      },
+      "glow_shimmer_border": {
+        "intent": "A thin light shimmer sweep tracing the glassmorphic card borders periodically every 5 seconds.",
+        "spec": {
+          "shimmer_color": "var(--primary)",
+          "duration_ms": 800,
+          "interval_s": 5
+        }
+      }
+    }
+  },
+  "transition": {
+    "in": {
+      "type": "solid-color-match",
+      "description": "Inherits background color from the preceding hero or logo-bar to keep a seamless design flow.",
+      "recommended_bg": [
+        "bg-[#000000]",
+        "bg-[#F5F5F7]",
+        "bg-[#0B0F19]"
+      ]
+    },
+    "out": {
+      "type": "solid-color-match",
+      "description": "Fades out softly before transitioning to the subsequent how-it-works or showcase sections."
+    }
+  },
+  "flow": {
+    "follows": [
+      "hero",
+      "logo-bar",
+      "navbar"
+    ],
+    "recommended_next": [
+      "how-it-works",
+      "showcase",
+      "faq",
+      "pricing"
+    ],
+    "optional": false,
+    "required_in_template": true,
+    "notes": "Core section for presenting key features and value propositions of the product/service."
+  },
+  "tech": {
+    "animation_lib": "framer-motion",
+    "dependencies": [
+      "framer-motion",
+      "gsap"
+    ],
+    "cms_fields": [
+      "eyebrow",
+      "section_title",
+      "section_subtitle",
+      "features",
+      "layout_variant"
+    ]
+  }
+}

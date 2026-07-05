@@ -1,0 +1,195 @@
+{
+  "id": "logo-bar",
+  "name": "Logo Bar / Social Proof Strip",
+  "category": "trust",
+  "order_weight": 20,
+  "reusability": "universal",
+  "tags": [
+    "trust",
+    "social-proof",
+    "logos",
+    "clients",
+    "as-seen-on"
+  ],
+  "content": {
+    "slots": [
+      {
+        "name": "label",
+        "required": false,
+        "type": "text",
+        "notes": "E.g., 'Trusted by teams at', 'As seen on'. Positioned above or before the logos"
+      },
+      {
+        "name": "logos",
+        "required": true,
+        "type": "array",
+        "notes": "Logo array: {image, alt, href?}. Minimum 4, maximum 12"
+      }
+    ]
+  },
+  "layout_variants": [
+    {
+      "id": "static-row",
+      "name": "Static Single Row",
+      "description": "UI Aesthetics: Static horizontal row of partner logos, neatly centered on a dark Slate background. Spacing between logos is generous (gap-12). Logos are monochrome SVGs with a grayscale filter to maintain a clean, professional look. Secondary label above is styled in light [Heading Font], logo label in [UI Font]. Entrance Load: Step 1: Logos initialize hidden (opacity: 0, scale: 0.95). Step 2: Upon scroll trigger (top 80% viewport), logos fade in concurrently over 500ms. On scroll up: Logos fade out. Hover Interaction: Hovered logo shifts to full color, scaling up by 1.05x."
+    },
+    {
+      "id": "marquee-scroll",
+      "name": "Infinite Marquee Scroll",
+      "description": "UI Aesthetics: Infinite horizontal scrolling logo bar (marquee). Monochrome SVG logos flow across a row featuring soft left and right edge gradient masks to create smooth visual fades. Background is deep Slate (slate-950) for contrast. Eyebrow label is styled in clean, sharp [Heading Font]. Entrance Load: Step 1: Initialize logo cards positioned beyond the right edge of the screen. Step 2: Trigger continuous GSAP x-translation tween. Scroll Trigger: Marquee velocity automatically accelerates proportional to scroll velocity, then decays back to base speed. On scroll up: Marquee direction reverses smoothly (left to right). Hover Interaction: Supports flexible interactions: marquee speed drops by 70%, hovered logo scales by 1.1x via spring, transitions from grayscale to vibrant Primary brand color, glows with a soft neon aura and diagonal shimmer sweep, or magnetically tracks the cursor."
+    },
+    {
+      "id": "marquee-dual",
+      "name": "Dual Row Marquee (opposite directions)",
+      "description": "UI Aesthetics: Two parallel logo marquee rows scrolling in opposite directions. Sits behind an ultra-wide gradient mask. Generous vertical spacing (gap-8) separates rows. Background features a soft glassmorphic backdrop-blur. Labels use [UI Font] and headings use [Heading Font]. Entrance Load: Renders both rows simultaneously with a 600ms fade-in. Scroll Trigger: Scroll down accelerates both rows in opposite directions, reinforcing visual depth. On scroll up: Both rows reverse scroll direction. Hover Interaction: Hovering a logo slows down the row by 70%, while the hovered logo highlights in brand color or flips 3D to reveal partner details in [UI Font]."
+    },
+    {
+      "id": "angled-text-marquee",
+      "name": "Angled Text & Icon Marquee Strip",
+      "description": "UI Aesthetics: Text marquee banners tilted at 5deg to 15deg overlapping each other, breaking flat layout patterns. Marquees showcase key announcements or phrases separated by rotating SVG stars, crosshairs, or snowflakes. Uses large, bold, uppercase [Heading Font] for strong visual impact. Entrance Animation: Upon viewport trigger, banners slide in staggered from opposite screen margins and rotate. Scroll Trigger: Marquee velocity adjusts to scroll speed. Hover Interaction: Decelerates marquee speed by 80% (multiplier: 0.2), and hovered text shifts to vibrant Primary color, scaling up by 1.02x via spring."
+    },
+    {
+      "id": "vertical-image-marquee",
+      "name": "Vertical Image/Mockup Marquee Grid",
+      "description": "UI Aesthetics: Infinite vertical scrolling marquees split into 2 or 3 columns scrolling in opposite directions. Contains highlighted project thumbnails, product cards, or device mockups with soft corners and deep drop shadows. Features top and bottom vertical gradient masks for infinite drift. Entrance Animation: Columns fade in and slide up from below. Scroll Trigger: Scrolling vertically accelerates marquee speed. Hover Interaction: Columns pause scroll, and the hovered card rises (translateZ: +15px) with a glowing neon border."
+    },
+    {
+      "id": "testimonial-card-marquee",
+      "name": "Testimonial Card Infinite Marquee",
+      "description": "UI Aesthetics: Infinite horizontal scrolling testimonial review cards (marquee). Cards feature premium glassmorphic blocks (backdrop-blur-md bg-slate-950/40 border border-white/10 rounded-2xl) containing quotes in [Body Font] and author details in [Heading Font]. Entrance Animation: Testimonial cards slide left smoothly. Hover Interaction: Marquee speed slows by 80% to allow reading. Hovered card scales by 1.05x via spring with a neon border glow, while surrounding cards fade to 30% opacity (focus overlay) to draw focus."
+    }
+  ],
+  "animations": {
+    "entrance": {
+      "intent": "Initial entrance effect: Step 1: Once the logo bar hits 85% viewport bottom, trigger fade-in. Step 2: Opacity fades to 1.0 over 600ms while logos slide up (y: 20px -> 0px). On scroll up: Reverses animation to hide logos (opacity: 0, y: 20px) to re-trigger on scroll down.",
+      "spec": {
+        "opacity_from": 0,
+        "duration_ms": 600
+      }
+    },
+    "scroll_parallax": {
+      "none": true
+    },
+    "interactive": {
+      "logo_hover": {
+        "intent": "Defines 5 premium hover interaction variants when hovering over a logo on the Marquee, including marquee deceleration, brand color shifting, magnetic tracking, shimmer glow, and 3D kinetic card flip.",
+        "variants": [
+          {
+            "id": "speed-deceleration-scale",
+            "name": "Deceleration & Spring Scale",
+            "description": "Hovering on the marquee slows down scroll speed by 70% for readability, scaling up the active logo.",
+            "spec": {
+              "marquee_speed_multiplier": 0.3,
+              "active_logo_scale": 1.1,
+              "spring_preset": "bouncy",
+              "opacity": "0.5 -> 1.0"
+            }
+          },
+          {
+            "id": "color-shift-primary",
+            "name": "Brand Color Shift (Primary/Accent)",
+            "description": "Logo transitions from grayscale to brand primary or accent color to fit project theme.",
+            "spec": {
+              "default_color": "#7a7a7a (grayscale 100% opacity 50%)",
+              "hover_color": "var(--primary) (grayscale 0% opacity 100%)",
+              "transition_ms": 250,
+              "method": "CSS drop-shadow or SVG currentColor fill mapping"
+            }
+          },
+          {
+            "id": "magnetic-hover",
+            "name": "Magnetic Attraction Pull",
+            "description": "Logo acts as a small magnet, pulling towards the mouse cursor within a 35px radius.",
+            "spec": {
+              "magnetic_radius_px": 35,
+              "max_displacement_px": 8,
+              "spring_preset": "magnetic",
+              "rebound_on_leave": true
+            }
+          },
+          {
+            "id": "glowing-halo-shimmer",
+            "name": "Glowing Neon Halo & Shimmer Sweep",
+            "description": "Logo radiates a soft neon drop-shadow halo while running a diagonal white shimmer sweep from left to right.",
+            "spec": {
+              "glow_filter": "drop-shadow(0 0 8px rgba(var(--primary-rgb), 0.5))",
+              "shimmer_gradient": "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)",
+              "shimmer_duration_ms": 600,
+              "shimmer_ease": "power1.inOut"
+            }
+          },
+          {
+            "id": "kinetic-card-flip",
+            "name": "3D Kinetic Card Flip",
+            "description": "Logo flips 3D by 180 degrees along the vertical Y-axis to reveal partner details styled in [UI Font] on the back.",
+            "spec": {
+              "rotation_deg": 180,
+              "axis": "Y-axis",
+              "duration_ms": 500,
+              "ease": "back.out(1.7) (bouncy spring overshoot at end of rotation)",
+              "back_text_font": "[UI Font]",
+              "back_bg_color": "var(--base-200)"
+            }
+          }
+        ]
+      }
+    },
+    "decorative": {
+      "marquee": {
+        "intent": "Marquee scroll loop: Step 1: Measure block width. Step 2: Run infinite CSS keyframe translate loop along X-axis. Step 3: Pause scroll on hover. Hover exit: Resume scroll smoothly.",
+        "spec": {
+          "duration_s": 30,
+          "pause_on_hover": true,
+          "duplicate_set": true,
+          "type": "css keyframes (loop)"
+        }
+      },
+      "marquee_gsap_velocity": {
+        "intent": "Advanced velocity-driven marquee: Step 1: Measure block width (blockWidth) using ResizeObserver. Step 2: Track mouse scroll velocity. Step 3: Accelerate marquee speed proportional to scroll velocity (up to 5x) with a 0.8s decay. Step 4: Scroll up reverses marquee direction. Hover: Pauses scroll. SVG path wrap: Arrange logos into 3 identical block wrappers. Animate track translate to exactly -blockWidth, repeating infinitely to prevent snapping or blank gaps on the right edge.",
+        "spec": {
+          "base_speed": 1.0,
+          "max_multiplier": 5.0,
+          "decay_duration_s": 0.8,
+          "type": "gsap scroll-velocity loop",
+          "loop_strategy": "Arrange logos into 3 identical block wrappers. Measure block width (blockWidth) using ResizeObserver to ensure image assets load fully. Animate translate on the track to exactly -blockWidth using GSAP, repeat: -1. Seamless loop on reset removes snaps or whitespace gaps on the right edge."
+        }
+      }
+    }
+  },
+  "transition": {
+    "in": {
+      "type": "solid-color-match",
+      "description": "Logo bar follows Hero immediately, sharing background color or slightly lighter.",
+      "spacing": "pt-16 pb-12",
+      "separator": "optional thin border-top 1px opacity-10"
+    },
+    "out": {
+      "type": "solid-color-match",
+      "description": "Following section (features) usually has a contrasting background (gray-50 or dark) to create a visual break.",
+      "implementation": "Following section changing its background color is sufficient."
+    }
+  },
+  "flow": {
+    "follows": [
+      "hero"
+    ],
+    "recommended_next": [
+      "features-grid",
+      "how-it-works"
+    ],
+    "optional": true,
+    "required_in_template": false,
+    "notes": "If real client logos are missing, this can be replaced by a stats bar (trust indicators)."
+  },
+  "tech": {
+    "animation_lib": "gsap",
+    "dependencies": [
+      "gsap",
+      "@gsap/react"
+    ],
+    "cms_fields": [
+      "label",
+      "logos"
+    ]
+  }
+}

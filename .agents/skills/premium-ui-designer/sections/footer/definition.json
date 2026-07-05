@@ -1,0 +1,353 @@
+{
+  "id": "footer",
+  "name": "Footer",
+  "category": "exit",
+  "order_weight": 100,
+  "reusability": "universal",
+  "tags": [
+    "footer",
+    "links",
+    "legal",
+    "navigation",
+    "social",
+    "brand"
+  ],
+  "content": {
+    "slots": [
+      {
+        "name": "logo",
+        "required": true,
+        "type": "image"
+      },
+      {
+        "name": "tagline",
+        "required": false,
+        "type": "text",
+        "notes": "Slogan or brief brand description below the logo"
+      },
+      {
+        "name": "link_columns",
+        "required": true,
+        "type": "array",
+        "notes": "List of link columns: { title, links[] }"
+      },
+      {
+        "name": "social_links",
+        "required": false,
+        "type": "array",
+        "notes": "List of social networks: { platform, url, icon }"
+      },
+      {
+        "name": "newsletter_form",
+        "required": false,
+        "type": "component",
+        "notes": "Newsletter signup form: Email input + Submit button"
+      },
+      {
+        "name": "copyright",
+        "required": true,
+        "type": "text"
+      },
+      {
+        "name": "legal_links",
+        "required": false,
+        "type": "array",
+        "notes": "Legal links: Privacy Policy, Terms of Service..."
+      },
+      {
+        "name": "brand_giant_text",
+        "required": false,
+        "type": "text",
+        "notes": "Super large brand name text faded at the bottom of the footer"
+      },
+      {
+        "name": "partner_logos",
+        "required": false,
+        "type": "array",
+        "notes": "Partner/credibility logo strip: { name, logo_image, rating_stars }"
+      },
+      {
+        "name": "globe_offices",
+        "required": false,
+        "type": "array",
+        "notes": "List of office addresses overlaying the globe: { country, address }"
+      },
+      {
+        "name": "svg_ribbon_path",
+        "required": false,
+        "type": "text",
+        "notes": "Artistic background SVG Ribbon path"
+      }
+    ]
+  },
+  "layout_variants": [
+    {
+      "id": "4-col-classic",
+      "name": "4-Column Clean Slate",
+      "description": "Visual Design (UI Aesthetics): Traditional 4-column layout, highly structured on a dark Slate background (#0B0F19). The first column contains a vector logo in `[Display Geometric Font]` and a subtle tagline in `[Body Font]`. The next 3 columns contain link categories with column headers in uppercase `[UI Font]`, widely spaced (gap-12). A super thin dotted horizontal line separates the main body and the bottom bar. The bottom section contains copyright and legal links using a clean `[Mono Font]`. Entrance Animation: Step 1: Logo and tagline in column 1 fade in and slide up. Step 2: The next 3 link columns reveal sequentially with a 60ms stagger from left to right. When scrolling back up: The entire footer fades out and slides down slightly towards the bottom screen edge. Link Hover: Text changes to primary color, and a smooth underline slides in from left to right."
+    },
+    {
+      "id": "violet-lets-talk",
+      "name": "Neon Violet & Mint Banner (Contrast Display)",
+      "description": "Visual Design (UI Aesthetics): Inspired by reference image 1. The top section features a deep-rounded corner banner overlapping the previous section boundary, styled in vibrant Mint Green (#00FFA3), containing a large headline in sans-serif `[Heading Font]` and a flat, oval black button 'Talk with an expert' in bold `[UI Font]`. The lower portion is the footer body with a strong Neon Violet background (#5D3CFA). The bottom-left contains a simple text logo 'w.' in `[Display Geometric Font]` along with 3 vertically distributed link menu columns in light `[UI Font]`. The bottom-right features a large CTA headline: the top row is a tiny uppercase monospaced 'GOT A PROJECT IN MIND?' in `[Accent Font]`, and the bottom row is a giant 'Let's talk' in `[Display Serif Font]` with deep contrast between thin and thick strokes, creating a striking contrast against the flat menu on the left. Entrance & Scroll Animation: When scrolling into the viewport, the dotted/dashed separator line draws horizontally from the center to both edges (scaleX: 0 -> 1) over 700ms. The 'Let's talk' text and the link columns fade in and slide up from below. A white circular 'Back to Top' button with an up-pointing arrow at the bottom-left automatically slides up from the screen edge when scrolling past 100vh. Scroll Reverse: All components retract and condense in the direction of the scroll. Back to Top Hover: Triggers a springy bounce feedback, with the up arrow sliding vertically upward."
+    },
+    {
+      "id": "dual-tone-split",
+      "name": "Dual-Tone Sand & Moss List",
+      "description": "Visual Design (UI Aesthetics): Inspired by reference image 2. The layout splits into two blocks of warm, rustic contrasting colors. The top block in light Sand Cream (#F3EFE0) contains a short career/contact description in clean sans-serif `[Body Font]` and a horizontal table of career opportunities separated by thin warm brown borders. Each row features a title in uppercase `[UI Font]` and a underlined link 'En savoir plus'. The bottom block in deep Earth Moss (#3E4A3F) contains a giant angular logo 'B2R' in `[Display Geometric Font]` and a contact info column 'POUR NOUS JOINDRE' in light `[Mono Font]`. The visual highlight is a light moss ribbon (#C8CDBC) winding as an artistic SVG path on the right side. Entrance & Scroll Animation: The ribbon automatically draws its stroke (stroke-dashoffset: 100% -> 0%) based on scroll position. Scrolling reverse automatically redraws it backward. Career List Row Hover (top block): Divider line glows, row height expands slightly (padding-y increases by 6px), text shifts right by 12px, and 'En savoir plus' draws its sliding underline. B2R Logo Hover: The logo edges warp slightly using a displacement warp filter, creating a raw, architectural feel."
+    },
+    {
+      "id": "cosmic-mesh-globe",
+      "name": "Cosmic Globe with Glassmorphism Offices",
+      "description": "Visual Design (UI Aesthetics): Inspired by reference image 3. Deep space theme with a dark background (#0B0D19). The top of the footer displays a neon blue glowing 3D globe rotating slowly. Overlaying the globe are glassmorphism office location cards (United States, Australia, Singapore...) with backdrop-blur-md and a subtle glowing border. The bottom section contains 4 thin link menu columns in `[UI Font]`, a muted monochrome partner logo strip next to a 5-star rating widget. At the absolute bottom is a giant, faded 'designmonks' logo in a thick `[Heading Font]`, glowing with a soft neon mint green. Entrance & Scroll Animation: The globe moves up with a 0.2 parallax effect during page scroll, and office cards float freely with out-of-phase frequencies to create a 3D levitating feel. Partner logos fade in and slide up sequentially. Scroll Reverse: The globe sinks, and office cards scale down and fade out. Partner Logo Hover: Logo transitions from monochrome to its original colors, rising slightly with a soft glow behind it."
+    },
+    {
+      "id": "klarheit-dot-grid",
+      "name": "Klarheit Deep Grid & Giant Serif Text",
+      "description": "Visual Design (UI Aesthetics): Inspired by reference image 4. Dark blue gradient background shifting to black, covered with a subtle glowing dot grid pattern. Left side has 2 link menu columns in clean sans-serif `[UI Font]`. Right side features a large CTA headline 'Let's build something great together' in elegant classic `[Accent Serif Font]`, along with a flat white oval button 'Get a Quote'. Near the absolute bottom, a giant brand wordmark 'Klarheit' (font-size: 20vw) in a heavy `[Heading Serif Font]` is set half-buried below the screen bottom, blending into the dark background with an overlay mix-blend-mode. Entrance & Scroll Animation: When scrolling to the absolute bottom, the giant wordmark 'Klarheit' slides up from the bottom edge and brightens with a gradient. Scroll Reverse: The wordmark retreats down. Mouse Movement: The dot grid background deforms slightly away from the cursor (interactive mouse displacement grid). Get a Quote Hover: Button exerts a magnetic pull, and a small 45-degree arrow slides out from the text center."
+    },
+    {
+      "id": "omosa-bold-minimalist",
+      "name": "OMOSA Bold Minimalist & Typographic Stretch",
+      "description": "Visual Design (UI Aesthetics): Inspired by reference image 5. High-contrast, absolute minimalist solid black theme (#000000). The left side contains a compact sub-banner 'Keep scrolling to learn more / Works next page' in light `[Mono Font]`, a text block 'We would love to hear from you. Let's work - together.' in neat sans-serif `[Body Font]`, and a solid white rectangular button with black text 'CONTACT US ->'. At the bottom-left is a giant brand wordmark 'OMOSA' in bold, sharp uppercase `[Display Geometric Font]`. The right side contains 2 menu columns (INDEX, SOCIALS) and a BUSINESS INQUIRIES contact column. Bottom links (SITEMAP, TERMS OF USE) are in small uppercase `[Mono Font]`. Entrance & Scroll Animation: The giant 'OMOSA' text at the bottom dynamically expands its letter-spacing and stretches horizontally based on the scroll progress (Scroll-driven typography stretch). The call-to-action text block splits into single lines that automatically flip rotate (rotateX: 90deg -> 0deg) smoothly on scroll. Scroll Reverse: Lines flip backward, and OMOSA characters condense tightly together."
+    }
+  ],
+  "animations": {
+    "entrance": {
+      "standard_fade_slide": {
+        "intent": "Standard entrance effect for the footer: Fade-in with a subtle vertical slide.",
+        "spec": {
+          "opacity_from": 0,
+          "opacity_to": 1,
+          "y_from": 30,
+          "y_to": 0,
+          "duration_ms": 600,
+          "ease": [
+            0.25,
+            0.1,
+            0.25,
+            1
+          ],
+          "scroll_reverse": true
+        }
+      },
+      "staggered_column_reveal": {
+        "intent": "Footer link columns reveal sequentially, creating visual rhythm.",
+        "spec": {
+          "y_from": 24,
+          "y_to": 0,
+          "opacity_from": 0,
+          "opacity_to": 1,
+          "stagger_ms": 60,
+          "duration_ms": 500,
+          "ease": [
+            0.25,
+            0.1,
+            0.25,
+            1
+          ],
+          "scroll_reverse": true
+        }
+      },
+      "giant_text_split_reveal": {
+        "intent": "When scrolling to the bottom, characters of the giant brand wordmark slide up from below (y: 100% -> 0%) sequentially.",
+        "spec": {
+          "type": "gsap split-text slide-up",
+          "stagger_ms": 40,
+          "y_from": "100%",
+          "y_to": "0%",
+          "skew_y_from": 10,
+          "skew_y_to": 0,
+          "duration_ms": 800,
+          "ease": [
+            0.25,
+            0.1,
+            0.25,
+            1
+          ],
+          "scroll_reverse": true
+        }
+      },
+      "list_row_reveal": {
+        "intent": "Career/contact rows in the upper footer slide up smoothly in sequence.",
+        "spec": {
+          "opacity_from": 0,
+          "y_from": 20,
+          "stagger_ms": 80,
+          "duration_ms": 450,
+          "scroll_reverse": true
+        }
+      },
+      "ribbon_draw_reveal": {
+        "intent": "Draws the artistic curved SVG ribbon smoothly according to the scroll position.",
+        "spec": {
+          "type": "SVG stroke-dashoffset reveal",
+          "dasharray": 1000,
+          "start_trigger": "top bottom-=10%",
+          "end_trigger": "bottom bottom",
+          "scroll_reverse": true
+        }
+      }
+    },
+    "scroll_parallax": {
+      "fixed_reveal_footer": {
+        "intent": "Fixed footer reveal mechanism (Reveal Footer) where the section above slides up to uncover the footer.",
+        "spec": {
+          "footer_position": "fixed",
+          "footer_z_index": -1,
+          "sibling_z_index": 1,
+          "uncover_height_ratio": 0.5,
+          "scroll_reverse": true
+        }
+      },
+      "floating_banner_parallax": {
+        "intent": "Floating banner at the boundary slides vertically slower than the scroll rate, creating depth.",
+        "spec": {
+          "speed_multiplier": 0.35,
+          "y_offset_max": 80,
+          "scroll_reverse": true
+        }
+      },
+      "earth_3d_parallax": {
+        "intent": "3D Globe slides with a light vertical parallax, and glassmorphic office boxes float.",
+        "spec": {
+          "earth_parallax_speed": 0.2,
+          "card_float_y_amplitude": 12,
+          "card_float_duration_s": 3,
+          "scroll_reverse": true
+        }
+      },
+      "omosa_letter_stretch": {
+        "intent": "Stretches the letter-spacing and width of the giant wordmark 'OMOSA' based on the scroll position at the bottom.",
+        "spec": {
+          "type": "scroll-driven css variable stretch",
+          "letter_spacing_from": "-0.05em",
+          "letter_spacing_to": "0.15em",
+          "font_stretch_from": "80%",
+          "font_stretch_to": "130%",
+          "scroll_reverse": true
+        }
+      }
+    },
+    "interactive": {
+      "link_underline_draw": {
+        "intent": "On link hover: text changes to primary color, and an underline draws from left to right.",
+        "spec": {
+          "transition_ms": 200,
+          "underline_thickness_px": 1,
+          "color_target": "var(--color-primary)"
+        }
+      },
+      "button_magnetic_bounce": {
+        "intent": "Button magnetically attracts to the cursor and bounces slightly when hovered.",
+        "spec": {
+          "magnetic_strength": 0.35,
+          "spring_stiffness": 200,
+          "spring_damping": 15
+        }
+      },
+      "social_hover_magnetic": {
+        "intent": "Social media icon scales to 1.15x and transitions to its native brand color with a subtle magnetic effect.",
+        "spec": {
+          "scale": 1.15,
+          "magnetic_strength": 0.25,
+          "transition_ms": 150
+        }
+      },
+      "card_glow_interactive": {
+        "intent": "Hovering on glassmorphic location cards: card borders glow brighter and rise slightly.",
+        "spec": {
+          "glow_color": "rgba(255,255,255,0.25)",
+          "scale": 1.02,
+          "y_lift": -4
+        }
+      },
+      "dot_grid_displacement": {
+        "intent": "Moving the mouse over the footer causes the background dot grid to deform away from the cursor.",
+        "spec": {
+          "type": "canvas interactive displacement mapping",
+          "influence_radius_px": 120,
+          "displacement_strength": 15
+        }
+      },
+      "logo_displacement_warp": {
+        "intent": "Hovering on raw vector logo: logo warps dynamically using a displacement map.",
+        "spec": {
+          "type": "SVG feDisplacementMap scale warp",
+          "scale_max": 8,
+          "transition_ms": 300
+        }
+      }
+    },
+    "decorative": {
+      "mesh_globe_loop": {
+        "intent": "3D globe rotates slowly on the Y-axis indefinitely using CSS keyframes.",
+        "spec": {
+          "type": "CSS keyframe 3D rotation",
+          "duration_s": 24,
+          "direction": "normal",
+          "loop": true
+        }
+      },
+      "bottom_text_neon_pulse": {
+        "intent": "Giant wordmark at the bottom glows with a soft, slow neon breathing pulse.",
+        "spec": {
+          "type": "CSS breathing glow pulse",
+          "opacity_min": 0.3,
+          "opacity_max": 0.85,
+          "duration_s": 4
+        }
+      }
+    }
+  },
+  "transition": {
+    "in": {
+      "type": "solid-color-match",
+      "description": "Footer is placed immediately after the CTA banner or final sections. Typically uses a seamless background color transition or a floating boundary banner overlap.",
+      "recommended_bg": [
+        "bg-[#000000]",
+        "bg-[#5D3CFA]",
+        "bg-[#3E4A3F]",
+        "bg-[#0B0D19]",
+        "bg-[#0B0F19]"
+      ]
+    },
+    "out": {
+      "type": "solid-color-match",
+      "description": "Footer is placed at the final position, serving as the terminal point of the user experience journey."
+    }
+  },
+  "flow": {
+    "follows": [
+      "cta-banner",
+      "testimonials",
+      "features-grid",
+      "how-it-works"
+    ],
+    "recommended_next": [],
+    "optional": false,
+    "required_in_template": true,
+    "notes": "Must always be positioned at the absolute end of the entire website."
+  },
+  "tech": {
+    "animation_lib": "framer-motion",
+    "dependencies": [
+      "framer-motion",
+      "gsap"
+    ],
+    "cms_fields": [
+      "logo",
+      "tagline",
+      "link_columns",
+      "social_links",
+      "newsletter_form",
+      "copyright",
+      "legal_links",
+      "brand_giant_text",
+      "partner_logos",
+      "globe_offices",
+      "svg_ribbon_path",
+      "layout_variant"
+    ]
+  }
+}

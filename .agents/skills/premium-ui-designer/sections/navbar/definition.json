@@ -1,0 +1,156 @@
+{
+  "id": "navbar",
+  "name": "Navigation Bar",
+  "category": "navigation",
+  "order_weight": 0,
+  "reusability": "universal",
+  "tags": [
+    "nav",
+    "header",
+    "sticky",
+    "all-pages"
+  ],
+  "content": {
+    "slots": [
+      {
+        "name": "logo",
+        "required": true,
+        "type": "image",
+        "notes": "SVG preferred, fallback text"
+      },
+      {
+        "name": "nav_links",
+        "required": true,
+        "type": "array",
+        "notes": "label + href + optional dropdown"
+      },
+      {
+        "name": "cta_button",
+        "required": false,
+        "type": "component",
+        "notes": "Primary action button e.g. Get Started / Login"
+      },
+      {
+        "name": "announcement_bar",
+        "required": false,
+        "type": "text",
+        "notes": "Thin banner on top of the navbar, used for promos/notices"
+      }
+    ]
+  },
+  "layout_variants": [
+    {
+      "id": "floating-capsule",
+      "name": "Floating Capsule Bar",
+      "description": "UI Aesthetics: Pill-shaped navigation bar floating at the top center of the page (w-auto max-w-lg mt-4). Uses a dark, translucent glassmorphic backdrop (backdrop-blur-md bg-slate-950/70 rounded-full) with a thin reflective border (border border-white/10). The capsule contains only the logo on the left (in [Heading Font]) and a smooth hamburger trigger button on the right (in [UI Font]), removing secondary links to establish an ultra-minimalist, modern feel. Entrance Load: Step 1: Initialize fully hidden (opacity: 0, y: -40px, scale: 0.9). Step 2: On load, slide down smoothly and scale up to 1.0 over 400ms using spring physics. Scroll Behavior: Pinned at the top and scales down slightly on scroll down. On scroll up: Slides down into view automatically (smart show-on-scroll-up)."
+    },
+    {
+      "id": "fullscreen-mega-overlay",
+      "name": "Fullscreen Typography Menu",
+      "description": "UI Aesthetics: Clicking the menu trigger opens a fullscreen overlay panel (dark backdrop or vibrant neon color). Main links are displayed in giant, bold [Heading Font] (text-6xl md:text-8xl font-black uppercase tracking-tight) stacked vertically at the center. Screen corners show social links, contact email, and copyright notice in fine [UI Font]. Entrance Load: When clicked open, links perform a staggered split-text reveal from below through a hidden clip-path over 500ms, while the close (X) button rotates 90 degrees. Hover Interaction: Hovered link slides a solid color background sweep behind the text, while other link rows fade to 70% opacity to highlight focus."
+    },
+    {
+      "id": "sliding-drawer-panel",
+      "name": "Sliding Drawer Panel",
+      "description": "UI Aesthetics: A drawer navigation panel sliding in from the right edge of the screen on click (occupying 30-40% viewport width). Styled in dark translucent glassmorphism (backdrop-blur-xl bg-slate-950/80 border-l border-white/10). Vertical link list features stylized prefix glyphs like `[-] HOME`, `[o] ABOUT`, `[x] WORK` in sharp [Heading Font] or [UI Font]. Entrance Load: Drawer panel slides horizontally from right to left (x: 100% -> 0%) using spring physics. Links slide up and fade in sequentially from top to bottom with an 80ms stagger."
+    },
+    {
+      "id": "segmented-floating-bar",
+      "name": "Segmented Floating Navbar",
+      "description": "UI Aesthetics: A floating glassmorphic navbar split into 3 distinct segments separated by diagonal cuts (segmented glass panels). The center segment hosts the logo in [Heading Font], the left segment contains the Menu trigger, and the right segment holds quick actions in [UI Font]. Entrance Load: All 3 segments slide down together from the top edge of the screen. Hover Interaction: The hovered segment glows along its borders and runs a metallic sweep overlay along the diagonal seams."
+    },
+    {
+      "id": "minimal-trigger",
+      "name": "Minimal Header Trigger",
+      "description": "UI Aesthetics: Ultra-minimal header bar situated along the top edge of the screen. Features only a monochrome logo in [Heading Font] on the left and a small MENU trigger button in [UI Font] on the right. Beside the MENU button, a neon green dot pulses slowly (breathing neon dot) acting as a visual anchor on a dark backdrop. Entrance Load: Logo and trigger button slide down from the top edge over 300ms. Hover Interaction: The neon dot pulses faster on hover while the MENU button shifts 3px via spring physics for tactile feedback."
+    }
+  ],
+  "animations": {
+    "entrance": {
+      "intent": "The navigation bar slides in smoothly from the top edge (y: -80px -> 0px) while fading in (opacity: 0 -> 1). Note: If the page has an active Intro Loader / Page Transition, this entry is delayed and triggers only after the intro ends (delay: 1.2s to 1.5s depending on the intro variant), maintaining a clean, cohesive initial load.",
+      "spec": {
+        "y_from": -80,
+        "opacity_from": 0,
+        "duration_ms": 400,
+        "ease": "easeOut",
+        "delay_with_intro_ms": 1200
+      }
+    },
+    "scroll_behavior": {
+      "sticky": {
+        "intent": "When scroll progress crosses 80px, the navbar toggles to a sticky state: Step 1: Background shifts from transparent to 90% opacity. Step 2: Activates a 12px backdrop-blur. Step 3: Adds a thin bottom border and subtle shadow. Scrolling back to the top restores the original transparent header state.",
+        "spec": {
+          "trigger_px": 80,
+          "backdrop_blur": "12px",
+          "bg_opacity": 0.9,
+          "transition_ms": 300
+        }
+      }
+    },
+    "interactive": {
+      "link_hover": {
+        "intent": "Navigation link hover effect: Step 1: Text color transitions to primary brand color over 150ms. Step 2: A 2px underline sweeps smoothly from left to right. Step 3: Text rises by 2px along the Y-axis. Hover exit: Reverses the entire transition, hiding the underline.",
+        "spec": {
+          "type": "underline-slide-left-to-right",
+          "translate_y_px": -2,
+          "color": "primary",
+          "duration_ms": 200
+        }
+      },
+      "cta_hover": {
+        "intent": "Primary CTA button hover interaction: Step 1: Button expands by 1.05x using spring physics. Step 2: Triggers a shimmer sweep across the button face from left to right. Step 3: Box-shadow glow extends by 10px. Hover exit: Restores static state over 150ms.",
+        "spec": {
+          "scale": 1.05,
+          "shadow_glow": "0 0 20px rgba(var(--primary), 0.25)",
+          "type": "spring",
+          "stiffness": 400,
+          "damping": 15
+        }
+      },
+      "mobile_menu": {
+        "intent": "Mobile menu overlay interaction: Step 1: A backdrop overlay covers the page, fading to 40% opacity. Step 2: Menu drawer slides out from the right (x: 100% -> 0%) with an 8px backdrop blur. On close: Drawer slides back right and backdrop fades out.",
+        "spec": {
+          "direction": "right",
+          "backdrop_blur": "8px",
+          "overlay_opacity": 0.4
+        }
+      }
+    },
+    "decorative": {
+      "none": true
+    }
+  },
+  "transition": {
+    "in": {
+      "type": "solid-color-match",
+      "notes": "Navbar is the first element, no transition in is needed."
+    },
+    "out": {
+      "type": "solid-color-match",
+      "description": "Navbar overlaps the Hero section — Hero content starts below the navbar (padding-top equal to navbar height).",
+      "overlap_px": 0,
+      "z_index": 50
+    }
+  },
+  "flow": {
+    "follows": null,
+    "recommended_next": [
+      "hero"
+    ],
+    "optional": false,
+    "required_in_template": true
+  },
+  "tech": {
+    "animation_lib": "framer-motion",
+    "dependencies": [
+      "framer-motion",
+      "clsx"
+    ],
+    "cms_fields": [
+      "logo",
+      "navLinks",
+      "ctaButton",
+      "announcementBar"
+    ]
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "id": "custom-portfolio",
+  "name": "Web3 Interactive Portfolio",
+  "description": "Custom portfolio landing page template featuring high-end 3D visual models, interactive widgets, draggable showcase, and bold transitions.",
+  "project_type": "creative-portfolio",
+  "target_audience": "designers, developers, creative agencies, Web3 innovators",
+  "sections": [
+    {
+      "id": "navbar",
+      "variant": "floating-capsule",
+      "config": {
+        "cta_button": true,
+        "announcement_bar": false
+      }
+    },
+    {
+      "id": "hero",
+      "variant": "3d-floating-centered",
+      "config": {
+        "badge": true,
+        "trust_line": false,
+        "media_type": "3d-assets",
+        "background": "gradient-orbs + grid-dot-pattern"
+      },
+      "transition_out": "gradient-fade-bridge"
+    },
+    {
+      "id": "features-grid",
+      "variant": "interactive-ui-bento",
+      "config": {
+        "feature_count": 5,
+        "background": "bg-slate-950"
+      },
+      "transition_in": "solid-color-match",
+      "transition_out": "solid-color-match"
+    },
+    {
+      "id": "showcase",
+      "variant": "minimalist-outlined-list",
+      "config": {
+        "background": "bg-slate-900",
+        "media_type": "list-images",
+        "item_count": 6
+      },
+      "transition_in": "gradient-fade-bridge",
+      "transition_out": "gradient-fade-bridge"
+    },
+    {
+      "id": "how-it-works",
+      "variant": "sinusoidal-spline-path",
+      "config": {
+        "step_count": 3,
+        "background": "bg-slate-950"
+      },
+      "transition_in": "solid-color-match",
+      "transition_out": "solid-color-match"
+    },
+    {
+      "id": "testimonials",
+      "variant": "infinite-marquee-reviews",
+      "config": {
+        "testimonial_count": 6,
+        "background": "bg-slate-900"
+      },
+      "transition_in": "gradient-fade-bridge",
+      "transition_out": "solid-color-match"
+    },
+    {
+      "id": "cta-banner",
+      "variant": "brutalist-starburst",
+      "config": {
+        "background": "bg-[#5D3CFA]",
+        "trust_signals": ["Let's build something epic", "Available for contracts", "Worldwide remote"]
+      },
+      "transition_in": "solid-color-match",
+      "transition_out": "solid-color-match"
+    },
+    {
+      "id": "footer",
+      "variant": "violet-lets-talk",
+      "config": {
+        "newsletter_form": true,
+        "social_links": true,
+        "background": "bg-slate-950"
+      },
+      "transition_in": "solid-color-match"
+    }
+  ],
+  "color_scheme": {
+    "preset": "web3-interactive"
+  },
+  "animation_strategy": {
+    "library": "framer-motion",
+    "global_principle": "Web3/Creative Interactive theme with immersive 3D orbits, interactive outlined list, and scroll path draws.",
+    "performance_budget": "LCP < 2.5s — simple layout loading above fold, hydrating advanced elements dynamically"
+  }
+}
