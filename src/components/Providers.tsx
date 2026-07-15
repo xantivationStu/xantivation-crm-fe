@@ -64,9 +64,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               algorithm: activeTheme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
               token: {
                 colorPrimary: '#4F46E5',
-                borderRadius: 12,
-                colorBgContainer: activeTheme === 'dark' ? '#1c1c1f' : '#fcfcfd',
+                borderRadius: 16,
+                colorBgContainer: activeTheme === 'dark' ? '#161b22' : '#f1f5f9',
+                colorBgElevated: activeTheme === 'dark' ? '#1c2128' : '#ffffff',
                 colorBorder: activeTheme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                colorTextBase: activeTheme === 'dark' ? '#f5f5f7' : '#1e1e24',
               },
             }}
           >

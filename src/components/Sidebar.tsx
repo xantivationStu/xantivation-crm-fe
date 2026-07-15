@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from './Providers';
+import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   UserPlus,
@@ -19,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import MagneticButton from './MagneticButton';
 
 const sidebarGroups = [
   {
@@ -45,7 +48,6 @@ const sidebarGroups = [
       { name: 'Conversations', path: '/conversations', icon: MessageSquare },
       { name: 'AI Hub', path: '/ai-hub', icon: BrainCircuit },
       { name: 'Reports', path: '/reports', icon: BarChart3 },
-      { name: 'Settings', path: '/settings', icon: Settings },
     ],
   },
 ];
@@ -53,40 +55,49 @@ const sidebarGroups = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { theme } = useTheme();
+
+  // Choose logo version based on light/dark mode
+  const logoSrc = theme === 'dark' ? '/White_Logo.png' : '/Black_Logo.png';
 
   return (
     <aside
-      className={`h-screen sticky top-0 left-0 bg-[var(--color-bg-tint)] border-r border-[var(--color-border)] flex flex-col justify-between transition-all duration-300 ${
+      className={`h-[calc(100vh-2rem)] my-4 ml-4 sticky top-4 left-0 bg-[var(--color-bg-tint)] border border-[var(--color-border)] shadow-sm rounded-3xl flex flex-col justify-between transition-[width] duration-300 ease-in-out z-40 ${
         collapsed ? 'w-20' : 'w-64'
       }`}
     >
       <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden py-6">
         {/* Logo Section */}
-        <div className="flex items-center justify-between px-6 mb-8">
-          {!collapsed && (
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[var(--color-accent)] to-cyan-500 bg-clip-text text-transparent">
-                Xantivation
-              </span>
-            </Link>
-          )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-colors duration-200 cursor-pointer"
+        <div className={`flex items-center transition-all duration-300 mb-8 ${collapsed ? 'justify-center px-0' : 'px-5 gap-3'}`}>
+          <Link href="/" className="flex items-center justify-center shrink-0">
+            <img
+              src={logoSrc}
+              alt="Xantivation Logo"
+              className={`transition-all duration-300 object-contain ${
+                collapsed ? 'h-7 w-7' : 'h-6'
+              }`}
+            />
+          </Link>
+          <span
+            className={`transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap text-[11px] font-bold tracking-wider text-[var(--color-fg)] uppercase font-sans ${
+              collapsed ? 'max-w-0 opacity-0 pointer-events-none' : 'max-w-[150px] opacity-100'
+            }`}
           >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
+            XANTIVATION STUDIO
+          </span>
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 space-y-6 px-4">
+        <nav className="flex-1 space-y-6 px-3">
           {sidebarGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1.5">
-              {!collapsed && (
-                <h3 className="px-3 text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  {group.title}
-                </h3>
-              )}
+              <h3
+                className={`px-3 text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap ${
+                  collapsed ? 'max-h-0 opacity-0 mb-0' : 'max-h-8 opacity-70 mb-1.5'
+                }`}
+              >
+                {group.title}
+              </h3>
               <div className="space-y-0.5">
                 {group.items.map((item, iIdx) => {
                   const isActive = pathname ? pathname.startsWith(item.path) : false;
@@ -95,14 +106,35 @@ export default function Sidebar() {
                     <Link
                       key={iIdx}
                       href={item.path}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[var(--color-accent)] text-white shadow-sm'
-                          : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface)]'
-                      }`}
+                      className="block relative group/item"
                     >
-                      <Icon size={18} className="shrink-0" />
-                      {!collapsed && <span className="truncate">{item.name}</span>}
+                      <motion.div
+                        whileHover={{ scale: 1.015 }}
+                        whileTap={{ scale: 0.985 }}
+                        className={`flex items-center rounded-xl text-sm font-medium transition-all duration-300 w-full py-2.5 relative z-10 ${
+                          collapsed ? 'justify-center px-0' : 'px-3'
+                        } ${
+                          isActive
+                            ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                            : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface)]'
+                        }`}
+                      >
+                        <Icon size={18} className="shrink-0" />
+                        <span
+                          className={`transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap text-xs font-semibold ${
+                            collapsed ? 'max-w-0 opacity-0 pointer-events-none ml-0' : 'max-w-[150px] opacity-100 ml-3'
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                        {isActive && (
+                          <span
+                            className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse transition-opacity duration-300 ${
+                              collapsed ? 'opacity-0' : 'opacity-100'
+                            }`}
+                          />
+                        )}
+                      </motion.div>
                     </Link>
                   );
                 })}
@@ -112,19 +144,16 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer Info */}
-      <div className="p-4 border-t border-[var(--color-border)]">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-xs font-bold font-mono">
-            XS
-          </div>
-          {!collapsed && (
-            <div className="truncate">
-              <p className="text-xs font-semibold text-[var(--color-fg)]">Xantivation Studio</p>
-              <p className="text-[10px] text-[var(--color-muted-fg)]">CRM v1.0</p>
-            </div>
-          )}
-        </div>
+      {/* Footer / Collapse Button Section */}
+      <div className="p-4 border-t border-[var(--color-border)] flex items-center justify-center">
+        <MagneticButton range={40}>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-10 h-10 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] flex items-center justify-center transition-colors duration-200 cursor-pointer"
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </MagneticButton>
       </div>
     </aside>
   );

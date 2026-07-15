@@ -1,85 +1,196 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, message } from 'antd';
 import { FloatingInput } from '@/components/FloatingInput';
+import { useTheme } from '@/components/Providers';
+import { motion } from 'framer-motion';
+
+import { useAuth } from '@/hooks/useAuth';
+
+// Constants for messages to avoid hardcoded strings
+const MSG_REGISTER_SUCCESS = 'Đăng ký tài khoản thành công';
+const MSG_REGISTER_ERROR = 'Đăng ký thất bại';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { register, loading } = useAuth();
+  const [currentTime, setCurrentTime] = useState('');
   const router = useRouter();
+  const { theme } = useTheme();
+
+  // Use Ant Design's message hook to consume dynamic theme context
+  const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
+    const now = new Date();
+    setCurrentTime(now.toLocaleTimeString('en-US', { hour12: false }));
+    return () => clearInterval(timer);
+  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      message.success('Đăng ký tài khoản thành công');
-      router.push('/login');
+      const nameParts = name.trim().split(/\s+/);
+      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
+      const lastName = nameParts[nameParts.length - 1] || '';
+      await register({ email, password, firstName, lastName });
     } catch (err) {
-      message.error('Đăng ký thất bại');
-    } finally {
-      setLoading(false);
+      // Handled inside useAuth hook
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] px-4">
-      {/* Background soft glow */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[var(--color-accent)]/5 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none"></div>
+  const logoSrc = theme === 'dark' ? '/White_Logo.png' : '/Black_Logo.png';
 
-      <div className="w-full max-w-md bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl p-8 shadow-sm relative z-10">
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-[var(--color-accent)] to-cyan-500 bg-clip-text text-transparent inline-block">
-            Create Account
-          </h2>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-2">Get started with Xantivation CRM workspace.</p>
+  return (
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-[var(--color-bg)] overflow-hidden relative">
+      {/* Context holder for dynamic message API */}
+      {contextHolder}
+
+      {/* Background ambient glows */}
+      <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-[var(--color-accent)]/5 blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-cyan-500/3 blur-3xl pointer-events-none"></div>
+      <div className="noise-overlay pointer-events-none z-0"></div>
+
+      {/* LEFT SIDE: Visual Brand Showcase (50% Width on Desktop) */}
+      <div className="hidden md:flex w-1/2 flex-col justify-between p-12 lg:p-16 relative select-none border-r border-[var(--color-border)] min-h-screen">
+        {/* Subtle grid lines accents */}
+        <div className="absolute top-0 bottom-0 left-[25%] w-px bg-[var(--color-border)] opacity-30"></div>
+        <div className="absolute top-0 bottom-0 left-[75%] w-px bg-[var(--color-border)] opacity-30"></div>
+        <div className="absolute left-0 right-0 top-[35%] h-px bg-[var(--color-border)] opacity-30"></div>
+        <div className="absolute left-0 right-0 top-[65%] h-px bg-[var(--color-border)] opacity-30"></div>
+
+        {/* Brand indicator */}
+        <div className="flex items-center gap-3 relative z-10">
+          <img
+            src={logoSrc}
+            alt="Xantivation Logo"
+            className="h-5.5 object-contain"
+          />
+          <span className="text-[11px] font-bold tracking-wider text-[var(--color-fg)] uppercase font-sans">
+            XANTIVATION STUDIO
+          </span>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-6">
-          <FloatingInput
-            label="Full Name"
-            type="text"
-            value={name}
-            onChange={setName}
-            required
-          />
-
-          <FloatingInput
-            label="Email Address"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            required
-          />
-
-          <FloatingInput
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            required
-          />
-
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            className="w-full h-11 rounded-xl text-sm font-semibold mt-6 cursor-pointer"
+        {/* Centered Large Typographic Title & Real-Time Clock */}
+        <div className="my-auto space-y-12 lg:space-y-16 relative z-10 flex flex-col items-center text-center justify-center w-full px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+            className="space-y-4 lg:space-y-6 flex flex-col items-center"
           >
-            Sign Up
-          </Button>
-        </form>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-none text-[var(--color-fg)]">
+              JOIN THE
+              <br />
+              <span className="bg-gradient-to-r from-[var(--color-accent)] to-cyan-500 bg-clip-text text-transparent">
+                WORKSPACE
+              </span>
+            </h1>
+            <p className="text-xs sm:text-sm lg:text-base text-[var(--color-muted-fg)] max-w-md lg:max-w-lg font-medium leading-relaxed">
+              Create your account to configure pipeline workflows, invite collaborators, and manage analytics reports.
+            </p>
+          </motion.div>
 
-        <div className="mt-6 text-center text-xs text-[var(--color-muted-fg)]">
-          Already have an account?{' '}
-          <Link href="/login" className="text-[var(--color-accent)] hover:underline">
-            Sign in here
-          </Link>
+          {/* Elegant clock display */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.7 }}
+            className="space-y-2 border-t border-[var(--color-border)] pt-6 px-12"
+          >
+            <span className="text-[10px] lg:text-xs font-mono tracking-widest text-[var(--color-muted-fg)] block">
+              STATION LOCAL TIME
+            </span>
+            <span className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extralight tracking-widest text-[var(--color-fg)] font-mono">
+              {currentTime || "00:00:00"}
+            </span>
+          </motion.div>
+        </div>
+
+        {/* Empty bottom element to keep flex layout balanced */}
+        <div className="h-4"></div>
+      </div>
+
+      {/* RIGHT SIDE: Auth Panel (50% Width on Desktop) */}
+      <div className="w-full md:w-1/2 min-h-screen flex items-center justify-center p-8 sm:p-16 bg-[var(--color-bg-tint)]/85 backdrop-blur-xl z-10 relative">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          className="w-full max-w-lg md:max-w-xl space-y-10 lg:space-y-12"
+        >
+          {/* Logo visible on mobile */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <Link href="/" className="mb-4 md:hidden">
+              <img
+                src={logoSrc}
+                alt="Xantivation Logo"
+                className="h-6 object-contain hover:opacity-80 transition-opacity"
+              />
+            </Link>
+            <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-[var(--color-fg)]">
+              Create Account
+            </h2>
+            <p className="text-sm lg:text-base text-[var(--color-muted-fg)] mt-1.5 font-medium">Get started with Xantivation CRM workspace.</p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-6 lg:space-y-8">
+            <FloatingInput
+              label="Full Name"
+              type="text"
+              value={name}
+              onChange={setName}
+              required
+            />
+
+            <FloatingInput
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+            />
+
+            <FloatingInput
+              label="Password"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              required
+            />
+
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="pt-2">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                className="w-full h-12 lg:h-14 rounded-xl text-base lg:text-lg font-semibold mt-4 cursor-pointer"
+              >
+                Sign Up
+              </Button>
+            </motion.div>
+          </form>
+
+          <div className="text-center md:text-left text-xs sm:text-sm lg:text-base text-[var(--color-muted-fg)]">
+            Already have an account?{' '}
+            <Link href="/login" className="text-[var(--color-accent)] hover:underline font-semibold transition-all">
+              Sign in here
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* Bottom copyright visible on mobile/desktop right side */}
+        <div className="absolute bottom-6 left-8 md:left-16 text-[9px] font-mono text-[var(--color-muted-fg)] uppercase">
+          © {new Date().getFullYear()} Xantivation Studio
         </div>
       </div>
     </div>

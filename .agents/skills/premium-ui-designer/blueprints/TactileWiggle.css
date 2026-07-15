@@ -1,8 +1,0 @@
-.item-tactile-wiggle {
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-  transform-origin: var(--wiggle-origin, left center);
-}
-
-.item-tactile-wiggle:hover {
-  transform: scale(var(--wiggle-scale, 1.02)) rotate(var(--wiggle-angle, 1.5deg));
-}

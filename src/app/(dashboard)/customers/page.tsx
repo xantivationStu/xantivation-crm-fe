@@ -1,30 +1,43 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Modal, message } from 'antd';
-import { Plus } from 'lucide-react';
+import { Button, Modal, message, Select, Drawer, Spin } from 'antd';
+import { useCustomers, useContacts, useCreateCustomer, useCreateContact, useUpdateCustomer, useUpdateContact, useDeleteCustomer, useDeleteContact } from '@/hooks/api/useCustomer';
+import { Plus, Search, Download, Check, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import { FloatingInput } from '@/components/FloatingInput';
+import Link from 'next/link';
 
-interface Contact {
-  name: string;
+interface ContactRecord {
+  id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   role: string;
+  jobTitle: string;
+  isPrimary: boolean;
+  companyId: string;
+  companyName: string;
 }
 
-interface CustomerRecord {
+interface AccountRecord {
   id: string;
   code: string;
   name: string;
   email: string;
   phone: string;
   address: string;
-  contacts: Contact[];
+  taxCode: string;
+  website: string;
+  industry: string;
+  clientType: 'BUSINESS' | 'INDIVIDUAL';
+  status: 'ACTIVE' | 'INACTIVE';
+  contactsCount: number;
 }
 
-const mockCustomers: CustomerRecord[] = [
+const mockAccounts: AccountRecord[] = [
   {
     id: '1',
     code: 'ACC-2026-00001',
@@ -32,9 +45,12 @@ const mockCustomers: CustomerRecord[] = [
     email: 'contact@xantivation.dev',
     phone: '+84987654321',
     address: 'Hanoi, Vietnam',
-    contacts: [
-      { name: 'John Doe', email: 'john@xantivation.dev', phone: '+84987654321', role: 'CTO' },
-    ],
+    taxCode: '0102030405',
+    website: 'https://xantivation.dev',
+    industry: 'Technology',
+    clientType: 'BUSINESS',
+    status: 'ACTIVE',
+    contactsCount: 1,
   },
   {
     id: '2',
@@ -43,174 +59,807 @@ const mockCustomers: CustomerRecord[] = [
     email: 'hello@cybercore.io',
     phone: '+15550199',
     address: 'California, US',
-    contacts: [
-      { name: 'Bruce Wayne', email: 'bruce@cybercore.io', phone: '+15550199', role: 'Founder' },
-      { name: 'Alfred Pennyworth', email: 'alfred@cybercore.io', phone: '+15550200', role: 'COO' },
-    ],
+    taxCode: '9988776655',
+    website: 'https://cybercore.io',
+    industry: 'F&B',
+    clientType: 'BUSINESS',
+    status: 'ACTIVE',
+    contactsCount: 2,
+  },
+];
+
+const mockContacts: ContactRecord[] = [
+  {
+    id: '1',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@xantivation.dev',
+    phone: '+84987654321',
+    role: 'CTO',
+    jobTitle: 'Chief Technology Officer',
+    isPrimary: true,
+    companyId: '1',
+    companyName: 'Xantivation Dev',
+  },
+  {
+    id: '2',
+    firstName: 'Bruce',
+    lastName: 'Wayne',
+    email: 'bruce@cybercore.io',
+    phone: '+15550199',
+    role: 'Founder',
+    jobTitle: 'Chief Executive Officer',
+    isPrimary: true,
+    companyId: '2',
+    companyName: 'CyberCore LLC',
+  },
+  {
+    id: '3',
+    firstName: 'Alfred',
+    lastName: 'Pennyworth',
+    email: 'alfred@cybercore.io',
+    phone: '+15550200',
+    role: 'COO',
+    jobTitle: 'Chief Operating Officer',
+    isPrimary: false,
+    companyId: '2',
+    companyName: 'CyberCore LLC',
   },
 ];
 
 export default function Customers() {
-  const [customers, setCustomers] = useState<CustomerRecord[]>(mockCustomers);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<CustomerRecord | null>(null);
+  const [activeTab, setActiveTab] = useState<'accounts' | 'contacts'>('accounts');
 
-  // Form states
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactRole, setContactRole] = useState('');
+  const { data: customersResponse, isLoading: isCustomersLoading } = useCustomers();
+  const { data: contactsResponse, isLoading: isContactsLoading } = useContacts();
 
-  const columns: ColumnProps<CustomerRecord>[] = [
+  const createCustomerMutation = useCreateCustomer();
+  const updateCustomerMutation = useUpdateCustomer();
+  const deleteCustomerMutation = useDeleteCustomer();
+
+  const createContactMutation = useCreateContact();
+  const updateContactMutation = useUpdateContact();
+  const deleteContactMutation = useDeleteContact();
+
+  const rawCustomers = customersResponse?.data || [];
+  const accounts = rawCustomers.map((c: any) => ({
+    id: c.id,
+    code: c.code,
+    name: c.name,
+    email: c.email || '',
+    phone: c.phone || '',
+    address: c.address || '',
+    taxCode: c.taxCode || '',
+    website: c.website || '',
+    industry: c.industry || '',
+    clientType: c.clientType,
+    status: c.status,
+    contactsCount: c.contacts?.length || 0,
+  }));
+
+  const rawContacts = contactsResponse?.data || [];
+  const contacts = rawContacts.map((c: any) => ({
+    id: c.id,
+    firstName: c.firstName || '',
+    lastName: c.lastName || c.name || '',
+    email: c.email || '',
+    phone: c.phone || '',
+    role: c.role || '',
+    jobTitle: c.jobTitle || '',
+    isPrimary: c.isPrimary || false,
+    companyId: c.customer?.id || '',
+    companyName: c.customer?.name || '',
+  }));
+  
+  // Modal states
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<AccountRecord | null>(null);
+  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
+
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterClientType, setFilterClientType] = useState('ALL');
+  const [filterPrimary, setFilterPrimary] = useState('ALL');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Account Form states
+  const [accountName, setAccountName] = useState('');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPhone, setAccountPhone] = useState('');
+  const [accountAddress, setAccountAddress] = useState('');
+  const [taxCodeVal, setTaxCodeVal] = useState('');
+  const [websiteVal, setWebsiteVal] = useState('');
+  const [industryVal, setIndustryVal] = useState('');
+  const [clientTypeVal, setClientTypeVal] = useState<'BUSINESS' | 'INDIVIDUAL'>('BUSINESS');
+  const [accountStatus, setAccountStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
+
+  // Contact Form states
+  const [contactFirstName, setContactFirstName] = useState('');
+  const [contactLastName, setContactLastName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactRoleVal, setContactRoleVal] = useState('');
+  const [contactJobTitle, setContactJobTitle] = useState('');
+  const [contactIsPrimary, setContactIsPrimary] = useState(false);
+  const [contactCompanyId, setContactCompanyId] = useState('1');
+
+  // Validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Bulk selection states
+  const [selectedAccountKeys, setSelectedAccountKeys] = useState<React.Key[]>([]);
+  const [selectedContactKeys, setSelectedContactKeys] = useState<React.Key[]>([]);
+
+  // Columns for Accounts Table
+  const accountColumns: ColumnProps<AccountRecord>[] = [
     {
-      title: 'Code',
+      title: 'Account Code',
       dataIndex: 'code',
       key: 'code',
-      render: (val) => <span className="font-mono text-xs font-semibold bg-[var(--color-surface)] px-2 py-1 rounded-lg border border-[var(--color-border)]">{val}</span>,
+      render: (val, rec) => (
+        <Link href={`/customers/accounts/${rec.id}`} className="font-mono text-xs font-semibold bg-[var(--color-surface)] px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:text-[var(--color-accent)] transition-colors">
+          {val}
+        </Link>
+      ),
     },
-    { title: 'Company Name', dataIndex: 'name', key: 'name' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    {
+      title: 'Company Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (val, rec) => (
+        <Link href={`/customers/accounts/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline">
+          {val}
+        </Link>
+      ),
+    },
+    { title: 'Tax Code', dataIndex: 'taxCode', key: 'taxCode', render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val || 'N/A'}</span> },
     { title: 'Phone', dataIndex: 'phone', key: 'phone' },
+    { title: 'Email', dataIndex: 'email', key: 'email' },
+    {
+      title: 'Client Type',
+      dataIndex: 'clientType',
+      key: 'clientType',
+      render: (val) => <span className="text-xs font-semibold">{val}</span>,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+          status === 'ACTIVE' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
+        }`}>{status}</span>
+      ),
+    },
     {
       title: 'Contacts',
-      dataIndex: 'contacts',
-      key: 'contacts',
-      render: (contacts: Contact[]) => (
-        <span className="text-xs text-[var(--color-muted-fg)] font-medium">
-          {contacts.length} {contacts.length === 1 ? 'contact' : 'contacts'}
-        </span>
-      ),
+      dataIndex: 'contactsCount',
+      key: 'contactsCount',
+      render: (count) => <span className="text-xs text-[var(--color-muted-fg)] font-mono font-semibold">{count}</span>,
     },
   ];
 
-  const handleOpenCreate = () => {
-    setEditingCustomer(null);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setAddress('');
-    setContactName('');
-    setContactRole('');
-    setModalOpen(true);
-  };
+  // Columns for Contacts Table
+  const contactColumns: ColumnProps<ContactRecord>[] = [
+    {
+      title: 'Name',
+      dataIndex: 'lastName',
+      key: 'name',
+      render: (_, rec) => (
+        <Link href={`/customers/contacts/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline">
+          {rec.firstName} {rec.lastName}
+        </Link>
+      ),
+    },
+    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
+    { title: 'Job Title', dataIndex: 'jobTitle', key: 'jobTitle', render: (val) => <span className="text-xs">{val || 'N/A'}</span> },
+    {
+      title: 'Account',
+      dataIndex: 'companyName',
+      key: 'companyName',
+      render: (val, rec) => (
+        <Link href={`/customers/accounts/${rec.companyId}`} className="text-xs font-semibold text-[var(--color-accent)] hover:underline">
+          {val}
+        </Link>
+      ),
+    },
+    {
+      title: 'Primary',
+      dataIndex: 'isPrimary',
+      key: 'isPrimary',
+      render: (isPri) => isPri ? (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+          <Check size={10} /> Primary
+        </span>
+      ) : <span className="text-xs text-[var(--color-muted-fg)]">-</span>,
+    },
+  ];
 
-  const handleOpenEdit = (rec: CustomerRecord) => {
-    setEditingCustomer(rec);
-    setName(rec.name);
-    setEmail(rec.email);
-    setPhone(rec.phone);
-    setAddress(rec.address);
-    if (rec.contacts && rec.contacts.length > 0) {
-      setContactName(rec.contacts[0].name);
-      setContactRole(rec.contacts[0].role);
-    } else {
-      setContactName('');
-      setContactRole('');
+  // Save Account
+  const handleSaveAccount = () => {
+    const newErrors: Record<string, string> = {};
+    if (!accountName.trim()) newErrors.accountName = 'Account name is required';
+    if (!accountEmail.trim() || !accountEmail.includes('@')) newErrors.accountEmail = 'Please enter a valid email address';
+    if (!accountPhone.trim()) newErrors.accountPhone = 'Please enter a valid phone number';
+    if (clientTypeVal === 'BUSINESS' && !taxCodeVal.trim()) {
+      newErrors.taxCode = 'Tax code is required for B2B accounts';
+    } else if (taxCodeVal && !/^[0-9]{10}(-[0-9]{3})?$/.test(taxCodeVal)) {
+      newErrors.taxCode = 'Invalid tax code format (10 or 13 digits)';
     }
-    setModalOpen(true);
-  };
 
-  const handleSave = () => {
-    const contactsList: Contact[] = [];
-    if (contactName.trim() !== '') {
-      contactsList.push({
-        name: contactName,
-        email: email,
-        phone: phone,
-        role: contactRole || 'Representative',
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const payload = {
+      name: accountName,
+      email: accountEmail,
+      phone: accountPhone,
+      address: accountAddress,
+      taxCode: taxCodeVal,
+      website: websiteVal,
+      industry: industryVal,
+      clientType: clientTypeVal as any,
+      status: accountStatus as any,
+    };
+
+    if (editingAccount) {
+      updateCustomerMutation.mutate(
+        { id: editingAccount.id, dto: payload },
+        {
+          onSuccess: () => {
+            setAccountModalOpen(false);
+          },
+        }
+      );
+    } else {
+      createCustomerMutation.mutate(payload, {
+        onSuccess: () => {
+          setAccountModalOpen(false);
+        },
       });
     }
+  };
 
-    if (editingCustomer) {
-      setCustomers(
-        customers.map((c) =>
-          c.id === editingCustomer.id
-            ? { ...c, name, email, phone, address, contacts: contactsList }
-            : c,
-        ),
-      );
-      message.success('Customer updated successfully');
-    } else {
-      const year = new Date().getFullYear();
-      const code = `ACC-${year}-${String(customers.length + 1).padStart(5, '0')}`;
-      const newCustomer: CustomerRecord = {
-        id: String(customers.length + 1),
-        code,
-        name,
-        email,
-        phone,
-        address,
-        contacts: contactsList,
-      };
-      setCustomers([...customers, newCustomer]);
-      message.success('Customer created successfully');
+  // Save Contact
+  const handleSaveContact = () => {
+    const newErrors: Record<string, string> = {};
+    if (!contactLastName.trim()) newErrors.contactLastName = 'Last name is required';
+    if (!contactEmail.trim() || !contactEmail.includes('@')) newErrors.contactEmail = 'Please enter a valid email address';
+    if (!contactPhone.trim()) newErrors.contactPhone = 'Please enter a valid phone number';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
-    setModalOpen(false);
+
+    const payload = {
+      firstName: contactFirstName,
+      lastName: contactLastName,
+      email: contactEmail,
+      phone: contactPhone,
+      role: contactRoleVal,
+      jobTitle: contactJobTitle,
+      isPrimary: contactIsPrimary,
+      accountId: contactCompanyId,
+    };
+
+    if (editingContact) {
+      updateContactMutation.mutate(
+        { id: editingContact.id, dto: payload },
+        {
+          onSuccess: () => {
+            setContactModalOpen(false);
+          },
+        }
+      );
+    } else {
+      createContactMutation.mutate(payload, {
+        onSuccess: () => {
+          setContactModalOpen(false);
+        },
+      });
+    }
   };
 
-  const handleDelete = (rec: CustomerRecord) => {
-    setCustomers(customers.filter((c) => c.id !== rec.id));
-    message.success('Customer deleted successfully');
+  // Filter Accounts & Contacts
+  const filteredAccounts = accounts.filter(a => {
+    const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          a.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          a.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'ALL' || a.status === filterStatus;
+    const matchesType = filterClientType === 'ALL' || a.clientType === filterClientType;
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const filteredContacts = contacts.filter(c => {
+    const matchesSearch = c.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          c.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          c.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPrimary = filterPrimary === 'ALL' || (filterPrimary === 'PRIMARY' && c.isPrimary) || (filterPrimary === 'REGULAR' && !c.isPrimary);
+    return matchesSearch && matchesPrimary;
+  });
+
+  const handleOpenAccountCreate = () => {
+    setEditingAccount(null);
+    setAccountName('');
+    setAccountEmail('');
+    setAccountPhone('');
+    setAccountAddress('');
+    setTaxCodeVal('');
+    setWebsiteVal('');
+    setIndustryVal('');
+    setClientTypeVal('BUSINESS');
+    setAccountStatus('ACTIVE');
+    setErrors({});
+    setAccountModalOpen(true);
   };
+
+  const handleOpenAccountEdit = (rec: AccountRecord) => {
+    setEditingAccount(rec);
+    setAccountName(rec.name);
+    setAccountEmail(rec.email);
+    setAccountPhone(rec.phone);
+    setAccountAddress(rec.address);
+    setTaxCodeVal(rec.taxCode);
+    setWebsiteVal(rec.website);
+    setIndustryVal(rec.industry);
+    setClientTypeVal(rec.clientType);
+    setAccountStatus(rec.status);
+    setErrors({});
+    setAccountModalOpen(true);
+  };
+
+  const handleOpenContactCreate = () => {
+    setEditingContact(null);
+    setContactFirstName('');
+    setContactLastName('');
+    setContactEmail('');
+    setContactPhone('');
+    setContactRoleVal('');
+    setContactJobTitle('');
+    setContactIsPrimary(false);
+    setContactCompanyId(accounts[0]?.id || '');
+    setErrors({});
+    setContactModalOpen(true);
+  };
+
+  const handleOpenContactEdit = (rec: ContactRecord) => {
+    setEditingContact(rec);
+    setContactFirstName(rec.firstName);
+    setContactLastName(rec.lastName);
+    setContactEmail(rec.email);
+    setContactPhone(rec.phone);
+    setContactRoleVal(rec.role);
+    setContactJobTitle(rec.jobTitle);
+    setContactIsPrimary(rec.isPrimary);
+    setContactCompanyId(rec.companyId);
+    setErrors({});
+    setContactModalOpen(true);
+  };
+
+  const activeFiltersCount =
+    activeTab === 'accounts'
+      ? (filterStatus !== 'ALL' ? 1 : 0) + (filterClientType !== 'ALL' ? 1 : 0)
+      : (filterPrimary !== 'ALL' ? 1 : 0);
 
   return (
     <div className="space-y-8">
       {/* Title & Actions */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Customers</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">View accounts and key customer contacts.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Customers</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Manage company accounts and key customer contacts.</p>
         </div>
-        <Button
-          type="primary"
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>New Customer</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search bar */}
+          <div className="flex items-center gap-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-xl px-3 py-2 w-full md:w-64">
+            <Search size={15} className="text-[var(--color-muted-fg)]" />
+            <input
+              type="text"
+              placeholder={`Search ${activeTab === 'accounts' ? 'accounts' : 'contacts'}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
+            />
+          </div>
+
+          {/* Filters Button */}
+          <button
+            onClick={() => setFilterDrawerOpen(true)}
+            className={`flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+              activeFiltersCount > 0
+                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 text-[var(--color-accent)]'
+                : 'border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
+            }`}
+          >
+            <SlidersHorizontal size={14} />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+
+          {/* Export Excel Button */}
+          <button
+            onClick={() => message.success('Exporting accounts to Excel sheet...')}
+            className="flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
+          >
+            <Download size={14} />
+            <span>Export Excel</span>
+          </button>
+
+          {/* New Account / Contact Button */}
+          <Button
+            type="primary"
+            onClick={activeTab === 'accounts' ? handleOpenAccountCreate : handleOpenContactCreate}
+            className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>{activeTab === 'accounts' ? 'New Account' : 'New Contact'}</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Main Table */}
-      <SharedTable
-        columns={columns}
-        dataSource={customers}
-        onEdit={handleOpenEdit}
-        onDelete={handleDelete}
-      />
+      {/* Tabs Switcher */}
+      <div className="flex gap-6 border-b border-[var(--color-border)]">
+        <button
+          onClick={() => { setActiveTab('accounts'); setSearchQuery(''); }}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'accounts'
+              ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+              : 'border-transparent text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
+          }`}
+        >
+          Accounts
+        </button>
+        <button
+          onClick={() => { setActiveTab('contacts'); setSearchQuery(''); }}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'contacts'
+              ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+              : 'border-transparent text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
+          }`}
+        >
+          Contacts
+        </button>
+      </div>
 
+      {/* Advanced Filter Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center justify-between w-full pr-4">
+            <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={() => {
+                  if (activeTab === 'accounts') {
+                    setFilterStatus('ALL');
+                    setFilterClientType('ALL');
+                  } else {
+                    setFilterPrimary('ALL');
+                  }
+                }}
+                className="text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        }
+        placement="right"
+        width={360}
+        onClose={() => setFilterDrawerOpen(false)}
+        open={filterDrawerOpen}
+        styles={{
+          body: {
+            background: 'var(--color-bg)',
+            color: 'var(--color-fg)',
+          },
+          header: {
+            background: 'var(--color-bg)',
+            borderBottom: '1px solid var(--color-border)',
+          }
+        }}
+      >
+        <div className="space-y-6">
+          {activeTab === 'accounts' ? (
+            <>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                  Account Status
+                </label>
+                <Select
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  className="w-full h-11"
+                  options={[
+                    { value: 'ALL', label: 'All Statuses' },
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'INACTIVE', label: 'Inactive' },
+                  ]}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                  Client Type
+                </label>
+                <Select
+                  value={filterClientType}
+                  onChange={setFilterClientType}
+                  className="w-full h-11"
+                  options={[
+                    { value: 'ALL', label: 'All Types' },
+                    { value: 'BUSINESS', label: 'Business' },
+                    { value: 'INDIVIDUAL', label: 'Individual' },
+                  ]}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Contact Role
+              </label>
+              <Select
+                value={filterPrimary}
+                onChange={setFilterPrimary}
+                className="w-full h-11"
+                options={[
+                  { value: 'ALL', label: 'All Roles' },
+                  { value: 'PRIMARY', label: 'Primary Only' },
+                  { value: 'REGULAR', label: 'Regular Only' },
+                ]}
+              />
+            </div>
+          )}
+        </div>
+      </Drawer>
+
+      {/* Bulk selection actions */}
+      {activeTab === 'accounts' && selectedAccountKeys.length > 0 && (
+        <div className="bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 p-3 rounded-xl flex justify-between items-center text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <span className="font-semibold text-[var(--color-fg)]">Selected {selectedAccountKeys.length} accounts</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                message.success(`Deactivated ${selectedAccountKeys.length} selected accounts.`);
+                setSelectedAccountKeys([]);
+              }}
+              className="px-3 py-1 bg-white hover:bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg font-semibold cursor-pointer"
+            >
+              Deactivate
+            </button>
+            <button
+              onClick={() => {
+                message.success(`Exporting ${selectedAccountKeys.length} accounts to Excel file...`);
+                setSelectedAccountKeys([]);
+              }}
+              className="px-3 py-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-lg font-semibold cursor-pointer"
+            >
+              Export Selected
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'contacts' && selectedContactKeys.length > 0 && (
+        <div className="bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 p-3 rounded-xl flex justify-between items-center text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <span className="font-semibold text-[var(--color-fg)]">Selected {selectedContactKeys.length} contacts</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                message.success(`Sent bulk sync invitation to ${selectedContactKeys.length} contacts.`);
+                setSelectedContactKeys([]);
+              }}
+              className="px-3 py-1 bg-white hover:bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg font-semibold cursor-pointer"
+            >
+              Send Sync Invite
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unified Table Container Canvas */}
+      <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm relative">
+        <Spin spinning={activeTab === 'accounts' ? isCustomersLoading : isContactsLoading}>
+          {activeTab === 'accounts' ? (
+            <SharedTable
+              columns={accountColumns}
+              dataSource={filteredAccounts}
+              onEdit={handleOpenAccountEdit}
+              onDelete={(rec) => {
+                Modal.confirm({
+                  title: 'Xác nhận xóa Khách hàng',
+                  content: `Bạn có chắc chắn muốn xóa khách hàng "${rec.name}"? Hành động này không thể hoàn tác.`,
+                  okText: 'Xóa',
+                  cancelText: 'Hủy',
+                  okButtonProps: { danger: true },
+                  onOk: () => {
+                    deleteCustomerMutation.mutate(rec.id);
+                  },
+                });
+              }}
+              rowSelection={{
+                selectedRowKeys: selectedAccountKeys,
+                onChange: (keys) => setSelectedAccountKeys(keys),
+              }}
+            />
+          ) : (
+            <SharedTable
+              columns={contactColumns}
+              dataSource={filteredContacts}
+              onEdit={handleOpenContactEdit}
+              onDelete={(rec) => {
+                Modal.confirm({
+                  title: 'Xác nhận xóa Liên hệ',
+                  content: `Bạn có chắc chắn muốn xóa liên hệ "${rec.firstName} ${rec.lastName}"?`,
+                  okText: 'Xóa',
+                  cancelText: 'Hủy',
+                  okButtonProps: { danger: true },
+                  onOk: () => {
+                    deleteContactMutation.mutate(rec.id);
+                  },
+                });
+              }}
+              rowSelection={{
+                selectedRowKeys: selectedContactKeys,
+                onChange: (keys) => setSelectedContactKeys(keys),
+              }}
+            />
+          )}
+        </Spin>
+      </div>
+
+      {/* Create / Edit Account Modal */}
       <Modal
-        title={editingCustomer ? 'Edit Customer' : 'Create Customer'}
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        title={editingAccount ? 'Edit Account' : 'Create Account'}
+        open={accountModalOpen}
+        onCancel={() => setAccountModalOpen(false)}
         footer={null}
         width={600}
       >
         <div className="space-y-6 pt-4">
-          <FloatingInput label="Company Name" value={name} onChange={setName} required />
-          <FloatingInput label="Email Address" type="email" value={email} onChange={setEmail} required />
-          <FloatingInput label="Phone Number" value={phone} onChange={setPhone} />
-          <FloatingInput label="Office Address" value={address} onChange={setAddress} />
-
-          {/* Contact Representative segment */}
-          <div className="pt-4 border-t border-[var(--color-border)]/50">
-            <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)] mb-4">
-              Primary Contact Person
-            </h4>
-            <FloatingInput label="Contact Name" value={contactName} onChange={setContactName} />
-            <FloatingInput label="Job Title / Role" value={contactRole} onChange={setContactRole} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Client Type
+              </label>
+              <Select
+                value={clientTypeVal}
+                onChange={setClientTypeVal}
+                options={[
+                  { value: 'BUSINESS', label: 'Business (B2B)' },
+                  { value: 'INDIVIDUAL', label: 'Individual (B2C)' },
+                ]}
+                className="w-full h-11"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Account Status
+              </label>
+              <Select
+                value={accountStatus}
+                onChange={setAccountStatus}
+                options={[
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'INACTIVE', label: 'Inactive' },
+                ]}
+                className="w-full h-11"
+              />
+            </div>
           </div>
 
-          {/* Submit Actions */}
+          <FloatingInput label="Company Account Name" value={accountName} onChange={setAccountName} required />
+          {errors.accountName && <p className="text-red-500 text-[10px] mt-1">{errors.accountName}</p>}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <FloatingInput label="Email Address" type="email" value={accountEmail} onChange={setAccountEmail} required />
+              {errors.accountEmail && <p className="text-red-500 text-[10px] mt-1">{errors.accountEmail}</p>}
+            </div>
+            <div>
+              <FloatingInput label="Phone Number" value={accountPhone} onChange={setAccountPhone} required />
+              {errors.accountPhone && <p className="text-red-500 text-[10px] mt-1">{errors.accountPhone}</p>}
+            </div>
+          </div>
+
+          {clientTypeVal === 'BUSINESS' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FloatingInput label="Tax Code (MST)" value={taxCodeVal} onChange={setTaxCodeVal} required />
+                {errors.taxCode && <p className="text-red-500 text-[10px] mt-1">{errors.taxCode}</p>}
+              </div>
+              <div>
+                <FloatingInput label="Industry Sector" value={industryVal} onChange={setIndustryVal} />
+              </div>
+            </div>
+          )}
+
+          <FloatingInput label="Website Address (https://...)" value={websiteVal} onChange={setWebsiteVal} />
+          <FloatingInput label="Office Location Address" value={accountAddress} onChange={setAccountAddress} />
+
           <div className="flex justify-end gap-3 pt-4">
-            <Button onClick={() => setModalOpen(false)} className="rounded-xl cursor-pointer">
-              Cancel
-            </Button>
-            <Button type="primary" onClick={handleSave} className="rounded-xl cursor-pointer">
-              Save changes
-            </Button>
+            <Button onClick={() => setAccountModalOpen(false)} className="rounded-xl">Cancel</Button>
+            <Button type="primary" onClick={handleSaveAccount} className="rounded-xl">Save changes</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Create / Edit Contact Modal */}
+      <Modal
+        title={editingContact ? 'Edit Contact' : 'Create Contact'}
+        open={contactModalOpen}
+        onCancel={() => setContactModalOpen(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-6 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <FloatingInput label="First Name" value={contactFirstName} onChange={setContactFirstName} />
+            </div>
+            <div>
+              <FloatingInput label="Last Name" value={contactLastName} onChange={setContactLastName} required />
+              {errors.contactLastName && <p className="text-red-500 text-[10px] mt-1">{errors.contactLastName}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <FloatingInput label="Email Address" type="email" value={contactEmail} onChange={setContactEmail} required />
+              {errors.contactEmail && <p className="text-red-500 text-[10px] mt-1">{errors.contactEmail}</p>}
+            </div>
+            <div>
+              <FloatingInput label="Phone Number" value={contactPhone} onChange={setContactPhone} required />
+              {errors.contactPhone && <p className="text-red-500 text-[10px] mt-1">{errors.contactPhone}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <FloatingInput label="Job Title" value={contactJobTitle} onChange={setContactJobTitle} />
+            </div>
+            <div>
+              <FloatingInput label="Internal Role/Notes" value={contactRoleVal} onChange={setContactRoleVal} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Associated Account
+              </label>
+              <Select
+                value={contactCompanyId}
+                onChange={setContactCompanyId}
+                options={accounts.map(a => ({ value: a.id, label: a.name }))}
+                className="w-full h-11"
+              />
+            </div>
+            
+            <label className="flex items-center gap-3 cursor-pointer group mt-6 pl-4">
+              <input
+                type="checkbox"
+                checked={contactIsPrimary}
+                onChange={(e) => setContactIsPrimary(e.target.checked)}
+                className="w-4 h-4 rounded accent-[var(--color-accent)] cursor-pointer"
+              />
+              <span className="text-sm text-[var(--color-fg)] select-none">Set as Primary Contact</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button onClick={() => setContactModalOpen(false)} className="rounded-xl">Cancel</Button>
+            <Button type="primary" onClick={handleSaveContact} className="rounded-xl">Save changes</Button>
           </div>
         </div>
       </Modal>

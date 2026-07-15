@@ -1,0 +1,73 @@
+{
+  "id": "xantivation-crm-overhaul",
+  "name": "Xantivation CRM Premium Overhaul",
+  "description": "Premium UI/UX configuration for Xantivation CRM, featuring a Sleek Editorial Minimalist archetype with Light/Dark mode alignment.",
+  "project_type": "crm-dashboard-portal",
+  "target_audience": "creatives, sales, accountants, and system admins",
+  "sections": [
+    {
+      "id": "login-register",
+      "variant": "spotlight-glassmorphic",
+      "config": {
+        "spotlight": true,
+        "noise_overlay": true,
+        "floating_labels": true,
+        "spring_buttons": true
+      }
+    },
+    {
+      "id": "navigation-shell",
+      "variant": "floating-glassmorphic",
+      "config": {
+        "floating_sidebar": true,
+        "backdrop_blur": "md",
+        "magnetic_buttons": true,
+        "active_link_glow": true
+      }
+    },
+    {
+      "id": "dashboard-bento",
+      "variant": "editorial-bento-grid",
+      "config": {
+        "stagger_entrance": true,
+        "counter_animation": true,
+        "chart_gradients": true,
+        "shimmer_skeleton": true
+      }
+    },
+    {
+      "id": "shared-table-list",
+      "variant": "high-contrast-sleek",
+      "config": {
+        "row_hover_highlight": true,
+        "slide_over_detail": true,
+        "micro_interactions": true
+      }
+    }
+  ],
+  "color_scheme": {
+    "preset": "editorial-indigo-oklch",
+    "primary": "oklch(0.55 0.18 264)",
+    "light": {
+      "bg": "oklch(0.985 0.005 264)",
+      "bg_tint": "oklch(0.965 0.006 264)",
+      "surface": "oklch(0.935 0.008 264)",
+      "border": "oklch(0.880 0.005 264 / 0.3)",
+      "fg": "oklch(0.180 0.010 264)",
+      "muted_fg": "oklch(0.500 0.008 264)"
+    },
+    "dark": {
+      "bg": "oklch(0.120 0.006 264)",
+      "bg_tint": "oklch(0.145 0.006 264)",
+      "surface": "oklch(0.180 0.008 264)",
+      "border": "oklch(0.250 0.008 264 / 0.4)",
+      "fg": "oklch(0.950 0.004 264)",
+      "muted_fg": "oklch(0.680 0.006 264)"
+    }
+  },
+  "animation_strategy": {
+    "library": "framer-motion",
+    "global_principle": "Clean, snappy transitions, staggered fade-in reveals for Bento grids, spring hover transformations on interactive elements.",
+    "performance_budget": "LCP < 2.5s — above fold content displays static first, hydrating interactive elements below"
+  }
+}
