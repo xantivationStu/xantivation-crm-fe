@@ -48,6 +48,7 @@ const sidebarGroups = [
       { name: 'Conversations', path: '/conversations', icon: MessageSquare },
       { name: 'AI Hub', path: '/ai-hub', icon: BrainCircuit },
       { name: 'Reports', path: '/reports', icon: BarChart3 },
+      { name: 'Settings', path: '/settings', icon: Settings },
     ],
   },
 ];
