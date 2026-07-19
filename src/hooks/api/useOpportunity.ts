@@ -39,32 +39,46 @@ export function useCreateOpportunity() {
   });
 }
 
-export function useUpdateOpportunity(id: string) {
+export function useUpdateOpportunity() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: UpdateOpportunityDto) => {
-      const response = await api.patch(`/opportunities/${id}`, dto);
+    mutationFn: async (payload: { id: string; dto: UpdateOpportunityDto }) => {
+      const response = await api.patch(`/opportunities/${payload.id}`, payload.dto);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      queryClient.invalidateQueries({ queryKey: ['opportunity', id] });
+      queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] });
       message.success('Cập nhật Cơ hội thành công!');
     },
   });
 }
 
-export function useCloseLostOpportunity(id: string) {
+export function useCloseLostOpportunity() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: { lostReason: string }) => {
-      const response = await api.patch(`/opportunities/${id}/close-lost`, dto);
+    mutationFn: async (payload: { id: string; lostReason: string }) => {
+      const response = await api.patch(`/opportunities/${payload.id}/close-lost`, { lostReason: payload.lostReason });
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] });
+      message.success('Đã cập nhật trạng thái Thất bại!');
+    },
+  });
+}
+
+export function useDeleteOpportunity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(`/opportunities/${id}`);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      queryClient.invalidateQueries({ queryKey: ['opportunity', id] });
-      message.success('Đã cập nhật trạng thái Thất bại!');
+      message.success('Xóa cơ hội bán hàng thành công!');
     },
   });
 }

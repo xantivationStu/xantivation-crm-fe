@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, use } from 'react';
-import { Button, Steps, Modal, DatePicker, Input, message } from 'antd';
+import { Button, Steps, Modal, Input, message, Spin } from 'antd';
 import { ArrowLeft, User, Calendar, CreditCard, ArrowRight, ShieldCheck, FileText, CheckCircle2, AlertTriangle, Landmark, Ban, Printer, FileDown } from 'lucide-react';
 import Link from 'next/link';
+import { usePayment, useConfirmPayment } from '@/hooks/api/useContract';
 
 interface PaymentRecord {
   id: string;
@@ -25,74 +26,36 @@ interface PaymentRecord {
   createdAt: string;
 }
 
-const mockPayments: PaymentRecord[] = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2026-00001',
-    amount: 104500000,
-    dueDate: '2026-07-05',
-    paidAt: '2026-07-05 15:00',
-    status: 'PAID',
-    milestoneName: 'Deposit Payment',
-    milestonePercentage: 50,
-    notes: 'Paid fully via bank transfer transaction reference #TR-998822.',
-    contractId: '1',
-    contractCode: 'HĐ-2026-00001',
-    contractTitle: 'Service Agreement - Xantivation Dev - CRM Integration Deal',
-    companyName: 'Xantivation Dev',
-    contactName: 'Phan Manh',
-    contactEmail: 'manh@xantivation.com',
-    contactPhone: '0988777666',
-    createdAt: '2026-07-05',
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2026-00002',
-    amount: 104500000,
-    dueDate: '2026-08-05',
-    status: 'PENDING',
-    milestoneName: 'Final Delivery',
-    milestonePercentage: 50,
-    contractId: '1',
-    contractCode: 'HĐ-2026-00001',
-    contractTitle: 'Service Agreement - Xantivation Dev - CRM Integration Deal',
-    companyName: 'Xantivation Dev',
-    contactName: 'Phan Manh',
-    contactEmail: 'manh@xantivation.com',
-    contactPhone: '0988777666',
-    createdAt: '2026-07-05',
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2026-00003',
-    amount: 82500000,
-    dueDate: '2026-08-15',
-    status: 'OVERDUE',
-    milestoneName: 'Advance payment',
-    milestonePercentage: 100,
-    contractId: '2',
-    contractCode: 'HĐ-2026-00002',
-    contractTitle: 'Service Agreement - CyberCore LLC - Brand Strategy Deal',
-    companyName: 'CyberCore LLC',
-    contactName: 'David Lee',
-    contactEmail: 'david@cybercore.io',
-    contactPhone: '0911222333',
-    createdAt: '2026-07-06',
-  },
-];
-
 export default function PaymentDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [payment, setPayment] = useState<PaymentRecord | undefined>(mockPayments.find((p) => p.id === id) || mockPayments[1]);
   const [activeTab, setActiveTab] = useState('overview');
 
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [paymentNotes, setPaymentNotes] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().substring(0, 10));
+  // API Queries & Mutations
+  const { data: paymentRes, isLoading } = usePayment(id);
+  const confirmPaymentMutation = useConfirmPayment();
 
-  if (!payment) {
+  const p = paymentRes?.data as any;
+
+  if (isLoading) {
+    return (
+      <div className="py-32 flex flex-col justify-center items-center gap-3">
+        <Spin size="large" />
+        <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading invoice details...</span>
+      </div>
+    );
+  }
+
+  if (!p) {
     return <div className="p-8 text-center text-red-500 font-bold">Payment record not found</div>;
   }
+
+  const handleConfirmPayment = async () => {
+    try {
+      await confirmPaymentMutation.mutateAsync(p.id);
+    } catch (err) {
+      // Handled
+    }
+  };
 
   // Stepper helper
   const getStepIndex = (st: string) => {
@@ -105,38 +68,16 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
     }
   };
 
-  // Actions
-  const handleConfirmPayment = () => {
-    setPayment({
-      ...payment,
-      status: 'PAID',
-      paidAt: `${paymentDate} 12:00`,
-      notes: paymentNotes || 'Marked paid by Finance.',
-    });
-    setConfirmModalOpen(false);
-    message.success('Invoice payment recorded successfully.');
-  };
-
-  const handleMarkOverdue = () => {
-    setPayment({
-      ...payment,
-      status: 'OVERDUE',
-    });
-    message.warning('Invoice status marked as OVERDUE.');
-  };
-
-  const handleCancelPayment = () => {
-    setPayment({
-      ...payment,
-      status: 'CANCELLED',
-    });
-    message.error('Invoice cancelled.');
-  };
-
   const handlePrint = () => {
     message.info('Generating print queue for invoice...');
     window.print();
   };
+
+  const invoiceNumber = p.invoiceCode || `INV-${p.id.substring(0, 8).toUpperCase()}`;
+  const amount = Number(p.amount) || 0;
+  const dueDate = p.dueDate ? p.dueDate.substring(0, 10) : '';
+  const paidAt = p.paidDate ? p.paidDate.substring(0, 16).replace('T', ' ') : undefined;
+  const createdAt = p.invoiceDate ? p.invoiceDate.substring(0, 10) : '';
 
   return (
     <div className="space-y-8">
@@ -146,21 +87,21 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
             <Link href="/payments" className="hover:underline">Payments</Link>
             <span>&gt;</span>
-            <span className="text-[var(--color-fg)] font-semibold">{payment.invoiceNumber}</span>
+            <span className="text-[var(--color-fg)] font-semibold">{invoiceNumber}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
-            Invoice: {payment.invoiceNumber}
+            Hóa đơn: {invoiceNumber}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Milestone billing: {payment.milestoneName} ({payment.milestonePercentage}%) • Client: {payment.companyName}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">Milestone billing: {p.milestoneName} ({p.milestonePercentage}%) • Client: {p.notes || 'Studio Client'}</p>
         </div>
 
         <div>
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            payment.status === 'PAID' ? 'bg-green-500/10 text-green-500' :
-            payment.status === 'PENDING' ? 'bg-blue-500/10 text-blue-500' :
-            payment.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500' : 'bg-gray-500/10 text-gray-500'
+            p.status === 'PAID' ? 'bg-green-500/10 text-green-500' :
+            p.status === 'PENDING' ? 'bg-blue-500/10 text-blue-500' :
+            p.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500' : 'bg-gray-500/10 text-gray-500'
           }`}>
-            Status: {payment.status}
+            Trạng thái: {p.status}
           </span>
         </div>
       </div>
@@ -168,12 +109,12 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
       {/* Stepper progress */}
       <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6">
         <Steps
-          current={getStepIndex(payment.status)}
+          current={getStepIndex(p.status)}
           items={[
-            { title: 'Awaiting Payment', description: `Due by ${payment.dueDate}` },
-            { title: payment.status === 'CANCELLED' ? 'Cancelled / Void' : 'Cleared Payment', description: payment.status === 'CANCELLED' ? 'Invoice Cancelled' : (payment.paidAt ? `Paid on ${payment.paidAt}` : 'Cleared') },
+            { title: 'Awaiting Payment', description: `Due by ${dueDate}` },
+            { title: p.status === 'CANCELLED' ? 'Cancelled / Void' : 'Cleared Payment', description: p.status === 'CANCELLED' ? 'Invoice Cancelled' : (paidAt ? `Paid on ${paidAt}` : 'Cleared') },
           ]}
-          status={payment.status === 'OVERDUE' ? 'error' : 'process'}
+          status={p.status === 'OVERDUE' ? 'error' : 'process'}
         />
       </div>
 
@@ -184,9 +125,8 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-3 space-y-6">
           <div className="flex gap-6 border-b border-[var(--color-border)] pb-px">
             {[
-              { id: 'overview', name: 'Overview Details' },
+              { id: 'overview', name: 'Thông tin hóa đơn' },
               { id: 'preview', name: 'Invoice Statement' },
-              { id: 'confirmation', name: 'Transaction Notes' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -209,271 +149,157 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
                 <div className="grid grid-cols-2 gap-6 text-xs border-b border-[var(--color-border)]/50 pb-6">
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Invoice details
+                      Chi tiết thanh toán
                     </h4>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Amount Due</span>
-                      <span className="font-semibold font-mono text-[var(--color-accent)]">{payment.amount.toLocaleString('vi-VN')} VND</span>
+                      <span className="text-[var(--color-muted-fg)]">Số tiền cần thu</span>
+                      <span className="font-semibold font-mono text-[var(--color-accent)]">{amount.toLocaleString('vi-VN')} VND</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Due Date</span>
-                      <span className="font-semibold font-mono">{payment.dueDate}</span>
+                      <span className="text-[var(--color-muted-fg)]">Hạn thanh toán</span>
+                      <span className="font-semibold font-mono">{dueDate}</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Billing milestone</span>
-                      <span className="font-semibold">{payment.milestoneName} ({payment.milestonePercentage}%)</span>
+                      <span className="text-[var(--color-muted-fg)]">Đợt thanh toán</span>
+                      <span className="font-semibold">{p.milestoneName} ({p.milestonePercentage}%)</span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Client details
+                      Thông tin đính kèm
                     </h4>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Client Company</span>
-                      <span className="font-semibold">{payment.companyName}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Billing Contact</span>
-                      <span className="font-semibold">{payment.contactName}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Contact Email</span>
-                      <span className="font-semibold font-mono">{payment.contactEmail}</span>
+                      <span className="text-[var(--color-muted-fg)]">Khách hàng ghi chú</span>
+                      <span className="font-semibold">{p.notes || '-'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Contract context */}
                 <div className="space-y-3 text-xs">
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Linked Agreement</h4>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Hợp đồng điện tử liên quan</h4>
                   <div className="p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-indigo-500/10 text-indigo-500 rounded-xl">
-                        <Landmark size={20} />
-                      </div>
+                      <FileText className="text-[var(--color-accent)]" size={24} />
                       <div>
-                        <p className="font-semibold text-xs text-[var(--color-fg)]">{payment.contractCode} — {payment.contractTitle}</p>
-                        <p className="text-[10px] text-[var(--color-muted-fg)] font-mono">Status: ACTIVE</p>
+                        <p className="font-semibold text-xs text-[var(--color-fg)]">Mã Hợp đồng liên quan</p>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">Generated dynamically from signed deal.</p>
                       </div>
                     </div>
-                    <Link
-                      href={`/contracts/${payment.contractId}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all font-mono"
-                    >
-                      <span>Contract Detail</span>
-                      <ArrowRight size={12} />
-                    </Link>
+                    {p.contract?.id && (
+                      <Link
+                        href={`/contracts/${p.contract.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-fg)] transition-all"
+                      >
+                        <span>Xem hợp đồng</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'preview' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
-                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">Invoice Statement Statement Preview</h3>
-                  <div className="flex gap-2">
-                    <Button size="small" icon={<Printer size={12} />} onClick={handlePrint}>Print</Button>
-                    <Button size="small" type="primary" icon={<FileDown size={12} />}>Export PDF</Button>
+              <div className="space-y-6 text-xs text-[var(--color-fg)] font-mono max-w-xl mx-auto p-8 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)]/20 shadow-sm relative">
+                {/* Print button overlay */}
+                <button
+                  onClick={handlePrint}
+                  className="absolute top-4 right-4 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] cursor-pointer"
+                  title="Print Statement"
+                >
+                  <Printer size={14} />
+                </button>
+
+                <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-6">
+                  <div>
+                    <h3 className="font-extrabold text-sm tracking-widest text-[var(--color-fg)] uppercase">XANTIVATION STUDIO</h3>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">Lầu 14, tòa nhà IDMC Duy Tân, Cầu Giấy, Hà Nội</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">contact@xantivation.com | xantivation.com</p>
+                  </div>
+                  <div className="text-right">
+                    <h4 className="font-extrabold text-[var(--color-accent)] text-base">INVOICE STATEMENT</h4>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] font-bold mt-1">Number: {invoiceNumber}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">Date: {createdAt}</p>
                   </div>
                 </div>
 
-                {/* Mock brand invoice */}
-                <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-8 max-w-2xl mx-auto space-y-8 shadow-sm">
-                  {/* Brand Invoice Header */}
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="font-bold text-lg tracking-wider text-[var(--color-fg)] bg-[var(--color-fg)]/5 px-3 py-1.5 rounded-xl border border-[var(--color-border)]">
-                        XANTIVATION STUDIO
-                      </span>
-                      <p className="text-[10px] text-[var(--color-muted-fg)] mt-2">123 Studio Way, Tech District, VN</p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">billing@xantivation.com</p>
-                    </div>
-                    <div className="text-right">
-                      <h2 className="text-xl font-bold tracking-tight text-[var(--color-fg)]">INVOICE</h2>
-                      <p className="text-xs font-mono text-[var(--color-muted-fg)] mt-1">{payment.invoiceNumber}</p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">Date: {payment.createdAt}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-8 text-[11px] border-b border-[var(--color-border)] pb-6">
+                  <div>
+                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">Billed To:</p>
+                    <p className="font-bold">{p.notes || 'Xantivation Client'}</p>
                   </div>
-
-                  {/* To/From Section */}
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-muted-fg)] mb-1">BILLED TO</p>
-                      <p className="font-bold text-[var(--color-fg)]">{payment.companyName}</p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">{payment.contactName}</p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">{payment.contactEmail}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-muted-fg)] mb-1">DUE DATE</p>
-                      <p className="font-bold text-[var(--color-fg)] font-mono">{payment.dueDate}</p>
-                    </div>
-                  </div>
-
-                  {/* Table Line Items */}
-                  <div className="border-t border-b border-[var(--color-border)] py-4">
-                    <table className="w-full text-xs text-left">
-                      <thead>
-                        <tr className="text-[9px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] border-b border-[var(--color-border)]/50 pb-2">
-                          <th className="pb-2">Description</th>
-                          <th className="pb-2 text-right">Percentage</th>
-                          <th className="pb-2 text-right">Amount (VND)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="text-[var(--color-fg)] font-medium">
-                          <td className="py-3">
-                            <span className="font-bold">{payment.milestoneName}</span>
-                            <span className="text-[10px] text-[var(--color-muted-fg)] block mt-0.5">Agreement code: {payment.contractCode}</span>
-                          </td>
-                          <td className="py-3 text-right font-mono">{payment.milestonePercentage}%</td>
-                          <td className="py-3 text-right font-mono font-bold">{payment.amount.toLocaleString('vi-VN')} VND</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Grand total & payment details */}
-                  <div className="flex justify-between items-start text-xs pt-4">
-                    <div>
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-muted-fg)] mb-1.5">PAYMENT INSTRUCTIONS</p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)] leading-relaxed">
-                        Bank: Techcombank Branch HN<br />
-                        Account: 19028882999018<br />
-                        Recipient: XANTIVATION STUDIO CO., LTD<br />
-                        Reference: {payment.invoiceNumber}
-                      </p>
-                    </div>
-                    <div className="text-right space-y-1.5">
-                      <div className="flex justify-end gap-6 text-[10px] text-[var(--color-muted-fg)]">
-                        <span>Subtotal:</span>
-                        <span className="font-mono">{payment.amount.toLocaleString('vi-VN')} VND</span>
-                      </div>
-                      <div className="flex justify-end gap-6 text-sm font-bold text-[var(--color-fg)] pt-1 border-t border-[var(--color-border)]/50">
-                        <span>Total Due:</span>
-                        <span className="font-mono text-[var(--color-accent)]">{payment.amount.toLocaleString('vi-VN')} VND</span>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">Payment Method:</p>
+                    <p className="font-bold">Bank Transfer (VND)</p>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {activeTab === 'confirmation' && (
-              <div className="space-y-6 text-xs">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Payment Clearing Information</h3>
-                {payment.paidAt ? (
-                  <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-xl space-y-2">
-                    <p className="font-semibold text-green-500 flex items-center gap-1.5">
-                      <CheckCircle2 size={16} />
-                      <span>Payment Verified & Cleared</span>
-                    </p>
-                    <div className="font-mono space-y-1 text-[var(--color-muted-fg)]">
-                      <p>Cleared at: {payment.paidAt}</p>
-                      <p>Cleared amount: {payment.amount.toLocaleString('vi-VN')} VND</p>
-                      <p>Notes: {payment.notes}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl space-y-3">
-                    <p className="text-[var(--color-muted-fg)] italic">No payment clearance notes recorded yet. Verify bank transfer details and confirm payment release in the sidebar.</p>
-                  </div>
-                )}
+                <table className="w-full text-left text-[11px] border-b border-[var(--color-border)] pb-6">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)] text-[var(--color-muted-fg)]">
+                      <th className="pb-2 font-mono font-bold uppercase text-[9px] tracking-wider">Mô tả dịch vụ</th>
+                      <th className="pb-2 text-right font-mono font-bold uppercase text-[9px] tracking-wider">Tổng cộng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-3 font-semibold">
+                        {p.milestoneName} Billing Milestone ({p.milestonePercentage}% contract value)
+                      </td>
+                      <td className="py-3 text-right font-bold font-mono">
+                        {amount.toLocaleString('vi-VN')} VND
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div className="flex justify-between items-center text-xs font-mono font-semibold pt-4">
+                  <span className="text-[var(--color-muted-fg)]">Total Bill:</span>
+                  <span className="text-sm font-bold text-[var(--color-fg)]">{amount.toLocaleString('vi-VN')} VND</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Sidebar Actions (1 col) */}
+        {/* Right Sidebar Control */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Invoicing panel
+              Finance Controls
             </h3>
 
             <div className="space-y-3">
-              <Button
-                type="primary"
-                onClick={() => setConfirmModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer bg-green-600 border-green-600 text-white hover:bg-green-700"
-                disabled={payment.status === 'PAID' || payment.status === 'CANCELLED'}
-              >
-                <CreditCard size={14} />
-                <span>Confirm Payment</span>
-              </Button>
-
-              <Button
-                onClick={handleMarkOverdue}
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer bg-amber-600 border-amber-600 text-white hover:bg-amber-700"
-                disabled={payment.status === 'PAID' || payment.status === 'CANCELLED' || payment.status === 'OVERDUE'}
-              >
-                <AlertTriangle size={14} />
-                <span>Mark Overdue</span>
-              </Button>
-
-              <Button
-                onClick={handleCancelPayment}
-                danger
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer"
-                disabled={payment.status === 'PAID' || payment.status === 'CANCELLED'}
-              >
-                <Ban size={14} />
-                <span>Cancel Invoice</span>
-              </Button>
+              {p.status === 'PENDING' && (
+                <Button type="primary" onClick={handleConfirmPayment} loading={confirmPaymentMutation.isPending} className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl cursor-pointer">
+                  <CreditCard size={14} />
+                  <span>Xác nhận Thanh toán</span>
+                </Button>
+              )}
             </div>
 
-            {/* General parameters */}
-            <div className="border-t border-[var(--color-border)]/50 pt-4 space-y-3 text-xs font-mono text-[var(--color-muted-fg)]">
+            <div className="space-y-4 border-t border-[var(--color-border)]/50 pt-4 text-xs font-mono">
               <div className="flex justify-between">
-                <span>Total Amount:</span>
-                <span className="font-bold text-[var(--color-fg)]">{payment.amount.toLocaleString('vi-VN')} VND</span>
+                <span className="text-[var(--color-muted-fg)]">Tỷ lệ:</span>
+                <span className="font-semibold">{p.milestonePercentage}%</span>
               </div>
               <div className="flex justify-between">
-                <span>Billing:</span>
-                <span className="font-bold text-[var(--color-fg)]">{payment.milestonePercentage}%</span>
+                <span className="text-[var(--color-muted-fg)]">Ngày tạo:</span>
+                <span className="font-semibold">{createdAt}</span>
               </div>
+              {paidAt && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-muted-fg)]">Ngày nhận:</span>
+                  <span className="font-semibold">{paidAt}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
       </div>
-
-      {/* Payment Confirmation Modal */}
-      <Modal
-        title="Record Payment Clearing"
-        open={confirmModalOpen}
-        onCancel={() => setConfirmModalOpen(false)}
-        onOk={handleConfirmPayment}
-        okText="Clear Invoice"
-        cancelText="Cancel"
-      >
-        <div className="space-y-4 pt-4 text-xs">
-          <p className="text-[var(--color-muted-fg)]">
-            Verify the bank transaction history for client <strong>{payment.companyName}</strong> matching reference code <strong>{payment.invoiceNumber}</strong>.
-          </p>
-
-          <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">Clearing Date *</label>
-            <input
-              type="date"
-              value={paymentDate}
-              onChange={(e) => setPaymentDate(e.target.value)}
-              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-2 rounded-lg text-xs outline-none focus:border-[var(--color-accent)] text-[var(--color-fg)]"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">Clearing Notes / Transaction Reference</label>
-            <textarea
-              placeholder="e.g. Transaction Ref: #T-90082"
-              value={paymentNotes}
-              onChange={(e) => setPaymentNotes(e.target.value)}
-              className="w-full min-h-[80px] p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-fg)] outline-none focus:border-[var(--color-accent)] transition-colors"
-            />
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

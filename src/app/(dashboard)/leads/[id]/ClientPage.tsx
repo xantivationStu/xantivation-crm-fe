@@ -2,7 +2,7 @@
 
 import React, { useState, use } from 'react';
 import { Button, Steps, Select, Modal, Progress, message, Spin } from 'antd';
-import { useLead, useConvertLead, useAddLeadActivity, useLeadActivities, useUpdateLead, useDeleteLead } from '@/hooks/api/useLead';
+import { useLead, useConvertLead, useAddLeadActivity, useLeadActivities, useUpdateLead, useDeleteLead, useAutoQualifyLead } from '@/hooks/api/useLead';
 import { User, Briefcase, Mail, Phone, Calendar, Plus, ArrowRight, UserCheck, Bot, FileText, AlertTriangle, Trash2 } from 'lucide-react';
 import { FloatingInput } from '@/components/FloatingInput';
 import Link from 'next/link';
@@ -99,6 +99,7 @@ export default function LeadDetail({ params }: { params: Promise<{ id: string }>
   const addActivityMutation = useAddLeadActivity(id);
   const updateMutation = useUpdateLead();
   const deleteLeadMutation = useDeleteLead();
+  const autoQualifyMutation = useAutoQualifyLead(id);
   
   const rawLead = leadResponse?.data;
   const lead = rawLead ? {
@@ -118,6 +119,9 @@ export default function LeadDetail({ params }: { params: Promise<{ id: string }>
     serviceInterest: rawLead.serviceInterest || 'WEBSITE',
     need: rawLead.need || '',
     timeline: rawLead.timeline || '',
+    aiScore: rawLead.aiScore !== undefined && rawLead.aiScore !== null ? Number(rawLead.aiScore) : null,
+    aiScoreData: rawLead.aiScoreData || null,
+    aiScoredAt: rawLead.aiScoredAt || null,
   } : undefined;
 
   const rawActivities = activitiesResponse?.data || [];
@@ -220,28 +224,15 @@ export default function LeadDetail({ params }: { params: Promise<{ id: string }>
   };
 
   const handleAutoQualify = () => {
-    const hide = message.loading('Analyzing conversation transcripts with Groq RAG model...', 0);
-    updateMutation.mutate(
-      {
-        id,
-        dto: {
-          bantScore: 100,
-          budgetApproved: true,
-          authorityMarker: true,
-          need: 'AI analysis verified: Immediate demand for premium service',
-          timeline: '1-3 months',
-        },
+    const hide = message.loading('Analyzing lead using AI BANT scoring model...', 0);
+    autoQualifyMutation.mutate(undefined, {
+      onSuccess: () => {
+        hide();
       },
-      {
-        onSuccess: () => {
-          hide();
-          message.success('AI qualification completed. BANT score optimized to 100%');
-        },
-        onError: () => {
-          hide();
-        }
+      onError: () => {
+        hide();
       }
-    );
+    });
   };
 
   return (
@@ -504,38 +495,76 @@ export default function LeadDetail({ params }: { params: Promise<{ id: string }>
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-semibold text-[var(--color-fg)]">AI BANT Score Insights</h3>
-                  <Button type="primary" onClick={handleAutoQualify} className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer bg-[var(--color-accent)]">
+                  <Button 
+                    type="primary" 
+                    onClick={handleAutoQualify} 
+                    loading={autoQualifyMutation.isPending}
+                    className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer bg-[var(--color-accent)]"
+                  >
                     <Bot size={14} />
                     <span>Auto-Qualify</span>
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center pt-4">
-                  <div className="space-y-4 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span>BANT Qualification score</span>
-                      <span className="font-mono font-bold">{lead.bantScore}%</span>
-                    </div>
-                    <Progress percent={lead.bantScore} status="active" strokeColor="#4F46E5" />
+                {lead.aiScore !== null ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-4">
+                    <div className="space-y-4 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span>Overall AI Quality Score</span>
+                        <span className="font-mono font-bold text-base text-[var(--color-accent)]">{lead.aiScore * 10}%</span>
+                      </div>
+                      <Progress percent={lead.aiScore * 10} status="active" strokeColor="#4F46E5" />
 
-                    <div className="p-4 bg-[var(--color-surface)]/50 border border-[var(--color-border)] rounded-xl space-y-2 mt-4">
-                      <p className="font-semibold text-[var(--color-fg)] flex items-center gap-1.5">
-                        <Bot size={12} className="text-[var(--color-accent)]" />
-                        <span>Copilot Evaluation</span>
-                      </p>
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">
-                        {lead.bantScore >= 75
-                          ? 'This prospect is highly qualified. Recommend proceeding to initiate proposal document draft.'
-                          : 'Propose additional callback to investigate budget ranges and establish target deadline timelines.'}
-                      </p>
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                          <p className="text-[10px] text-[var(--color-muted-fg)] font-mono uppercase">Budget</p>
+                          <p className="text-sm font-bold text-[var(--color-fg)] mt-1">{lead.aiScoreData?.budget || 0}/10</p>
+                        </div>
+                        <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                          <p className="text-[10px] text-[var(--color-muted-fg)] font-mono uppercase">Authority</p>
+                          <p className="text-sm font-bold text-[var(--color-fg)] mt-1">{lead.aiScoreData?.authority || 0}/10</p>
+                        </div>
+                        <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                          <p className="text-[10px] text-[var(--color-muted-fg)] font-mono uppercase">Need</p>
+                          <p className="text-sm font-bold text-[var(--color-fg)] mt-1">{lead.aiScoreData?.need || 0}/10</p>
+                        </div>
+                        <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                          <p className="text-[10px] text-[var(--color-muted-fg)] font-mono uppercase">Timeline</p>
+                          <p className="text-sm font-bold text-[var(--color-fg)] mt-1">{lead.aiScoreData?.timeline || 0}/10</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-[var(--color-surface)]/50 border border-[var(--color-border)] rounded-xl space-y-2 mt-4 font-sans">
+                        <p className="font-semibold text-[var(--color-fg)] flex items-center gap-1.5">
+                          <Bot size={12} className="text-[var(--color-accent)]" />
+                          <span>AI Recommendation</span>
+                        </p>
+                        <p className="text-[11px] text-[var(--color-muted-fg)] leading-relaxed">
+                          {lead.aiScoreData?.recommendation || 'No recommendation provided.'}
+                        </p>
+                        {lead.aiScoredAt && (
+                          <p className="text-[9px] text-[var(--color-muted-fg)] font-mono pt-1">
+                            Evaluated at: {new Date(lead.aiScoredAt).toLocaleString('vi-VN')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-5 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
+                      <FileText size={32} className="mx-auto text-[var(--color-accent)]/50" />
+                      <span>FAISS Vector Database Matches: 3 similar deals</span>
+                      <span className="text-[10px] text-[var(--color-muted-fg)]">Ready to convert to Opportunity if score &ge; 7.</span>
                     </div>
                   </div>
-
-                  <div className="p-4 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
-                    <FileText size={32} className="mx-auto text-[var(--color-accent)]/50" />
-                    <span>FAISS Vector Database Matches: 3 similar deals</span>
+                ) : (
+                  <div className="text-center py-12 space-y-3 bg-[var(--color-surface)]/10 border border-dashed border-[var(--color-border)] rounded-xl">
+                    <Bot size={40} className="mx-auto text-[var(--color-muted-fg)]/40" />
+                    <p className="text-xs text-[var(--color-muted-fg)]">Lead này chưa được đánh giá tự động bằng AI.</p>
+                    <Button onClick={handleAutoQualify} loading={autoQualifyMutation.isPending} className="h-9 px-4 rounded-xl cursor-pointer">
+                      Đánh giá ngay
+                    </Button>
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>

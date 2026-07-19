@@ -121,3 +121,22 @@ export function useDeleteLead() {
     },
   });
 }
+
+export function useAutoQualifyLead(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const response = await api.post(`/leads/${id}/auto-qualify`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['lead', id] });
+      message.success('Đánh giá tự động Lead thành công!');
+    },
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || 'Đánh giá tự động Lead thất bại!');
+    },
+  });
+}
+

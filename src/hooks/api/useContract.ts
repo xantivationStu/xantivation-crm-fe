@@ -46,29 +46,29 @@ export function usePayment(id: string) {
   });
 }
 
-export function useStartContractSigning(id: string) {
+export function useStartContractSigning() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: StartSigningDto) => {
-      const response = await api.post(`/contracts/${id}/send`, dto);
+    mutationFn: async (payload: { id: string; dto: StartSigningDto }) => {
+      const response = await api.post(`/contracts/${payload.id}/send`, payload.dto);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
-      queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', variables.id] });
       message.success('Đã gửi yêu cầu ký số DocuSign!');
     },
   });
 }
 
-export function useForceSignContract(id: string) {
+export function useForceSignContract() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const response = await api.patch(`/contracts/${id}/sign`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       message.success('Đã xác nhận ký hợp đồng thủ công!');
@@ -76,14 +76,14 @@ export function useForceSignContract(id: string) {
   });
 }
 
-export function useVoidContract(id: string) {
+export function useVoidContract() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const response = await api.patch(`/contracts/${id}/void`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       message.success('Đã hủy hợp đồng!');
@@ -91,14 +91,14 @@ export function useVoidContract(id: string) {
   });
 }
 
-export function useConfirmPayment(id: string) {
+export function useConfirmPayment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const response = await api.post(`/payments/${id}/confirm`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
       queryClient.invalidateQueries({ queryKey: ['contract'] });

@@ -5,10 +5,23 @@ import {
   Bot, Workflow, Radio, Send, UploadCloud, FileText, 
   Sparkles, Search, Plus, Pin, Trash2, Edit2, CheckCircle2, 
   X, AlertTriangle, Paperclip, MoreVertical, Terminal, 
-  Brain, HelpCircle, ArrowRight, BookOpen, Clock, Activity, Settings
+  Brain, HelpCircle, ArrowRight, BookOpen, Clock, Activity, Settings, Cpu, Check, Play, Server, Layers
 } from 'lucide-react';
-import { Button, message, Steps, Tooltip } from 'antd';
+import { Button, message, Steps, Tooltip, Badge } from 'antd';
 import Link from 'next/link';
+
+// React Flow Imports
+import {
+  ReactFlow,
+  MiniMap,
+  Controls,
+  Background,
+  MarkerType,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
+// AI Settings execution logs query hook
+import { useExecutionLogs } from '@/hooks/api/useAiSettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -129,6 +142,41 @@ export default function AIHub() {
     { key: 'Payment policy', value: 'Defaults to 50% deposit / 50% delivery terms.' },
     { key: 'Support contact', value: 'Primary legal counsel is contact@xantivation.com.' }
   ]);
+
+  // --- AI Settings Workflow States ---
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'chat' | 'workflow'>('chat');
+  const [selectedExecutionLog, setSelectedExecutionLog] = useState<any>(null);
+  const [liveLogs, setLiveLogs] = useState<any[]>([]);
+
+  // API Execution Log queries
+  const [logPage, setLogPage] = useState(1);
+  const { data: dbLogsRes, refetch: refetchExecutionLogs } = useExecutionLogs(logPage, 20);
+  const dbLogsList = dbLogsRes?.data?.data || [];
+
+  // SSE Listener for real-time workflow monitoring events
+  useEffect(() => {
+    if (activeWorkspaceTab !== 'workflow') return;
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+    const sseUrl = `${apiUrl}/ai-settings/execution-logs/stream`;
+    let eventSource: EventSource | null = null;
+
+    try {
+      eventSource = new EventSource(sseUrl);
+      eventSource.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          setLiveLogs((prev) => [parsed, ...prev].slice(0, 100));
+          refetchExecutionLogs();
+          message.info(`AI Workflow: ${parsed.agentName || 'Agent'} is ${parsed.status}`);
+        } catch (e) {}
+      };
+    } catch (e) {}
+
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [activeWorkspaceTab, refetchExecutionLogs]);
 
   const activeConv = conversations.find(c => c.id === activeConvId) || conversations[0];
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -410,24 +458,39 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
         </div>
 
         {/* View mode page switches */}
-        <div className="flex bg-[var(--color-bg-tint)] border border-[var(--color-border)] p-1 rounded-xl">
-          <Link
-            href="/ai-hub"
-            className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-[var(--color-accent)] text-white shadow-sm"
+        <div className="flex bg-[var(--color-bg-tint)] border border-[var(--color-border)] p-1 rounded-xl gap-1">
+          <button
+            onClick={() => setActiveWorkspaceTab('chat')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+              activeWorkspaceTab === 'chat'
+                ? 'bg-[var(--color-accent)] text-white shadow-sm font-bold'
+                : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
+            }`}
           >
             Chat Console
-          </Link>
+          </button>
+          <button
+            onClick={() => setActiveWorkspaceTab('workflow')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+              activeWorkspaceTab === 'workflow'
+                ? 'bg-[var(--color-accent)] text-white shadow-sm font-bold'
+                : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
+            }`}
+          >
+            Workflow Monitor
+          </button>
           <Link
             href="/ai-hub/dashboard"
-            className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all"
+            className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all flex items-center"
           >
             AI Analytics Dashboard
           </Link>
         </div>
       </div>
 
-      {/* Main 3-Column Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
+      {/* Main Content Area */}
+      {activeWorkspaceTab === 'chat' && (
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
         
         {/* Column 1: Conversations History Sidebar */}
         <div className="lg:col-span-1 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl flex flex-col overflow-hidden">
@@ -955,6 +1018,285 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
         </div>
 
       </div>
+      )}
+
+      {activeWorkspaceTab === 'workflow' && (
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
+          {/* Main Monitor Graph Canvas (Left/Center - 3 Columns) */}
+          <div className="lg:col-span-3 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl flex flex-col overflow-hidden relative">
+            {/* Realtime Stats Bar */}
+            <div className="bg-[var(--color-surface)]/80 px-4 py-3 border-b border-[var(--color-border)]/60 flex items-center justify-between text-xs shrink-0">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5 font-bold text-[var(--color-fg)]">
+                  <Terminal size={14} className="text-indigo-500" />
+                  <span>Real-time Workflow Monitor</span>
+                </span>
+                <span className="text-[var(--color-muted-fg)]">|</span>
+                <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--color-muted-fg)]">
+                  Live connection: <Badge status="processing" text="Active SSE" />
+                </span>
+              </div>
+              <div className="flex gap-6 text-[10px] font-mono">
+                <div>
+                  <span className="text-[var(--color-muted-fg)]">RUNNING: </span>
+                  <span className="font-bold text-blue-500">
+                    {(() => {
+                      const merged = [
+                        ...liveLogs,
+                        ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                      ];
+                      return merged.filter(l => l.status === 'RUNNING' || l.status === 'PENDING').length;
+                    })()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-muted-fg)]">SUCCESS: </span>
+                  <span className="font-bold text-emerald-500">
+                    {(() => {
+                      const merged = [
+                        ...liveLogs,
+                        ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                      ];
+                      return merged.filter(l => l.status === 'SUCCESS').length;
+                    })()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-muted-fg)]">FAILED: </span>
+                  <span className="font-bold text-red-500">
+                    {(() => {
+                      const merged = [
+                        ...liveLogs,
+                        ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                      ];
+                      return merged.filter(l => l.status === 'FAILED').length;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* React Flow Canvas */}
+            <div className="flex-1 w-full h-full relative bg-[var(--color-surface)]/20">
+              {(() => {
+                const merged = [
+                  ...liveLogs,
+                  ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                ];
+                
+                if (!selectedExecutionLog && merged.length > 0) {
+                  setTimeout(() => setSelectedExecutionLog(merged[0]), 0);
+                }
+                
+                if (selectedExecutionLog) {
+                  const log = selectedExecutionLog;
+                  const nodes = [
+                    {
+                      id: 'trigger',
+                      position: { x: 80, y: 150 },
+                      style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '12px', width: '160px' },
+                      data: {
+                        label: (
+                          <div className="text-left space-y-1">
+                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">Trigger</span>
+                            <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.trigger}</div>
+                          </div>
+                        )
+                      }
+                    },
+                    {
+                      id: 'agent',
+                      position: { x: 300, y: 150 },
+                      style: { background: 'var(--color-surface)', border: '1px solid var(--color-accent)', borderRadius: '12px', padding: '12px', width: '180px', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.05)' },
+                      data: {
+                        label: (
+                          <div className="text-left space-y-1">
+                            <span className="text-[8px] font-extrabold text-indigo-400 uppercase tracking-wider">Executing Agent</span>
+                            <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.agent?.name || log.agentName || 'AI Agent'}</div>
+                            <div className="text-[8px] text-[var(--color-muted-fg)] font-mono truncate">{log.agent?.model?.modelName || 'LLM Model'}</div>
+                          </div>
+                        )
+                      }
+                    },
+                    {
+                      id: 'action',
+                      position: { x: 540, y: 150 },
+                      style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '12px', width: '180px' },
+                      data: {
+                        label: (
+                          <div className="text-left space-y-1">
+                            <span className="text-[8px] font-extrabold text-amber-500 uppercase tracking-wider">Action</span>
+                            <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.action}</div>
+                            {log.durationMs && (
+                              <div className="text-[8px] text-[var(--color-muted-fg)] font-mono">{log.durationMs}ms</div>
+                            )}
+                          </div>
+                        )
+                      }
+                    },
+                    {
+                      id: 'result',
+                      position: { x: 780, y: 150 },
+                      style: {
+                        background: log.status === 'SUCCESS' ? 'rgba(16, 185, 129, 0.05)' : log.status === 'FAILED' ? 'rgba(239, 68, 68, 0.05)' : 'var(--color-surface)',
+                        border: log.status === 'SUCCESS' ? '1px solid #10b981' : log.status === 'FAILED' ? '1px solid #ef4444' : '1px solid var(--color-accent)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        width: '180px',
+                      },
+                      data: {
+                        label: (
+                          <div className="text-left space-y-1">
+                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">Result Status</span>
+                            <div className={`font-extrabold text-xs ${log.status === 'SUCCESS' ? 'text-emerald-500' : log.status === 'FAILED' ? 'text-red-500' : 'text-indigo-500 animate-pulse'}`}>
+                              {log.status}
+                            </div>
+                            {log.errorMessage ? (
+                              <div className="text-[8px] text-red-500 truncate" title={log.errorMessage}>{log.errorMessage}</div>
+                            ) : log.outputSummary ? (
+                              <div className="text-[8px] text-[var(--color-muted-fg)] truncate font-mono">{log.outputSummary}</div>
+                            ) : null}
+                          </div>
+                        )
+                      }
+                    }
+                  ];
+
+                  const edges = [
+                    {
+                      id: 'e-trigger-agent',
+                      source: 'trigger',
+                      target: 'agent',
+                      animated: log.status === 'RUNNING' || log.status === 'PENDING',
+                      style: { stroke: log.status === 'FAILED' ? '#ef4444' : 'var(--color-accent)', strokeWidth: 2 },
+                      markerEnd: { type: MarkerType.ArrowClosed, color: log.status === 'FAILED' ? '#ef4444' : '#6366f1' }
+                    },
+                    {
+                      id: 'e-agent-action',
+                      source: 'agent',
+                      target: 'action',
+                      animated: log.status === 'RUNNING' || log.status === 'PENDING',
+                      style: { stroke: log.status === 'FAILED' ? '#ef4444' : 'var(--color-accent)', strokeWidth: 2 },
+                      markerEnd: { type: MarkerType.ArrowClosed, color: log.status === 'FAILED' ? '#ef4444' : '#6366f1' }
+                    },
+                    {
+                      id: 'e-action-result',
+                      source: 'action',
+                      target: 'result',
+                      animated: log.status === 'RUNNING' || log.status === 'PENDING',
+                      style: { stroke: log.status === 'SUCCESS' ? '#10b981' : log.status === 'FAILED' ? '#ef4444' : 'var(--color-accent)', strokeWidth: 2 },
+                      markerEnd: { type: MarkerType.ArrowClosed, color: log.status === 'SUCCESS' ? '#10b981' : log.status === 'FAILED' ? '#ef4444' : '#6366f1' }
+                    }
+                  ];
+
+                  return (
+                    <ReactFlow
+                      nodes={nodes}
+                      edges={edges}
+                      fitView
+                    >
+                      <Controls />
+                      <Background color="var(--color-border)" gap={16} />
+                    </ReactFlow>
+                  );
+                }
+
+                return (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                    <Layers size={32} className="text-[var(--color-muted-fg)] mb-2" />
+                    <p className="text-xs text-[var(--color-muted-fg)] font-semibold">Chưa chọn phiên thực thi nào</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">Vui lòng chọn một bản ghi từ danh sách lịch sử ở bên phải.</p>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* History log sidebar (Right - 1 Column) */}
+          <div className="lg:col-span-1 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl flex flex-col overflow-hidden min-w-0">
+            <div className="p-4 border-b border-[var(--color-border)] shrink-0">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Lịch sử Thực thi (Logs)
+              </span>
+            </div>
+
+            <div className="flex-1 p-3 overflow-y-auto space-y-3 min-h-0">
+              {(() => {
+                const merged = [
+                  ...liveLogs,
+                  ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                ];
+                return merged.map((log) => (
+                  <div
+                    key={log.id}
+                    onClick={() => setSelectedExecutionLog(log)}
+                    className={`p-3 rounded-xl border text-left cursor-pointer transition-all space-y-2 ${
+                      selectedExecutionLog?.id === log.id
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
+                        : 'border-transparent bg-[var(--color-surface)] hover:border-[var(--color-border)]'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="font-bold text-xs text-[var(--color-fg)] truncate">
+                        {log.agent?.name || log.agentName || 'AI Agent'}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                        log.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-500' :
+                        log.status === 'FAILED' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500 animate-pulse'
+                      }`}>
+                        {log.status}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] truncate font-mono">Nhiệm vụ: {log.action}</p>
+                    <div className="flex justify-between items-center text-[8px] text-[var(--color-muted-fg)] mt-1 pt-1 border-t border-[var(--color-border)]/30">
+                      <span>Trigger: {log.trigger}</span>
+                      <span>{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+                ));
+              })()}
+              {(() => {
+                const merged = [
+                  ...liveLogs,
+                  ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
+                ];
+                return merged.length === 0 ? (
+                  <p className="text-[10px] text-[var(--color-muted-fg)] text-center py-8">Chưa có log thực thi nào.</p>
+                ) : null;
+              })()}
+            </div>
+
+            {/* Pagination / Refetch toolbar */}
+            <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-surface)]/20 flex justify-between items-center shrink-0">
+              <Button
+                size="small"
+                onClick={() => refetchExecutionLogs()}
+                className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
+              >
+                Làm mới
+              </Button>
+              <div className="flex gap-1.5">
+                <Button
+                  size="small"
+                  disabled={logPage <= 1}
+                  onClick={() => setLogPage(p => Math.max(1, p - 1))}
+                  className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
+                >
+                  Trước
+                </Button>
+                <Button
+                  size="small"
+                  disabled={dbLogsList.length < 20}
+                  onClick={() => setLogPage(p => p + 1)}
+                  className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
+                >
+                  Sau
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

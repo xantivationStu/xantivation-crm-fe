@@ -25,16 +25,16 @@ export function useDeal(id: string) {
   });
 }
 
-export function useConfigureMilestones(id: string) {
+export function useConfigureMilestones() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: ConfigureMilestonesDto) => {
-      const response = await api.patch(`/deals/${id}/milestones`, dto);
+    mutationFn: async (payload: { id: string; dto: ConfigureMilestonesDto }) => {
+      const response = await api.patch(`/deals/${payload.id}/milestones`, payload.dto);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deal', id] });
+      queryClient.invalidateQueries({ queryKey: ['deal', variables.id] });
       message.success('Đã lưu cấu hình mốc thanh toán!');
     },
     onError: (error: any) => {
@@ -43,29 +43,29 @@ export function useConfigureMilestones(id: string) {
   });
 }
 
-export function useSubmitDealReview(id: string) {
+export function useSubmitDealReview() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: SubmitReviewDto) => {
-      const response = await api.patch(`/deals/${id}/submit-review`, dto);
+    mutationFn: async (payload: { id: string; dto: SubmitReviewDto }) => {
+      const response = await api.patch(`/deals/${payload.id}/submit-review`, payload.dto);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deal', id] });
+      queryClient.invalidateQueries({ queryKey: ['deal', variables.id] });
       message.success('Đã gửi phê duyệt nội bộ!');
     },
   });
 }
 
-export function useApproveDeal(id: string) {
+export function useApproveDeal() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const response = await api.post(`/deals/${id}/approve`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       queryClient.invalidateQueries({ queryKey: ['deal', id] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });

@@ -1,12 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button, Modal, Progress, Select, message, Tag, Drawer } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Modal, Progress, Select, message, Tag, Drawer, Spin } from 'antd';
 import { Plus, Search, Layers, List, ChevronRight, CheckCircle2, XCircle, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import { FloatingInput } from '@/components/FloatingInput';
 import Link from 'next/link';
+import { useOpportunities, useCreateOpportunity, useUpdateOpportunity, useCloseLostOpportunity } from '@/hooks/api/useOpportunity';
+import { useCustomers, useContacts } from '@/hooks/api/useCustomer';
+import { useUsers } from '@/hooks/api/useUser';
+import { OpportunityStage } from '@/types/opportunity.types';
 
 interface OpportunityRecord {
   id: string;
@@ -20,57 +24,11 @@ interface OpportunityRecord {
   companyName: string;
   contactId: string;
   contactName: string;
-  serviceInterest: 'WEBSITE' | 'APP_MVP' | 'BRANDING' | 'UI_UX' | 'SOCIAL_KIT' | 'MAINTENANCE' | 'CUSTOM';
+  serviceInterest: string;
   description: string;
   assignedTo: string;
   lostReason?: string;
 }
-
-const mockOpps: OpportunityRecord[] = [
-  {
-    id: '1',
-    code: 'OPP-2026-00001',
-    name: 'CRM Integration Contract',
-    amount: 250000000,
-    stage: 'PROPOSAL',
-    probability: 50,
-    closeDate: '2026-10-15',
-    companyId: '1',
-    companyName: 'Xantivation Dev',
-    contactId: '1',
-    contactName: 'John Doe',
-    serviceInterest: 'CUSTOM',
-    description: 'Integrate custom NestJS CRM with Next.js client portal.',
-    assignedTo: 'System Admin',
-  },
-  {
-    id: '2',
-    code: 'OPP-2026-00002',
-    name: 'Brand Identity Redesign',
-    amount: 75000000,
-    stage: 'NEGOTIATION',
-    probability: 80,
-    closeDate: '2026-08-30',
-    companyId: '2',
-    companyName: 'CyberCore LLC',
-    contactId: '2',
-    contactName: 'Bruce Wayne',
-    serviceInterest: 'BRANDING',
-    description: 'Redesign brand logo, visual system and standard social kit guidelines.',
-    assignedTo: 'Jane Smith',
-  },
-];
-
-const mockAccounts = [
-  { id: '1', name: 'Xantivation Dev', status: 'ACTIVE', primaryContactId: '1', primaryContactName: 'John Doe' },
-  { id: '2', name: 'CyberCore LLC', status: 'ACTIVE', primaryContactId: '2', primaryContactName: 'Bruce Wayne' },
-];
-
-const mockContacts = [
-  { id: '1', name: 'John Doe', companyId: '1', isPrimary: true },
-  { id: '2', name: 'Bruce Wayne', companyId: '2', isPrimary: true },
-  { id: '3', name: 'Alfred Pennyworth', companyId: '2', isPrimary: false },
-];
 
 const serviceOptions = [
   { value: 'WEBSITE', label: 'Website Development' },
@@ -92,9 +50,43 @@ const stages: ('QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'WON' | 'LOST')[] 
 
 export default function Opportunities() {
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
-  const [opps, setOpps] = useState<OpportunityRecord[]>(mockOpps);
-  
-  // Search & Filter
+
+  // API Queries
+  const { data: oppsRes, isLoading: isOppsLoading } = useOpportunities({ limit: 100 });
+  const { data: accountsRes } = useCustomers();
+  const { data: contactsRes } = useContacts();
+  const { data: usersRes } = useUsers();
+
+  // API Mutations
+  const createMutation = useCreateOpportunity();
+  const updateMutation = useUpdateOpportunity();
+  const closeLostMutation = useCloseLostOpportunity();
+
+  const rawOpps = oppsRes?.data?.items || [];
+  const realAccounts = accountsRes?.data || [];
+  const realContacts = contactsRes?.data || [];
+  const realUsers = usersRes?.data || [];
+
+  // Map API response to local record format
+  const oppsList: OpportunityRecord[] = rawOpps.map((opp: any) => ({
+    id: opp.id,
+    code: opp.opportunityCode || `OPP-${opp.id.substring(0, 8).toUpperCase()}`,
+    name: opp.name,
+    amount: Number(opp.amount) || 0,
+    stage: opp.stage as any,
+    probability: opp.probability || 0,
+    closeDate: opp.expectedCloseDate ? opp.expectedCloseDate.substring(0, 10) : '',
+    companyId: opp.accountId || '',
+    companyName: opp.account?.name || '',
+    contactId: opp.contactId || '',
+    contactName: opp.contact ? `${opp.contact.firstName || ''} ${opp.contact.lastName || ''}`.trim() : '',
+    serviceInterest: opp.serviceInterest || 'WEBSITE',
+    description: opp.description || '',
+    assignedTo: opp.owner ? `${opp.owner.firstName || ''} ${opp.owner.lastName || ''}`.trim() : 'System Admin',
+    lostReason: opp.lostReason || '',
+  }));
+
+  // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStage, setFilterStage] = useState('ALL');
   const [filterInterest, setFilterInterest] = useState('ALL');
@@ -111,14 +103,14 @@ export default function Opportunities() {
   const [stage, setStage] = useState<'QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION'>('QUALIFICATION');
   const [probability, setProbability] = useState<number>(20);
   const [closeDate, setCloseDate] = useState('');
-  const [companyId, setCompanyId] = useState('1');
-  const [contactId, setContactId] = useState('1');
-  const [serviceInterest, setServiceInterest] = useState<'WEBSITE' | 'APP_MVP' | 'BRANDING' | 'UI_UX' | 'SOCIAL_KIT' | 'MAINTENANCE' | 'CUSTOM'>('WEBSITE');
+  const [companyId, setCompanyId] = useState('');
+  const [contactId, setContactId] = useState('');
+  const [serviceInterest, setServiceInterest] = useState('WEBSITE');
   const [description, setDescription] = useState('');
-  const [assignedTo, setAssignedTo] = useState('System Admin');
+  const [assignedTo, setAssignedTo] = useState(''); // Owner ID
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Lost drag state
+  // Drag and drop states
   const [draggedOppId, setDraggedOppId] = useState<string | null>(null);
   const [lostReason, setLostReason] = useState('');
 
@@ -133,7 +125,7 @@ export default function Opportunities() {
   // Handle company change auto-load associated contacts and auto-select primary contact
   const handleCompanyChange = (val: string) => {
     setCompanyId(val);
-    const relatedContacts = mockContacts.filter(c => c.companyId === val);
+    const relatedContacts = realContacts.filter(c => c.accountId === val);
     const primary = relatedContacts.find(c => c.isPrimary) || relatedContacts[0];
     if (primary) {
       setContactId(primary.id);
@@ -149,11 +141,15 @@ export default function Opportunities() {
     setStage('QUALIFICATION');
     setProbability(20);
     setCloseDate('');
-    setCompanyId(mockAccounts[0]?.id || '');
-    setContactId(mockAccounts[0]?.primaryContactId || '');
+    setCompanyId(realAccounts[0]?.id || '');
+    if (realAccounts[0]?.id) {
+      handleCompanyChange(realAccounts[0].id);
+    } else {
+      setContactId('');
+    }
     setServiceInterest('WEBSITE');
     setDescription('');
-    setAssignedTo('System Admin');
+    setAssignedTo(realUsers[0]?.id || '');
     setErrors({});
     setModalOpen(true);
   };
@@ -169,68 +165,53 @@ export default function Opportunities() {
     setContactId(rec.contactId);
     setServiceInterest(rec.serviceInterest);
     setDescription(rec.description);
-    setAssignedTo(rec.assignedTo);
+
+    // Look up owner id matching user name
+    const foundUser = realUsers.find(
+      (u) => `${u.name || ''}`.trim().toLowerCase() === rec.assignedTo.trim().toLowerCase()
+    );
+    setAssignedTo(foundUser ? foundUser.id : '');
     setErrors({});
     setModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = 'Opportunity name is required';
     if (!amount || Number(amount) < 0) newErrors.amount = 'Please enter a valid amount';
     if (!closeDate) newErrors.closeDate = 'Expected close date is required';
-    else if (new Date(closeDate) < new Date(new Date().setHours(0,0,0,0))) {
-      newErrors.closeDate = 'Expected close date must be in the future';
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const company = mockAccounts.find(a => a.id === companyId);
-    const contact = mockContacts.find(c => c.id === contactId);
+    const payload = {
+      name,
+      accountId: companyId,
+      contactId,
+      amount: Number(amount),
+      stage: stage as any,
+      probability,
+      expectedCloseDate: closeDate,
+      serviceInterest: serviceInterest as any,
+      description,
+      ownerId: assignedTo || undefined,
+    };
 
-    if (editingOpp) {
-      setOpps(opps.map(o => o.id === editingOpp.id ? {
-        ...o,
-        name,
-        amount: Number(amount),
-        stage: stage as any,
-        probability,
-        closeDate,
-        companyId,
-        companyName: company ? company.name : '',
-        contactId,
-        contactName: contact ? contact.name : '',
-        serviceInterest,
-        description,
-        assignedTo,
-      } : o));
-      message.success('Opportunity updated successfully');
-    } else {
-      const year = new Date().getFullYear();
-      const code = `OPP-${year}-${String(opps.length + 1).padStart(5, '0')}`;
-      const newOpp: OpportunityRecord = {
-        id: String(opps.length + 1),
-        code,
-        name,
-        amount: Number(amount),
-        stage: stage as any,
-        probability,
-        closeDate,
-        companyId,
-        companyName: company ? company.name : '',
-        contactId,
-        contactName: contact ? contact.name : '',
-        serviceInterest,
-        description,
-        assignedTo,
-      };
-      setOpps([...opps, newOpp]);
-      message.success('Opportunity created successfully');
+    try {
+      if (editingOpp) {
+        await updateMutation.mutateAsync({
+          id: editingOpp.id,
+          dto: payload,
+        });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+      setModalOpen(false);
+    } catch (err) {
+      // Handled
     }
-    setModalOpen(false);
   };
 
   // Drag and Drop Logic
@@ -243,7 +224,7 @@ export default function Opportunities() {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, targetStage: typeof stages[number]) => {
+  const handleDrop = async (e: React.DragEvent, targetStage: typeof stages[number]) => {
     e.preventDefault();
     const id = e.dataTransfer.getData('text/plain') || draggedOppId;
     if (!id) return;
@@ -261,24 +242,42 @@ export default function Opportunities() {
     else if (targetStage === 'PROPOSAL') prob = 50;
     else if (targetStage === 'QUALIFICATION') prob = 20;
 
-    setOpps(opps.map(o => o.id === id ? { ...o, stage: targetStage, probability: prob } : o));
-    message.success(`Moved opportunity to ${targetStage}`);
+    try {
+      await updateMutation.mutateAsync({
+        id,
+        dto: {
+          stage: targetStage as any,
+          probability: prob,
+        },
+      });
+      message.success(`Đã chuyển trạng thái sang ${targetStage}`);
+    } catch (err) {
+      // Handled
+    }
     setDraggedOppId(null);
   };
 
-  const handleSaveLost = () => {
+  const handleSaveLost = async () => {
     if (!lostReason.trim()) {
       message.error('Please enter a reason for losing this opportunity');
       return;
     }
-    setOpps(opps.map(o => o.id === draggedOppId ? { ...o, stage: 'LOST', probability: 0, lostReason } : o));
-    message.success('Opportunity marked as CLOSED LOST');
-    setLostModalOpen(false);
+    if (!draggedOppId) return;
+
+    try {
+      await closeLostMutation.mutateAsync({
+        id: draggedOppId,
+        lostReason,
+      });
+      setLostModalOpen(false);
+    } catch (err) {
+      // Handled
+    }
     setDraggedOppId(null);
   };
 
   // Filter Opps
-  const filteredOpps = opps.filter(o => {
+  const filteredOpps = oppsList.filter(o => {
     const matchesSearch = o.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           o.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           o.code.toLowerCase().includes(searchQuery.toLowerCase());
@@ -290,7 +289,7 @@ export default function Opportunities() {
   // Table Columns
   const tableColumns: ColumnProps<OpportunityRecord>[] = [
     {
-      title: 'Opp Code',
+      title: 'Mã cơ hội',
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -300,7 +299,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Opportunity Name',
+      title: 'Tên cơ hội',
       dataIndex: 'name',
       key: 'name',
       render: (val, rec) => (
@@ -313,7 +312,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Customer',
+      title: 'Khách hàng',
       dataIndex: 'companyName',
       key: 'companyName',
       render: (val, rec) => (
@@ -323,13 +322,13 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Estimated Amount',
+      title: 'Giá trị dự tính',
       dataIndex: 'amount',
       key: 'amount',
       render: (val) => <span className="font-mono font-semibold text-xs text-[var(--color-fg)]">{val.toLocaleString('vi-VN')} VND</span>,
     },
     {
-      title: 'Stage',
+      title: 'Trạng thái',
       dataIndex: 'stage',
       key: 'stage',
       render: (st) => (
@@ -342,7 +341,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Probability',
+      title: 'Khả năng chốt',
       dataIndex: 'probability',
       key: 'probability',
       render: (val) => (
@@ -353,7 +352,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Target Close',
+      title: 'Ngày dự kiến đóng',
       dataIndex: 'closeDate',
       key: 'closeDate',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val}</span>,
@@ -368,8 +367,8 @@ export default function Opportunities() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Opportunities</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Track deals pipelines, estimations, and drag-and-drop sales stages.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Cơ hội bán hàng</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Quản lý phễu cơ hội (Kanban drag-drop), dự tính doanh thu và tỷ lệ chốt.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -377,7 +376,7 @@ export default function Opportunities() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search deals, company..."
+              placeholder="Tìm kiếm cơ hội, khách hàng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -404,19 +403,14 @@ export default function Opportunities() {
             </button>
           </div>
 
-          {/* Filters Button */}
           <button
             onClick={() => setFilterDrawerOpen(true)}
-            className={`flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-              activeFiltersCount > 0
-                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 text-[var(--color-accent)]'
-                : 'border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
-            }`}
+            className="flex items-center gap-2 border border-[var(--color-border)] bg-[var(--color-bg-tint)] text-[var(--color-fg)] hover:bg-[var(--color-surface)] px-4 h-10 rounded-xl text-xs font-semibold cursor-pointer relative"
           >
             <SlidersHorizontal size={14} />
             <span>Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-[var(--color-accent)] text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
               </span>
             )}
@@ -425,18 +419,18 @@ export default function Opportunities() {
           <Button
             type="primary"
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
+            className="flex items-center gap-2 h-10 px-5 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>New Opportunity</span>
+            <span>Tạo cơ hội</span>
           </Button>
         </div>
       </div>
 
-      {/* Advanced Filter Drawer */}
+      {/* Advanced Filters Drawer */}
       <Drawer
         title={
-          <div className="flex items-center justify-between w-full pr-4">
+          <div className="flex justify-between items-center w-full pr-8">
             <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
             {activeFiltersCount > 0 && (
               <button
@@ -469,14 +463,14 @@ export default function Opportunities() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Opportunity Stage
+              Giai đoạn bán hàng
             </label>
             <Select
               value={filterStage}
               onChange={setFilterStage}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Stages' },
+                { value: 'ALL', label: 'Tất cả giai đoạn' },
                 { value: 'QUALIFICATION', label: 'Qualification' },
                 { value: 'PROPOSAL', label: 'Proposal' },
                 { value: 'NEGOTIATION', label: 'Negotiation' },
@@ -488,14 +482,14 @@ export default function Opportunities() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Service Interest
+              Dịch vụ quan tâm
             </label>
             <Select
               value={filterInterest}
               onChange={setFilterInterest}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Service Interests' },
+                { value: 'ALL', label: 'Tất cả dịch vụ' },
                 ...serviceOptions,
               ]}
             />
@@ -503,116 +497,119 @@ export default function Opportunities() {
         </div>
       </Drawer>
 
-      {/* Kanban Board View */}
-      {viewMode === 'kanban' ? (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto min-h-[500px]">
-          {stages.map(st => {
-            const stageOpps = filteredOpps.filter(o => o.stage === st);
-            const stageTotal = stageOpps.reduce((sum, o) => sum + o.amount, 0);
-
-            return (
-              <div
-                key={st}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, st)}
-                className="bg-[var(--color-bg-tint)] rounded-2xl p-3 flex flex-col min-h-[450px] border border-[var(--color-border)]"
-              >
-                {/* Column Header */}
-                <div className="mb-4 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold tracking-wider uppercase text-[var(--color-fg)]">
-                      {st === 'QUALIFICATION' ? 'Qualification' :
-                       st === 'PROPOSAL' ? 'Proposal' :
-                       st === 'NEGOTIATION' ? 'Negotiation' :
-                       st === 'WON' ? 'Closed Won' : 'Closed Lost'}
-                    </span>
-                    <span className="text-[10px] bg-[var(--color-surface)] text-[var(--color-muted-fg)] font-semibold font-mono px-2 py-0.5 rounded-full border border-[var(--color-border)]">
-                      {stageOpps.length}
-                    </span>
-                  </div>
-                  <p className="text-[11px] font-mono text-[var(--color-muted-fg)] font-semibold">
-                    {stageTotal.toLocaleString('vi-VN')} VND
-                  </p>
-                </div>
-
-                {/* Cards Container */}
-                <div className="flex-1 space-y-3 overflow-y-auto max-h-[500px] pr-1">
-                  {stageOpps.map(opp => (
-                    <div
-                      key={opp.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, opp.id)}
-                      className="bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-accent)] rounded-xl p-4 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all space-y-3 group relative"
-                    >
-                      <div>
-                        <Link href={`/opportunities/${opp.id}`} className="font-semibold text-xs text-[var(--color-fg)] hover:underline block mb-0.5">
-                          {opp.name}
-                        </Link>
-                        <span className="text-[10px] text-[var(--color-muted-fg)] font-semibold">{opp.companyName}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-[10px] text-[var(--color-muted-fg)] font-mono">
-                        <span>{opp.closeDate}</span>
-                        <span className="font-semibold text-[var(--color-fg)]">{opp.amount.toLocaleString('vi-VN')} VND</span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Progress percent={opp.probability} size="small" showInfo={false} strokeColor="var(--color-accent)" className="m-0" />
-                        <span className="text-[10px] font-mono font-semibold">{opp.probability}%</span>
-                      </div>
-
-                      {opp.lostReason && (
-                        <div className="text-[10px] text-red-500 bg-red-500/5 p-1.5 rounded-lg border border-red-500/10 flex items-start gap-1 font-mono">
-                          <AlertCircle size={10} className="shrink-0 mt-0.5" />
-                          <span>{opp.lostReason}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {stageOpps.length === 0 && (
-                    <div className="h-28 border border-dashed border-[var(--color-border)] rounded-xl flex items-center justify-center text-[10px] text-[var(--color-muted-fg)]">
-                      Drag here
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      {isOppsLoading ? (
+        <div className="py-24 flex flex-col justify-center items-center gap-3">
+          <Spin size="large" />
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading active pipelines...</span>
         </div>
       ) : (
-        /* Table View */
-        <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-          <SharedTable
-            columns={tableColumns}
-            dataSource={filteredOpps}
-            onEdit={handleOpenEdit}
-            onDelete={(rec) => {
-              setOpps(opps.filter(o => o.id !== rec.id));
-              message.success('Opportunity deleted successfully');
-            }}
-          />
-        </div>
+        /* Kanban Board View */
+        viewMode === 'kanban' ? (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto min-h-[500px]">
+            {stages.map(st => {
+              const stageOpps = filteredOpps.filter(o => o.stage === st);
+              const stageTotal = stageOpps.reduce((sum, o) => sum + o.amount, 0);
+
+              return (
+                <div
+                  key={st}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, st)}
+                  className="bg-[var(--color-bg-tint)] rounded-2xl p-3 flex flex-col min-h-[450px] border border-[var(--color-border)]"
+                >
+                  {/* Column Header */}
+                  <div className="mb-4 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold tracking-wider uppercase text-[var(--color-fg)]">
+                        {st === 'QUALIFICATION' ? 'Qualification' :
+                         st === 'PROPOSAL' ? 'Proposal' :
+                         st === 'NEGOTIATION' ? 'Negotiation' :
+                         st === 'WON' ? 'Closed Won' : 'Closed Lost'}
+                      </span>
+                      <span className="text-[10px] bg-[var(--color-surface)] text-[var(--color-muted-fg)] font-semibold font-mono px-2 py-0.5 rounded-full border border-[var(--color-border)]">
+                        {stageOpps.length}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-mono text-[var(--color-muted-fg)] font-semibold">
+                      {stageTotal.toLocaleString('vi-VN')} VND
+                    </p>
+                  </div>
+
+                  {/* Cards Container */}
+                  <div className="flex-1 space-y-3 overflow-y-auto max-h-[500px] pr-1">
+                    {stageOpps.map(opp => (
+                      <div
+                        key={opp.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, opp.id)}
+                        className="bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-accent)] rounded-xl p-4 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all space-y-3 group relative"
+                      >
+                        <div>
+                          <Link href={`/opportunities/${opp.id}`} className="font-semibold text-xs text-[var(--color-fg)] hover:underline block mb-0.5">
+                            {opp.name}
+                          </Link>
+                          <span className="text-[10px] text-[var(--color-muted-fg)] font-semibold">{opp.companyName}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[10px] text-[var(--color-muted-fg)] font-mono">
+                          <span>{opp.closeDate}</span>
+                          <span className="font-semibold text-[var(--color-fg)]">{opp.amount.toLocaleString('vi-VN')} VND</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Progress percent={opp.probability} size="small" showInfo={false} strokeColor="var(--color-accent)" className="m-0" />
+                          <span className="text-[10px] font-mono font-semibold">{opp.probability}%</span>
+                        </div>
+
+                        {opp.lostReason && (
+                          <div className="text-[10px] text-red-500 bg-red-500/5 p-1.5 rounded-lg border border-red-500/10 flex items-start gap-1 font-mono">
+                            <AlertCircle size={10} className="shrink-0 mt-0.5" />
+                            <span>{opp.lostReason}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {stageOpps.length === 0 && (
+                      <div className="h-28 border border-dashed border-[var(--color-border)] rounded-xl flex items-center justify-center text-[10px] text-[var(--color-muted-fg)]">
+                        Drag here
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Table View */
+          <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
+            <SharedTable
+              columns={tableColumns}
+              dataSource={filteredOpps}
+              onEdit={handleOpenEdit}
+            />
+          </div>
+        )
       )}
 
       {/* Create / Edit Opportunity Modal */}
       <Modal
-        title={editingOpp ? 'Edit Opportunity' : 'Create Opportunity'}
+        title={editingOpp ? 'Chỉnh sửa cơ hội' : 'Tạo cơ hội bán hàng'}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
         width={600}
       >
         <div className="space-y-6 pt-4">
-          <FloatingInput label="Opportunity Title" value={name} onChange={setName} required />
+          <FloatingInput label="Tên cơ hội" value={name} onChange={setName} required />
           {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name}</p>}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="Estimated Amount (VND)" type="number" value={amount} onChange={setAmount} required />
+              <FloatingInput label="Giá trị ước lượng (VND)" type="number" value={amount} onChange={setAmount} required />
               {errors.amount && <p className="text-red-500 text-[10px] mt-1">{errors.amount}</p>}
             </div>
             <div>
-              <FloatingInput label="Target Close Date (YYYY-MM-DD)" type="date" value={closeDate} onChange={setCloseDate} required />
+              <FloatingInput label="Ngày dự kiến chốt (YYYY-MM-DD)" type="date" value={closeDate} onChange={setCloseDate} required />
               {errors.closeDate && <p className="text-red-500 text-[10px] mt-1">{errors.closeDate}</p>}
             </div>
           </div>
@@ -620,23 +617,23 @@ export default function Opportunities() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Associated Customer Account
+                Tài khoản khách hàng
               </label>
               <Select
                 value={companyId}
                 onChange={handleCompanyChange}
-                options={mockAccounts.map(a => ({ value: a.id, label: a.name }))}
+                options={realAccounts.map(a => ({ value: a.id, label: a.name }))}
                 className="w-full h-11"
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Representative Contact
+                Người đại diện liên hệ
               </label>
               <Select
                 value={contactId}
                 onChange={setContactId}
-                options={mockContacts.filter(c => c.companyId === companyId).map(c => ({ value: c.id, label: c.name }))}
+                options={realContacts.filter(c => c.accountId === companyId).map(c => ({ value: c.id, label: `${c.firstName || ''} ${c.lastName || ''}`.trim() }))}
                 className="w-full h-11"
               />
             </div>
@@ -644,8 +641,8 @@ export default function Opportunities() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-mono uppercase tracking-widest text(--color-muted-fg)">
-                Sales Stage
+              <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+                Giai đoạn bán hàng
               </label>
               <Select
                 value={stage}
@@ -660,7 +657,7 @@ export default function Opportunities() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Service Interest
+                Dịch vụ quan tâm
               </label>
               <Select
                 value={serviceInterest}
@@ -673,7 +670,19 @@ export default function Opportunities() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Scope Description
+              Nhân viên chịu trách nhiệm (Owner)
+            </label>
+            <Select
+              value={assignedTo}
+              onChange={setAssignedTo}
+              options={realUsers.map(u => ({ value: u.id, label: u.name }))}
+              className="w-full h-11"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+              Mô tả chi tiết / Scope
             </label>
             <textarea
               placeholder="Describe scope, notes..."
@@ -684,25 +693,26 @@ export default function Opportunities() {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button onClick={() => setModalOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button type="primary" onClick={handleSave} className="rounded-xl">Save changes</Button>
+            <Button onClick={() => setModalOpen(false)} className="rounded-xl">Hủy</Button>
+            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">Lưu thay đổi</Button>
           </div>
         </div>
       </Modal>
 
       {/* Closed Lost Reason Modal */}
       <Modal
-        title="Mark Opportunity as Closed Lost"
+        title="Đóng cơ hội bán hàng với trạng thái Thất bại (Lost)"
         open={lostModalOpen}
         onCancel={() => { setLostModalOpen(false); setDraggedOppId(null); }}
         onOk={handleSaveLost}
-        okText="Confirm Close Lost"
-        cancelText="Cancel"
+        confirmLoading={closeLostMutation.isPending}
+        okText="Xác nhận Closed Lost"
+        cancelText="Hủy"
       >
         <div className="space-y-4 pt-4">
-          <p className="text-xs text-[var(--color-muted-fg)]">To close this opportunity as lost, please provide a valid reason (e.g. Budget limitation, Competitor won, Scope change).</p>
+          <p className="text-xs text-[var(--color-muted-fg)]">Để đánh dấu cơ hội này thất bại, vui lòng cung cấp lý do (ví dụ: Giới hạn ngân sách, Đối thủ cạnh tranh thắng, Thay đổi yêu cầu từ phía khách hàng).</p>
           <textarea
-            placeholder="Reason for loss..."
+            placeholder="Lý do thất bại..."
             value={lostReason}
             onChange={(e) => setLostReason(e.target.value)}
             className="w-full min-h-[100px] p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-fg)] focus:outline-none"

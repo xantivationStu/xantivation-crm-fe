@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Select, Tag, message, Drawer } from 'antd';
+import { Select, Tag, message, Drawer, Spin } from 'antd';
 import { Search, ChevronRight, CheckCircle2, ShieldCheck, XCircle, AlertCircle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import Link from 'next/link';
+import { useDeals } from '@/hooks/api/useDeal';
 
 interface DealRecord {
   id: string;
@@ -21,35 +22,6 @@ interface DealRecord {
   companyName: string;
 }
 
-const mockDeals: DealRecord[] = [
-  {
-    id: '1',
-    code: 'DEAL-2026-00001',
-    name: 'CRM Integration Deal',
-    amount: 209000000,
-    stage: 'DRAFT',
-    expectedStart: '2026-09-30',
-    paymentTerms: '50% upfront, 50% on final delivery',
-    timeline: '4-6 weeks after contract signing',
-    milestonesCount: 0,
-    opportunityName: 'CRM Integration Contract',
-    companyName: 'Xantivation Dev',
-  },
-  {
-    id: '2',
-    code: 'DEAL-2026-00002',
-    name: 'CyberCore Brand Strategy Deal',
-    amount: 82500000,
-    stage: 'CLOSED_WON',
-    expectedStart: '2026-08-15',
-    paymentTerms: '100% advance payment',
-    timeline: '3 weeks',
-    milestonesCount: 1,
-    opportunityName: 'Brand Identity Redesign',
-    companyName: 'CyberCore LLC',
-  },
-];
-
 const stageOptions = [
   { value: 'DRAFT', label: 'Draft' },
   { value: 'INTERNAL_REVIEW', label: 'Internal Review' },
@@ -59,12 +31,31 @@ const stageOptions = [
 ];
 
 export default function Deals() {
-  const [deals, setDeals] = useState<DealRecord[]>(mockDeals);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStage, setFilterStage] = useState('ALL');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  const filteredDeals = deals.filter((d) => {
+  // API Queries
+  const { data: dealsRes, isLoading } = useDeals();
+
+  const rawDeals = dealsRes?.data?.items || [];
+
+  // Map API response to local record format
+  const dealsList: DealRecord[] = rawDeals.map((d: any) => ({
+    id: d.id,
+    code: d.dealCode || `DEAL-${d.id.substring(0, 8).toUpperCase()}`,
+    name: d.projectName,
+    amount: Number(d.dealValue) || 0,
+    stage: d.status as any,
+    expectedStart: d.expectedStart ? d.expectedStart.substring(0, 10) : '',
+    paymentTerms: d.paymentTerms || '',
+    timeline: d.timeline || '',
+    milestonesCount: (d.milestones || []).length,
+    opportunityName: d.projectName || '',
+    companyName: d.account?.name || '',
+  }));
+
+  const filteredDeals = dealsList.filter((d) => {
     const matchesSearch =
       d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,7 +66,7 @@ export default function Deals() {
 
   const columns: ColumnProps<DealRecord>[] = [
     {
-      title: 'Deal Code',
+      title: 'Mã Deal',
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -88,7 +79,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Project Name & Client',
+      title: 'Tên dự án & Khách hàng',
       dataIndex: 'name',
       key: 'name',
       render: (val, rec) => (
@@ -101,7 +92,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Deal Value',
+      title: 'Giá trị',
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
@@ -111,7 +102,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Status Stage',
+      title: 'Giai đoạn duyệt',
       dataIndex: 'stage',
       key: 'stage',
       render: (stage: string) => {
@@ -124,23 +115,23 @@ export default function Deals() {
       },
     },
     {
-      title: 'Expected Start',
+      title: 'Bắt đầu dự kiến',
       dataIndex: 'expectedStart',
       key: 'expectedStart',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Milestones Count',
+      title: 'Số mốc thanh toán',
       dataIndex: 'milestonesCount',
       key: 'milestonesCount',
       render: (count: number) => (
         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-fg)] font-mono">
-          {count} milestones
+          {count} mốc
         </span>
       ),
     },
     {
-      title: 'Action',
+      title: 'Thao tác',
       dataIndex: 'id',
       key: 'action',
       render: (_, rec) => (
@@ -148,7 +139,7 @@ export default function Deals() {
           href={`/deals/${rec.id}`}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
         >
-          <span>Manage</span>
+          <span>Quản lý</span>
           <ChevronRight size={12} />
         </Link>
       ),
@@ -162,9 +153,9 @@ export default function Deals() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Deals</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Thỏa thuận thương mại (Deals)</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Manage deal progression stages, specify payment milestones distribution, and generate contracts.
+            Quản lý quy trình phê duyệt thương vụ, cấu hình mốc thanh toán và theo dõi tiến độ hợp đồng.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -173,7 +164,7 @@ export default function Deals() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search deals..."
+              placeholder="Tìm kiếm thương vụ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -199,7 +190,7 @@ export default function Deals() {
           </button>
 
           <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium">
-            Auto-created from Accepted Quotations
+            Tự động tạo từ Báo giá được Duyệt
           </div>
         </div>
       </div>
@@ -237,14 +228,14 @@ export default function Deals() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Deal Stage
+              Giai đoạn duyệt
             </label>
             <Select
               value={filterStage}
               onChange={setFilterStage}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Stages' },
+                { value: 'ALL', label: 'Tất cả giai đoạn' },
                 ...stageOptions,
               ]}
             />
@@ -252,17 +243,19 @@ export default function Deals() {
         </div>
       </Drawer>
 
-      {/* Unified Table Container Canvas */}
-      <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-        <SharedTable
-          columns={columns}
-          dataSource={filteredDeals}
-          onDelete={(rec) => {
-            setDeals(deals.filter((d) => d.id !== rec.id));
-            message.success('Deal deleted successfully');
-          }}
-        />
-      </div>
+      {isLoading ? (
+        <div className="py-24 flex flex-col justify-center items-center gap-3">
+          <Spin size="large" />
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading active deals...</span>
+        </div>
+      ) : (
+        <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
+          <SharedTable
+            columns={columns}
+            dataSource={filteredDeals}
+          />
+        </div>
+      )}
     </div>
   );
 }

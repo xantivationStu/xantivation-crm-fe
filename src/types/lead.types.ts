@@ -51,6 +51,9 @@ export interface Lead {
   budgetApproved?: boolean;
   authorityMarker?: boolean;
   description?: string;
+  aiScore?: number;
+  aiScoreData?: any;
+  aiScoredAt?: string;
   ownerId?: string;
   owner?: {
     id: string;

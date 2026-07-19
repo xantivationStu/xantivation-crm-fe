@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Modal, Select, message, Tag, Drawer } from 'antd';
+import { Button, Modal, Select, message, Tag, Drawer, Spin } from 'antd';
 import { Plus, Download, Search, FileText, Check, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import { FloatingInput } from '@/components/FloatingInput';
 import Link from 'next/link';
+import { useQuotations, useCreateQuotation, useUpdateQuotation, useCloneQuotation } from '@/hooks/api/useQuotation';
+import { useOpportunities } from '@/hooks/api/useOpportunity';
+import { useUsers } from '@/hooks/api/useUser';
+import { PackageType, AdjustmentType, QuotationStatus } from '@/types/quotation.types';
 
 interface QuotationItemRecord {
   itemName: string;
@@ -21,7 +25,7 @@ interface QuotationRecord {
   code: string;
   version: number;
   projectName: string;
-  serviceType: 'WEBSITE' | 'APP_MVP' | 'BRANDING' | 'UI_UX' | 'SOCIAL_KIT' | 'MAINTENANCE' | 'CUSTOM';
+  serviceType: string;
   packageType: 'BASIC' | 'STANDARD' | 'PREMIUM' | 'CUSTOM';
   validUntil: string;
   totalAmount: number;
@@ -43,70 +47,6 @@ interface QuotationRecord {
   owner: string;
   items: QuotationItemRecord[];
 }
-
-const mockQuotations: QuotationRecord[] = [
-  {
-    id: '1',
-    code: 'QUO-2026-00001',
-    version: 1,
-    projectName: 'CRM Integration Project',
-    serviceType: 'CUSTOM',
-    packageType: 'CUSTOM',
-    validUntil: '2026-09-30',
-    totalAmount: 200000000,
-    adjustmentType: 'DISCOUNT',
-    adjustmentAmount: 10000000,
-    adjustmentReason: 'Loyalty client discount',
-    vatRate: 10,
-    vatAmount: 19000000,
-    grandTotal: 209000000,
-    status: 'SENT',
-    opportunityId: '1',
-    opportunityName: 'CRM Integration Contract',
-    companyName: 'Xantivation Dev',
-    timeline: '4-6 weeks after contract signing',
-    revisionLimit: 3,
-    paymentTerms: '50% upfront, 50% on final delivery',
-    termsConditions: 'Standard service terms apply.',
-    notes: 'Internal project notes.',
-    owner: 'System Admin',
-    items: [
-      { itemName: 'Next.js Frontend Shell', description: 'Dashboard views and charts', fixedPrice: 120000000, estimatedEffort: '3 weeks', deliverables: 'Source code files' },
-      { itemName: 'NestJS Backend API core', description: 'REST APIs and DB migration schema', fixedPrice: 80000000, estimatedEffort: '2 weeks', deliverables: 'Backend source files' },
-    ],
-  },
-  {
-    id: '2',
-    code: 'QUO-2026-00002',
-    version: 2,
-    projectName: 'CyberCore Brand Strategy',
-    serviceType: 'BRANDING',
-    packageType: 'PREMIUM',
-    validUntil: '2026-08-15',
-    totalAmount: 75000000,
-    adjustmentAmount: 0,
-    vatRate: 10,
-    vatAmount: 7500000,
-    grandTotal: 82500000,
-    status: 'ACCEPTED',
-    opportunityId: '2',
-    opportunityName: 'Brand Identity Redesign',
-    companyName: 'CyberCore LLC',
-    timeline: '3 weeks',
-    revisionLimit: 5,
-    paymentTerms: '100% advance payment',
-    notes: 'VIP client priority',
-    owner: 'Jane Smith',
-    items: [
-      { itemName: 'AWS Architecture Assessment', description: 'Assessment of current security issues', fixedPrice: 75000000, estimatedEffort: '1 week', deliverables: 'Detailed PDF report' },
-    ],
-  },
-];
-
-const mockOpportunities = [
-  { id: '1', name: 'CRM Integration Contract', companyName: 'Xantivation Dev' },
-  { id: '2', name: 'Brand Identity Redesign', companyName: 'CyberCore LLC' },
-];
 
 const serviceOptions = [
   { value: 'WEBSITE', label: 'Website Development' },
@@ -135,9 +75,57 @@ const statusOptions = [
 ];
 
 export default function Quotations() {
-  const [quotations, setQuotations] = useState<QuotationRecord[]>(mockQuotations);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState<QuotationRecord | null>(null);
+
+  // API Queries
+  const { data: quotationsRes, isLoading: isQuotationsLoading } = useQuotations({ limit: 100 });
+  const { data: oppsRes } = useOpportunities({ limit: 100 });
+  const { data: usersRes } = useUsers();
+
+  // API Mutations
+  const createMutation = useCreateQuotation();
+  const updateMutation = useUpdateQuotation();
+  const cloneMutation = useCloneQuotation();
+
+  const rawQuotations = quotationsRes?.data?.items || [];
+  const realOpps = (oppsRes?.data?.items || []) as any[];
+  const realUsers = usersRes?.data || [];
+
+  // Map API response to local record format
+  const quotationsList: QuotationRecord[] = rawQuotations.map((q: any) => ({
+    id: q.id,
+    code: q.quotationCode || `QUO-${q.id.substring(0, 8).toUpperCase()}`,
+    version: q.version || 1,
+    projectName: q.projectName,
+    serviceType: q.serviceType,
+    packageType: q.packageType as any,
+    validUntil: q.validUntil ? q.validUntil.substring(0, 10) : '',
+    totalAmount: q.subtotal || 0,
+    adjustmentType: q.adjustmentType as any,
+    adjustmentAmount: q.adjustmentAmount || 0,
+    adjustmentReason: q.adjustmentReason || '',
+    vatRate: q.taxPercent || 0,
+    vatAmount: q.taxAmount || 0,
+    grandTotal: q.grandTotal || 0,
+    status: q.status as any,
+    opportunityId: q.opportunityId || '',
+    opportunityName: q.opportunity?.name || '',
+    companyName: q.opportunity?.account?.name || '',
+    timeline: q.timeline || '',
+    revisionLimit: q.revisionLimit || 3,
+    paymentTerms: q.paymentTerms || '',
+    termsConditions: q.termsConditions || '',
+    notes: q.notes || '',
+    owner: q.owner ? `${q.owner.firstName || ''} ${q.owner.lastName || ''}`.trim() : 'System Admin',
+    items: (q.items || []).map((item: any) => ({
+      itemName: item.itemName,
+      description: item.description,
+      fixedPrice: Number(item.fixedPrice) || 0,
+      estimatedEffort: item.estimatedEffort,
+      deliverables: item.deliverables,
+    })),
+  }));
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,9 +134,9 @@ export default function Quotations() {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   // Form states
-  const [opportunityId, setOpportunityId] = useState('1');
+  const [opportunityId, setOpportunityId] = useState('');
   const [projectName, setProjectName] = useState('');
-  const [serviceType, setServiceType] = useState<'WEBSITE' | 'APP_MVP' | 'BRANDING' | 'UI_UX' | 'SOCIAL_KIT' | 'MAINTENANCE' | 'CUSTOM'>('WEBSITE');
+  const [serviceType, setServiceType] = useState('WEBSITE');
   const [packageType, setPackageType] = useState<'BASIC' | 'STANDARD' | 'PREMIUM' | 'CUSTOM'>('STANDARD');
   const [validUntil, setValidUntil] = useState('');
   const [status, setStatus] = useState<'DRAFT' | 'REVIEW' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED'>('DRAFT');
@@ -182,7 +170,7 @@ export default function Quotations() {
 
   const handleOpenCreate = () => {
     setEditingQuotation(null);
-    setOpportunityId('1');
+    setOpportunityId(realOpps[0]?.id || '');
     setProjectName('');
     setServiceType('WEBSITE');
     setPackageType('STANDARD');
@@ -259,13 +247,10 @@ export default function Quotations() {
 
   const { subtotal, vatVal, grandVal } = calculatePricing();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors: Record<string, string> = {};
     if (!projectName.trim()) newErrors.projectName = 'Project Name is required';
     if (!validUntil) newErrors.validUntil = 'Validity date is required';
-    else if (new Date(validUntil) < new Date(new Date().setHours(0,0,0,0))) {
-      newErrors.validUntil = 'Validity date must be in the future';
-    }
 
     if (items.length === 0 || items.some(item => !item.itemName.trim() || Number(item.fixedPrice) <= 0)) {
       newErrors.items = 'All scope items must have a name and a price greater than 0';
@@ -284,85 +269,55 @@ export default function Quotations() {
       return;
     }
 
-    const currentOpp = mockOpportunities.find(o => o.id === opportunityId);
-    
-    // Auto Manager Review Rule: If grandTotal > 50,000,000 and status is DRAFT/SENT but adjusting DISCOUNT, trigger review
-    let resolvedStatus = status;
-    if (grandVal > 50000000 && adjustmentType === 'DISCOUNT' && status === 'DRAFT') {
-      resolvedStatus = 'REVIEW';
-      message.info('Grand total exceeds 50,000,000 VND with discount. Submitted for Manager Review.');
-    }
+    const payload = {
+      opportunityId,
+      projectName,
+      serviceType,
+      packageType: packageType as PackageType,
+      adjustmentType: adjustmentType as AdjustmentType,
+      adjustmentAmount: adjustmentType ? Number(adjustmentAmount) : undefined,
+      adjustmentReason: adjustmentType ? adjustmentReason : undefined,
+      taxPercent: Number(vatRate),
+      timeline,
+      revisionLimit,
+      paymentTerms,
+      termsConditions,
+      notes,
+      validUntil,
+      items: items.map(i => ({
+        itemName: i.itemName,
+        description: i.description,
+        fixedPrice: Number(i.fixedPrice),
+        estimatedEffort: i.estimatedEffort,
+        deliverables: i.deliverables,
+      })),
+    };
 
-    if (editingQuotation) {
-      setQuotations(
-        quotations.map(q =>
-          q.id === editingQuotation.id
-            ? {
-                ...q,
-                projectName,
-                opportunityId,
-                opportunityName: currentOpp?.name || '',
-                companyName: currentOpp?.companyName || '',
-                serviceType,
-                packageType,
-                validUntil,
-                totalAmount: subtotal,
-                adjustmentType,
-                adjustmentAmount: Number(adjustmentAmount) || 0,
-                adjustmentReason,
-                vatRate: Number(vatRate) || 0,
-                vatAmount: vatVal,
-                grandTotal: grandVal,
-                status: resolvedStatus,
-                timeline,
-                revisionLimit,
-                paymentTerms,
-                termsConditions,
-                notes,
-                items,
-                version: q.version + 1,
-              }
-            : q,
-        ),
-      );
-      message.success('Quotation version incremented successfully');
-    } else {
-      const year = new Date().getFullYear();
-      const code = `QUO-${year}-${String(quotations.length + 1).padStart(5, '0')}`;
-      const newQuotation: QuotationRecord = {
-        id: String(quotations.length + 1),
-        code,
-        version: 1,
-        projectName,
-        opportunityId,
-        opportunityName: currentOpp?.name || '',
-        companyName: currentOpp?.companyName || '',
-        serviceType,
-        packageType,
-        validUntil,
-        totalAmount: subtotal,
-        adjustmentType,
-        adjustmentAmount: Number(adjustmentAmount) || 0,
-        adjustmentReason,
-        vatRate: Number(vatRate) || 0,
-        vatAmount: vatVal,
-        grandTotal: grandVal,
-        status: resolvedStatus,
-        timeline,
-        revisionLimit,
-        paymentTerms,
-        termsConditions,
-        notes,
-        owner: 'System Admin',
-        items,
-      };
-      setQuotations([...quotations, newQuotation]);
-      message.success('Quotation drafted successfully');
+    try {
+      if (editingQuotation) {
+        await updateMutation.mutateAsync({
+          id: editingQuotation.id,
+          dto: payload,
+        });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+      setModalOpen(false);
+    } catch (err) {
+      // Handled
     }
-    setModalOpen(false);
   };
 
-  const filteredQuotations = quotations.filter(q => {
+  const handleCloneVersion = async (id: string) => {
+    try {
+      await cloneMutation.mutateAsync(id);
+    } catch (err) {
+      // Handled
+    }
+  };
+
+  // Filter Quotations
+  const filteredQuotations = quotationsList.filter(q => {
     const matchesSearch = q.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           q.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           q.companyName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -371,40 +326,36 @@ export default function Quotations() {
     return matchesSearch && matchesStatus && matchesService;
   });
 
-  const columns: ColumnProps<QuotationRecord>[] = [
+  // Table Columns
+  const tableColumns: ColumnProps<QuotationRecord>[] = [
     {
-      title: 'Quote Code',
+      title: 'Quotation Code',
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
         <Link href={`/quotations/${rec.id}`} className="font-mono text-xs font-semibold bg-[var(--color-surface)] px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:text-[var(--color-accent)] transition-colors">
-          {val} v{rec.version}
+          {val} (v{rec.version})
         </Link>
       ),
     },
     {
-      title: 'Project Name & Client',
+      title: 'Project Details',
       dataIndex: 'projectName',
       key: 'projectName',
       render: (val, rec) => (
         <div>
-          <Link href={`/quotations/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline block mb-0.5">
+          <Link href={`/quotations/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline block">
             {val}
           </Link>
-          <span className="text-[10px] text-[var(--color-muted-fg)]">{rec.companyName}</span>
+          <span className="text-[10px] text-[var(--color-muted-fg)] font-mono">{rec.serviceType}</span>
         </div>
       ),
     },
     {
-      title: 'Service & Package',
-      dataIndex: 'serviceType',
-      key: 'serviceType',
-      render: (val, rec) => (
-        <div className="flex gap-2 items-center">
-          <span className="text-[10px] bg-[var(--color-surface)] px-2 py-0.5 rounded border border-[var(--color-border)] font-mono text-[var(--color-muted-fg)]">{val}</span>
-          <span className="text-[10px] bg-indigo-500/10 text-indigo-500 px-2 py-0.5 rounded font-bold font-mono">{rec.packageType}</span>
-        </div>
-      ),
+      title: 'Customer',
+      dataIndex: 'companyName',
+      key: 'companyName',
+      render: (val) => <span className="text-xs font-semibold text-[var(--color-fg)]">{val}</span>,
     },
     {
       title: 'Grand Total',
@@ -419,7 +370,7 @@ export default function Quotations() {
       render: (st) => (
         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
           st === 'ACCEPTED' ? 'bg-green-500/10 text-green-500' :
-          st === 'REJECTED' ? 'bg-red-500/10 text-red-500' :
+          st === 'REJECTED' || st === 'EXPIRED' ? 'bg-red-500/10 text-red-500' :
           st === 'REVIEW' ? 'bg-amber-500/10 text-amber-600' :
           st === 'SENT' ? 'bg-blue-500/10 text-blue-500' : 'bg-gray-500/10 text-gray-500'
         }`}>{st}</span>
@@ -432,23 +383,17 @@ export default function Quotations() {
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val}</span>,
     },
     {
-      title: 'Owner',
-      dataIndex: 'owner',
-      key: 'owner',
-      render: (val) => <span className="text-xs font-semibold">{val}</span>,
-    },
-    {
-      title: 'PDF Export',
+      title: 'Actions',
       dataIndex: 'id',
-      key: 'pdf',
-      render: (_, rec) => (
-        <button
-          onClick={() => handleDownloadPdf(rec)}
-          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer font-mono"
-        >
-          <Download size={10} />
-          <span>PDF</span>
-        </button>
+      key: 'actions',
+      render: (_: any, rec) => (
+        <div className="flex items-center gap-2">
+          <Button size="small" onClick={() => handleCloneVersion(rec.id)} loading={cloneMutation.isPending} className="text-[10px] rounded-lg">Clone v{rec.version + 1}</Button>
+          <Button size="small" onClick={() => handleDownloadPdf(rec)} className="text-[10px] rounded-lg flex items-center gap-1">
+            <Download size={10} />
+            <span>PDF</span>
+          </Button>
+        </div>
       ),
     },
   ];
@@ -459,10 +404,10 @@ export default function Quotations() {
   return (
     <div className="space-y-8">
       {/* Title & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Quotations</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Draft proposals, customize line items, calculate VAT rates, and download PDF proposals.</p>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Configure project scope, fixed pricing, version controls, and contract generation.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -470,47 +415,41 @@ export default function Quotations() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search quotations..."
+              placeholder="Search project, quotation..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
             />
           </div>
 
-          {/* Filters Button */}
           <button
             onClick={() => setFilterDrawerOpen(true)}
-            className={`flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-              activeFiltersCount > 0
-                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 text-[var(--color-accent)]'
-                : 'border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
-            }`}
+            className="flex items-center gap-2 border border-[var(--color-border)] bg-[var(--color-bg-tint)] text-[var(--color-fg)] hover:bg-[var(--color-surface)] px-4 h-10 rounded-xl text-xs font-semibold cursor-pointer relative"
           >
             <SlidersHorizontal size={14} />
             <span>Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-[var(--color-accent)] text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
               </span>
             )}
           </button>
 
-          {/* New Quotation Button */}
           <Button
             type="primary"
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
+            className="flex items-center gap-2 h-10 px-5 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>New Quotation</span>
+            <span>Create Quotation</span>
           </Button>
         </div>
       </div>
 
-      {/* Advanced Filter Drawer */}
+      {/* Advanced Filters Drawer */}
       <Drawer
         title={
-          <div className="flex items-center justify-between w-full pr-4">
+          <div className="flex justify-between items-center w-full pr-8">
             <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
             {activeFiltersCount > 0 && (
               <button
@@ -565,7 +504,7 @@ export default function Quotations() {
               onChange={setFilterService}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Services' },
+                { value: 'ALL', label: 'All Service Types' },
                 ...serviceOptions,
               ]}
             />
@@ -573,51 +512,51 @@ export default function Quotations() {
         </div>
       </Drawer>
 
-      {/* Unified Table Container Canvas */}
-      <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-        <SharedTable
-          columns={columns}
-          dataSource={filteredQuotations}
-          onEdit={handleOpenEdit}
-          onDelete={(rec) => {
-            setQuotations(quotations.filter(q => q.id !== rec.id));
-            message.success('Quotation deleted successfully');
-          }}
-        />
-      </div>
+      {isQuotationsLoading ? (
+        <div className="py-24 flex flex-col justify-center items-center gap-3">
+          <Spin size="large" />
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading quotations list...</span>
+        </div>
+      ) : (
+        <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
+          <SharedTable
+            columns={tableColumns}
+            dataSource={filteredQuotations}
+            onEdit={handleOpenEdit}
+          />
+        </div>
+      )}
 
-      {/* Overhauled Detailed Quotation Modal */}
+      {/* Create / Edit Quotation Modal */}
       <Modal
-        title={editingQuotation ? `Edit Quotation v${editingQuotation.version + 1}` : 'Create Quotation'}
+        title={editingQuotation ? `Edit Quotation ${editingQuotation.code}` : 'Create New Quotation'}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
-        width={850}
+        width={750}
       >
-        <div className="space-y-8 pt-4 overflow-y-auto max-h-[75vh] pr-2">
-          {/* Section 1: Header */}
+        <div className="space-y-6 pt-4 max-h-[70vh] overflow-y-auto pr-2">
+          {/* Part 1: Header Parameters */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5">
-              1. General Header
-            </h3>
+            <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5 font-bold">1. Header & Association</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Sales Opportunity Link
+                  Linked CRM Opportunity
                 </label>
                 <Select
                   value={opportunityId}
                   onChange={setOpportunityId}
-                  options={mockOpportunities.map(o => ({ value: o.id, label: `${o.name} (${o.companyName})` }))}
+                  options={realOpps.map((opp: any) => ({ value: opp.id, label: opp.name }))}
                   className="w-full h-11"
                 />
               </div>
-              <FloatingInput label="Project Name / Proposal Name" value={projectName} onChange={setProjectName} required />
+              <FloatingInput label="Project Name" value={projectName} onChange={setProjectName} required />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Service Interest Type
+                  Service Type
                 </label>
                 <Select
                   value={serviceType}
@@ -628,245 +567,153 @@ export default function Quotations() {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Scope Tier Package
+                  Package Type
                 </label>
                 <Select
                   value={packageType}
-                  onChange={setPackageType}
+                  onChange={setPackageType as any}
                   options={packageOptions}
                   className="w-full h-11"
                 />
               </div>
+              <div>
+                <FloatingInput label="Validity Date" type="date" value={validUntil} onChange={setValidUntil} required />
+              </div>
             </div>
-            {errors.projectName && <p className="text-red-500 text-[10px] mt-0.5">{errors.projectName}</p>}
           </div>
 
-          {/* Section 2: Scope Items */}
+          {/* Part 2: Scope Items */}
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-1.5">
-              <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)]">
-                2. Scope Items & Workpackages
-              </h3>
-              <Button size="small" type="dashed" onClick={handleAddItemRow} className="cursor-pointer">
-                + Add Item
+              <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] font-bold">2. Scope Items & Fixed Prices</h4>
+              <Button size="small" onClick={handleAddItemRow} className="text-xs rounded-lg flex items-center gap-1">
+                <Plus size={10} />
+                <span>Add Item</span>
               </Button>
             </div>
-            
-            {errors.items && <p className="text-red-500 text-[10px] my-1">{errors.items}</p>}
-
+            {errors.items && <p className="text-red-500 text-[10px] font-mono">{errors.items}</p>}
             <div className="space-y-4">
               {items.map((item, idx) => (
-                <div key={idx} className="bg-[var(--color-bg)] p-4 rounded-xl border border-[var(--color-border)] space-y-3 relative group">
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-6">
-                      <input
-                        type="text"
-                        placeholder="Item / Module name *"
-                        value={item.itemName}
-                        onChange={(e) => handleItemFieldChange(idx, 'itemName', e.target.value)}
-                        className="w-full bg-transparent border-b border-[var(--color-border)] outline-none py-1 text-xs font-semibold text-[var(--color-fg)]"
-                        required
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <input
-                        type="number"
-                        placeholder="Price (VND) *"
-                        value={item.fixedPrice || ''}
-                        onChange={(e) => handleItemFieldChange(idx, 'fixedPrice', Number(e.target.value))}
-                        className="w-full bg-transparent border-b border-[var(--color-border)] outline-none py-1 text-xs text-[var(--color-fg)] font-mono"
-                        required
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Effort (e.g. 2 weeks)"
-                        value={item.estimatedEffort || ''}
-                        onChange={(e) => handleItemFieldChange(idx, 'estimatedEffort', e.target.value)}
-                        className="w-full bg-transparent border-b border-[var(--color-border)] outline-none py-1 text-xs text-[var(--color-fg)]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <textarea
-                      placeholder="Detailed Description..."
-                      value={item.description || ''}
-                      onChange={(e) => handleItemFieldChange(idx, 'description', e.target.value)}
-                      className="w-full min-h-[60px] p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-[11px] text-[var(--color-fg)] outline-none"
-                    />
-                    <textarea
-                      placeholder="Deliverables..."
-                      value={item.deliverables || ''}
-                      onChange={(e) => handleItemFieldChange(idx, 'deliverables', e.target.value)}
-                      className="w-full min-h-[60px] p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-[11px] text-[var(--color-fg)] outline-none"
-                    />
-                  </div>
-
+                <div key={idx} className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative space-y-3">
                   {items.length > 1 && (
                     <button
                       onClick={() => handleRemoveItemRow(idx)}
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-600 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      className="absolute top-2 right-2 text-[10px] font-semibold text-red-500 hover:underline cursor-pointer"
                     >
-                      Delete Row
+                      Remove
                     </button>
                   )}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2">
+                      <FloatingInput label="Scope item name" value={item.itemName} onChange={(val) => handleItemFieldChange(idx, 'itemName', val)} required />
+                    </div>
+                    <div>
+                      <FloatingInput label="Fixed price (VND)" type="number" value={item.fixedPrice ? String(item.fixedPrice) : ''} onChange={(val) => handleItemFieldChange(idx, 'fixedPrice', Number(val))} required />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2">
+                      <FloatingInput label="Deliverables details" value={item.deliverables || ''} onChange={(val) => handleItemFieldChange(idx, 'deliverables', val)} />
+                    </div>
+                    <div>
+                      <FloatingInput label="Estimated effort" value={item.estimatedEffort || ''} onChange={(val) => handleItemFieldChange(idx, 'estimatedEffort', val)} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Section 3: Price Summary */}
-          <div className="space-y-4 bg-[var(--color-bg-tint)] p-4 rounded-xl border border-[var(--color-border)]">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5">
-              3. Price & Adjustments Summary
-            </h3>
-            
-            <div className="grid grid-cols-3 gap-4">
+          {/* Part 3: Pricing Summary */}
+          <div className="space-y-4 bg-[var(--color-surface)]/40 p-4 border border-[var(--color-border)] rounded-2xl">
+            <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5 font-bold">3. Pricing Adjustment & VAT Summary</h4>
+            <div className="grid grid-cols-3 gap-4 items-start">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
                   Adjustment Type
                 </label>
                 <Select
-                  value={adjustmentType}
-                  onChange={(val) => {
-                    setAdjustmentType(val);
-                    if (!val) {
-                      setAdjustmentAmount('');
-                      setAdjustmentReason('');
-                    }
-                  }}
+                  value={adjustmentType || 'NONE'}
+                  onChange={(val) => setAdjustmentType(val === 'NONE' ? undefined : val as any)}
                   options={[
-                    { value: undefined, label: 'No adjustments' },
-                    { value: 'DISCOUNT', label: 'Discount (Discount Amount)' },
-                    { value: 'RUSH_FEE', label: 'Rush Fee (Premium Charge)' },
-                    { value: 'OTHER', label: 'Other Surcharges' },
+                    { value: 'NONE', label: 'No adjustments' },
+                    { value: 'DISCOUNT', label: 'Discount (-)' },
+                    { value: 'RUSH_FEE', label: 'Rush fee (+)' },
+                    { value: 'OTHER', label: 'Other adjustments (+)' },
                   ]}
                   className="w-full h-11"
-                  allowClear
                 />
               </div>
-
+              {adjustmentType && (
+                <div>
+                  <FloatingInput label="Adjustment Amount (VND)" type="number" value={adjustmentAmount} onChange={setAdjustmentAmount} required />
+                  {errors.adjustmentAmount && <p className="text-red-500 text-[10px] mt-1">{errors.adjustmentAmount}</p>}
+                </div>
+              )}
               <div>
-                <FloatingInput
-                  label="Adjustment Amount (VND)"
-                  type="number"
-                  value={adjustmentAmount}
-                  onChange={setAdjustmentAmount}
-                  disabled={!adjustmentType}
-                />
-                {errors.adjustmentAmount && <p className="text-red-500 text-[10px] mt-0.5">{errors.adjustmentAmount}</p>}
+                <FloatingInput label="VAT Rate (%)" type="number" value={vatRate} onChange={setVatRate} required />
               </div>
-
-              <FloatingInput
-                label="VAT Rate (%)"
-                type="number"
-                value={vatRate}
-                onChange={setVatRate}
-              />
             </div>
-
             {adjustmentType && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Adjustment Reason *
-                </label>
-                <textarea
-                  placeholder="Why is this discount/surcharge applied?"
-                  value={adjustmentReason}
-                  onChange={(e) => setAdjustmentReason(e.target.value)}
-                  className="w-full p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-fg)] outline-none"
-                  required
-                />
-                {errors.adjustmentReason && <p className="text-red-500 text-[10px] mt-0.5">{errors.adjustmentReason}</p>}
+              <div>
+                <FloatingInput label="Reason for adjustment" value={adjustmentReason} onChange={setAdjustmentReason} required />
+                {errors.adjustmentReason && <p className="text-red-500 text-[10px] mt-1">{errors.adjustmentReason}</p>}
               </div>
             )}
 
-            {/* Calculations Breakdown */}
-            <div className="pt-4 border-t border-[var(--color-border)] space-y-2 text-xs font-mono text-[var(--color-fg)]">
+            <div className="pt-4 border-t border-[var(--color-border)] space-y-2 text-xs font-mono font-semibold">
               <div className="flex justify-between">
-                <span>Subtotal Workpackages Amount:</span>
+                <span className="text-[var(--color-muted-fg)]">Subtotal:</span>
                 <span>{subtotal.toLocaleString('vi-VN')} VND</span>
               </div>
               {adjustmentType && (
-                <div className="flex justify-between text-indigo-500 font-semibold">
+                <div className="flex justify-between text-[var(--color-accent)]">
                   <span>Adjustment ({adjustmentType}):</span>
-                  <span>{adjustmentType === 'DISCOUNT' ? '-' : '+'}{ (Number(adjustmentAmount) || 0).toLocaleString('vi-VN') } VND</span>
+                  <span>{adjustmentType === 'DISCOUNT' ? '-' : '+'}{Number(adjustmentAmount).toLocaleString('vi-VN')} VND</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>VAT Calculated Amount ({vatRate}%):</span>
+              <div className="flex justify-between text-[var(--color-muted-fg)]">
+                <span>VAT ({vatRate}%):</span>
                 <span>{vatVal.toLocaleString('vi-VN')} VND</span>
               </div>
-              <div className="flex justify-between text-base font-bold border-t border-[var(--color-border)] pt-2 text-[var(--color-accent)]">
-                <span>Grand Total Amount (VNĐ):</span>
-                <span>{grandVal.toLocaleString('vi-VN')} VND</span>
+              <div className="flex justify-between text-base border-t border-[var(--color-border)]/50 pt-2 text-[var(--color-fg)]">
+                <span>Grand Total:</span>
+                <span className="font-bold">{grandVal.toLocaleString('vi-VN')} VND</span>
               </div>
             </div>
           </div>
 
-          {/* Section 4: Terms & Conditions */}
+          {/* Part 4: Terms & Signatures */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5">
-              4. Terms, Validity & Private Notes
-            </h3>
-
+            <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] border-b border-[var(--color-border)] pb-1.5 font-bold">4. Timeline & payment terms</h4>
             <div className="grid grid-cols-2 gap-4">
-              <FloatingInput label="Project Timeline (e.g. 4-6 weeks)" value={timeline} onChange={setTimeline} />
-              <FloatingInput label="Revision limit count" type="number" value={String(revisionLimit)} onChange={(v) => setRevisionLimit(Number(v) || 3)} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+              <FloatingInput label="Project delivery timeline" value={timeline} onChange={setTimeline} />
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Payment Terms
+                  Revision limits (times)
                 </label>
-                <textarea
-                  placeholder="e.g. 50% upfront, 50% on delivery"
-                  value={paymentTerms}
-                  onChange={(e) => setPaymentTerms(e.target.value)}
-                  className="w-full min-h-[80px] p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-fg)] outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Terms & Conditions
-                </label>
-                <textarea
-                  placeholder="e.g. Deliverable formats, source access..."
-                  value={termsConditions}
-                  onChange={(e) => setTermsConditions(e.target.value)}
-                  className="w-full min-h-[80px] p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-fg)] outline-none"
+                <Select
+                  value={revisionLimit}
+                  onChange={setRevisionLimit}
+                  options={[
+                    { value: 1, label: '1 revision' },
+                    { value: 2, label: '2 revisions' },
+                    { value: 3, label: '3 revisions (Default)' },
+                    { value: 5, label: '5 revisions' },
+                    { value: 10, label: '10 revisions' },
+                  ]}
+                  className="w-full h-11"
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FloatingInput label="Valid Until Date (YYYY-MM-DD) *" type="date" value={validUntil} onChange={setValidUntil} required />
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Internal Private Notes (Notes)
-                </label>
-                <textarea
-                  placeholder="Internal notes only, hidden from client..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full min-h-[85px] p-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-fg)] outline-none"
-                />
-              </div>
-            </div>
-            {errors.validUntil && <p className="text-red-500 text-[10px] mt-0.5">{errors.validUntil}</p>}
+            <FloatingInput label="Payment milestone terms" value={paymentTerms} onChange={setPaymentTerms} />
+            <FloatingInput label="Terms & Conditions clauses" value={termsConditions} onChange={setTermsConditions} />
+            <FloatingInput label="Internal notes" value={notes} onChange={setNotes} />
           </div>
 
-          {/* Submit */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]/50">
-            <Button onClick={() => setModalOpen(false)} className="rounded-xl cursor-pointer">
-              Cancel
-            </Button>
-            <Button type="primary" onClick={handleSave} className="rounded-xl cursor-pointer">
-              {editingQuotation ? 'Save Changes & Update Version' : 'Save draft quotation'}
-            </Button>
+          <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+            <Button onClick={() => setModalOpen(false)} className="rounded-xl">Cancel</Button>
+            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">Save changes</Button>
           </div>
         </div>
       </Modal>

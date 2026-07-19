@@ -39,32 +39,48 @@ export function useCreateQuotation() {
   });
 }
 
-export function useCloneQuotation(id: string) {
+export function useCloneQuotation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const response = await api.post(`/quotations/${id}/clone`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      queryClient.invalidateQueries({ queryKey: ['quotation', id] });
       message.success('Đã nhân bản phiên bản báo giá mới!');
     },
   });
 }
 
-export function useUpdateQuotationStatus(id: string) {
+export function useUpdateQuotationStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (status: string) => {
-      const response = await api.patch(`/quotations/${id}/status`, { status });
+    mutationFn: async (payload: { id: string; status: string }) => {
+      const response = await api.patch(`/quotations/${payload.id}/status`, { status: payload.status });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['quotation', id] });
+      queryClient.invalidateQueries({ queryKey: ['quotation', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       message.success('Cập nhật trạng thái báo giá thành công!');
+    },
+  });
+}
+
+export function useUpdateQuotation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { id: string; dto: any }) => {
+      const response = await api.patch(`/quotations/${payload.id}`, payload.dto);
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      queryClient.invalidateQueries({ queryKey: ['quotation', variables.id] });
+      message.success('Cập nhật Báo giá thành công!');
     },
   });
 }

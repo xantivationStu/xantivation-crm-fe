@@ -28,11 +28,15 @@ export interface PaymentSchedule {
   amount: number;
   dueDate: string;
   invoiceCode?: string;
+  invoiceNumber?: string;
   invoiceDate?: string;
   paidDate?: string;
+  paidAt?: string;
   paidAmount?: number;
   status: PaymentStatus;
   notes?: string;
+  contractId?: string;
+  contract?: any;
 }
 
 export interface Contract {

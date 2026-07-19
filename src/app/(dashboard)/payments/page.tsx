@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Select, Tag, message, Drawer } from 'antd';
+import { Select, Tag, message, Drawer, Spin, Button } from 'antd';
 import { Search, ChevronRight, CreditCard, AlertTriangle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import Link from 'next/link';
+import { usePayments, useConfirmPayment } from '@/hooks/api/useContract';
 
 interface PaymentRecord {
   id: string;
@@ -20,43 +21,6 @@ interface PaymentRecord {
   contractTitle: string;
 }
 
-const mockPayments: PaymentRecord[] = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2026-00001',
-    amount: 104500000,
-    dueDate: '2026-07-05',
-    paidAt: '2026-07-05 15:00',
-    status: 'PAID',
-    milestoneName: 'Deposit Payment',
-    milestonePercentage: 50,
-    clientName: 'Xantivation Dev',
-    contractTitle: 'Service Agreement - Xantivation Dev - CRM Integration Deal',
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2026-00002',
-    amount: 104500000,
-    dueDate: '2026-08-05',
-    status: 'PENDING',
-    milestoneName: 'Final Delivery',
-    milestonePercentage: 50,
-    clientName: 'Xantivation Dev',
-    contractTitle: 'Service Agreement - Xantivation Dev - CRM Integration Deal',
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2026-00003',
-    amount: 82500000,
-    dueDate: '2026-08-15',
-    status: 'OVERDUE',
-    milestoneName: 'Advance payment',
-    milestonePercentage: 100,
-    clientName: 'CyberCore LLC',
-    contractTitle: 'Service Agreement - CyberCore LLC - Brand Strategy Deal',
-  },
-];
-
 const statusOptions = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'PAID', label: 'Paid' },
@@ -65,30 +29,38 @@ const statusOptions = [
 ];
 
 export default function Payments() {
-  const [payments, setPayments] = useState<PaymentRecord[]>(mockPayments);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  const handleSimulatePayment = (rec: PaymentRecord) => {
-    message.loading(`Processing payment for invoice ${rec.invoiceNumber}...`);
-    setTimeout(() => {
-      setPayments(
-        payments.map((p) =>
-          p.id === rec.id
-            ? {
-                ...p,
-                status: 'PAID',
-                paidAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-              }
-            : p
-        )
-      );
-      message.success(`Invoice ${rec.invoiceNumber} paid successfully.`);
-    }, 1500);
+  // API Queries & Mutations
+  const { data: paymentsRes, isLoading } = usePayments({ limit: 100 });
+  const confirmPaymentMutation = useConfirmPayment();
+
+  const rawPayments = paymentsRes?.data?.items || [];
+
+  const paymentsList: PaymentRecord[] = rawPayments.map((p: any) => ({
+    id: p.id,
+    invoiceNumber: p.invoiceNumber || `INV-${p.id.substring(0, 8).toUpperCase()}`,
+    amount: Number(p.amount) || 0,
+    dueDate: p.dueDate ? p.dueDate.substring(0, 10) : '',
+    paidAt: p.paidAt ? p.paidAt.substring(0, 16).replace('T', ' ') : undefined,
+    status: p.status as any,
+    milestoneName: p.milestoneName || 'Milestone',
+    milestonePercentage: p.milestonePercentage || 0,
+    clientName: p.contract?.account?.name || 'Xantivation Client',
+    contractTitle: p.contract?.title || 'Service Agreement milestone',
+  }));
+
+  const handleSimulatePayment = async (rec: PaymentRecord) => {
+    try {
+      await confirmPaymentMutation.mutateAsync(rec.id);
+    } catch (err) {
+      // Handled
+    }
   };
 
-  const filteredPayments = payments.filter((p) => {
+  const filteredPayments = paymentsList.filter((p) => {
     const matchesSearch =
       p.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.milestoneName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,102 +72,88 @@ export default function Payments() {
 
   const columns: ColumnProps<PaymentRecord>[] = [
     {
-      title: 'Invoice No',
+      title: 'Mã Hóa đơn',
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
       render: (val, rec) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/payments/${rec.id}`}
-            className="font-mono text-xs font-semibold bg-[var(--color-surface)] px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:text-[var(--color-accent)] transition-colors"
-          >
-            {val}
-          </Link>
-          {rec.status === 'OVERDUE' && (
-            <span className="text-[10px] text-red-500 font-semibold inline-flex items-center gap-0.5">
-              <AlertTriangle size={10} /> Overdue
-            </span>
-          )}
-        </div>
+        <Link
+          href={`/payments/${rec.id}`}
+          className="font-mono text-xs font-semibold bg-[var(--color-surface)] px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:text-[var(--color-accent)] transition-colors"
+        >
+          {val}
+        </Link>
       ),
     },
     {
-      title: 'Billing Milestone',
+      title: 'Đợt thanh toán',
       dataIndex: 'milestoneName',
       key: 'milestoneName',
       render: (val, rec) => (
         <div>
-          <span className="text-xs font-semibold block">{val}</span>
-          <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">{rec.milestonePercentage}% of contract</span>
+          <Link href={`/payments/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline block mb-0.5">
+            {val}
+          </Link>
+          <span className="text-[10px] text-[var(--color-muted-fg)] font-mono">Tỷ lệ: {rec.milestonePercentage}%</span>
         </div>
       ),
     },
     {
-      title: 'Client & Contract',
-      dataIndex: 'clientName',
-      key: 'clientName',
-      render: (val, rec) => (
-        <div>
-          <p className="font-semibold text-[var(--color-fg)]">{val}</p>
-          <p className="text-xs text-[var(--color-muted-fg)] max-w-xs truncate">{rec.contractTitle}</p>
-        </div>
-      ),
-    },
-    {
-      title: 'Amount',
+      title: 'Số tiền',
       dataIndex: 'amount',
       key: 'amount',
-      render: (val: number) => (
+      render: (amount: number) => (
         <span className="font-mono font-semibold text-xs text-[var(--color-fg)]">
-          {val.toLocaleString('vi-VN')} VND
+          {amount.toLocaleString('vi-VN')} VND
         </span>
       ),
     },
     {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
         let color = 'bg-gray-500/10 text-gray-500';
         if (status === 'PAID') color = 'bg-green-500/10 text-green-500';
-        if (status === 'PENDING') color = 'bg-blue-500/10 text-blue-500';
+        if (status === 'PENDING') color = 'bg-amber-500/10 text-amber-600';
         if (status === 'OVERDUE') color = 'bg-red-500/10 text-red-500';
         if (status === 'CANCELLED') color = 'bg-red-900/10 text-red-600';
         return <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${color}`}>{status}</span>;
       },
     },
     {
-      title: 'Due Date',
+      title: 'Hạn thanh toán',
       dataIndex: 'dueDate',
       key: 'dueDate',
-      render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val}</span>,
+      render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Paid At',
+      title: 'Ngày thanh toán',
       dataIndex: 'paidAt',
       key: 'paidAt',
-      render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val || '-'}</span>,
+      render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || '-'}</span>,
     },
     {
-      title: 'Actions',
+      title: 'Thao tác',
       dataIndex: 'id',
-      key: 'actions',
+      key: 'action',
       render: (_, rec) => (
         <div className="flex items-center gap-2">
-          {(rec.status === 'PENDING' || rec.status === 'OVERDUE') && (
-            <button
+          {rec.status === 'PENDING' && (
+            <Button
+              size="small"
+              type="primary"
               onClick={() => handleSimulatePayment(rec)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white transition-all cursor-pointer"
+              loading={confirmPaymentMutation.isPending}
+              className="text-[10px] rounded-lg cursor-pointer"
             >
-              <CreditCard size={12} />
-              <span>Pay</span>
-            </button>
+              Xác nhận
+            </Button>
           )}
           <Link
             href={`/payments/${rec.id}`}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
-            <span>Manage</span>
+            <span>Chi tiết</span>
             <ChevronRight size={12} />
           </Link>
         </div>
@@ -210,9 +168,9 @@ export default function Payments() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Payments</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Hóa đơn & Thanh toán (Payments)</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Manage invoicing schedules, track due dates, and process customer payments.
+            Theo dõi dòng tiền thực thu, quản lý công nợ khách hàng và lịch sử thanh toán hóa đơn.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -221,7 +179,7 @@ export default function Payments() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search payments..."
+              placeholder="Tìm hóa đơn, mốc thanh toán..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -246,8 +204,8 @@ export default function Payments() {
             )}
           </button>
 
-          <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium">
-            Auto-created from Contract Milestones
+          <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium font-mono">
+            Auto-generated from Milestones of Signed Contracts
           </div>
         </div>
       </div>
@@ -285,14 +243,14 @@ export default function Payments() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Payment Status
+              Trạng thái thanh toán
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Statuses' },
+                { value: 'ALL', label: 'Tất cả trạng thái' },
                 ...statusOptions,
               ]}
             />
@@ -300,17 +258,19 @@ export default function Payments() {
         </div>
       </Drawer>
 
-      {/* Unified Table Container Canvas */}
-      <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-        <SharedTable
-          columns={columns}
-          dataSource={filteredPayments}
-          onDelete={(rec) => {
-            setPayments(payments.filter((p) => p.id !== rec.id));
-            message.success('Payment term deleted successfully');
-          }}
-        />
-      </div>
+      {isLoading ? (
+        <div className="py-24 flex flex-col justify-center items-center gap-3">
+          <Spin size="large" />
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading payments list...</span>
+        </div>
+      ) : (
+        <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
+          <SharedTable
+            columns={columns}
+            dataSource={filteredPayments}
+          />
+        </div>
+      )}
     </div>
   );
 }

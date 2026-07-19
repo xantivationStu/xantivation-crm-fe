@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Select, Tag, message, Drawer } from 'antd';
+import { Select, Tag, message, Drawer, Spin } from 'antd';
 import { Search, ChevronRight, PenTool, AlertCircle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
 import type { ColumnProps } from '@/components/SharedTable';
 import Link from 'next/link';
+import { useContracts, useForceSignContract } from '@/hooks/api/useContract';
 
 interface ContractRecord {
   id: string;
@@ -21,36 +22,6 @@ interface ContractRecord {
   dealName: string;
   companyName: string;
 }
-
-const mockContracts: ContractRecord[] = [
-  {
-    id: '1',
-    code: 'HĐ-2026-00001',
-    title: 'Service Agreement - Xantivation Dev - CRM Integration Deal',
-    contractValue: 209000000,
-    contractType: 'SERVICE_AGREEMENT',
-    signingDeadline: '2026-08-01',
-    docusignEnvelopeId: 'env-90df-8b21-4432',
-    status: 'SIGNED',
-    signedAt: '2026-07-05 14:32',
-    dealId: '1',
-    dealName: 'CRM Integration Deal',
-    companyName: 'Xantivation Dev',
-  },
-  {
-    id: '2',
-    code: 'HĐ-2026-00002',
-    title: 'Service Agreement - CyberCore LLC - Brand Strategy Deal',
-    contractValue: 82500000,
-    contractType: 'SERVICE_AGREEMENT',
-    signingDeadline: '2026-08-15',
-    docusignEnvelopeId: 'env-12ef-34ac-789a',
-    status: 'SENT',
-    dealId: '2',
-    dealName: 'CyberCore Brand Strategy Deal',
-    companyName: 'CyberCore LLC',
-  },
-];
 
 const typeOptions = [
   { value: 'SERVICE_AGREEMENT', label: 'Service Agreement' },
@@ -69,31 +40,41 @@ const statusOptions = [
 ];
 
 export default function Contracts() {
-  const [contracts, setContracts] = useState<ContractRecord[]>(mockContracts);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  const handleDocuSignSign = (rec: ContractRecord) => {
-    message.loading(`Connecting to DocuSign Envelope: ${rec.docusignEnvelopeId}...`);
-    setTimeout(() => {
-      setContracts(
-        contracts.map((c) =>
-          c.id === rec.id
-            ? {
-                ...c,
-                status: 'SIGNED',
-                signedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-              }
-            : c
-        )
-      );
-      message.success('Contract signed successfully via DocuSign Connect Webhook.');
-    }, 1500);
+  // API Queries
+  const { data: contractsRes, isLoading } = useContracts({ limit: 100 });
+  const forceSignMutation = useForceSignContract();
+
+  const rawContracts = contractsRes?.data?.items || [];
+
+  const contractsList: ContractRecord[] = rawContracts.map((c: any) => ({
+    id: c.id,
+    code: c.contractCode || `HĐ-${c.id.substring(0, 8).toUpperCase()}`,
+    title: c.title,
+    contractValue: Number(c.contractValue) || 0,
+    contractType: c.contractType as any,
+    signingDeadline: c.signingDeadline ? c.signingDeadline.substring(0, 10) : '',
+    docusignEnvelopeId: c.esignEnvelopeId || '',
+    status: c.status as any,
+    signedAt: c.signedDate ? c.signedDate.substring(0, 16).replace('T', ' ') : undefined,
+    dealId: c.dealId,
+    dealName: c.deal?.projectName || '',
+    companyName: c.account?.name || '',
+  }));
+
+  const handleDocuSignSign = async (rec: ContractRecord) => {
+    try {
+      await forceSignMutation.mutateAsync(rec.id);
+    } catch (err) {
+      // Handled
+    }
   };
 
-  const filteredContracts = contracts.filter((c) => {
+  const filteredContracts = contractsList.filter((c) => {
     const matchesSearch =
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,7 +86,7 @@ export default function Contracts() {
 
   const columns: ColumnProps<ContractRecord>[] = [
     {
-      title: 'Contract Code',
+      title: 'Mã hợp đồng',
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -118,7 +99,7 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Title & Client',
+      title: 'Tiêu đề & Khách hàng',
       dataIndex: 'title',
       key: 'title',
       render: (val, rec) => (
@@ -131,7 +112,7 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Type',
+      title: 'Loại',
       dataIndex: 'contractType',
       key: 'contractType',
       render: (val) => {
@@ -147,7 +128,7 @@ export default function Contracts() {
       },
     },
     {
-      title: 'Value',
+      title: 'Giá trị',
       dataIndex: 'contractValue',
       key: 'contractValue',
       render: (val: number) => (
@@ -157,7 +138,7 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -171,13 +152,13 @@ export default function Contracts() {
       },
     },
     {
-      title: 'Deadline',
+      title: 'Hạn ký',
       dataIndex: 'signingDeadline',
       key: 'signingDeadline',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Actions',
+      title: 'Thao tác',
       dataIndex: 'id',
       key: 'actions',
       render: (_, rec) => (
@@ -188,14 +169,14 @@ export default function Contracts() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white transition-all cursor-pointer"
             >
               <PenTool size={12} />
-              <span>Sign</span>
+              <span>Ký số</span>
             </button>
           )}
           <Link
             href={`/contracts/${rec.id}`}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
-            <span>Manage</span>
+            <span>Quản lý</span>
             <ChevronRight size={12} />
           </Link>
         </div>
@@ -211,9 +192,9 @@ export default function Contracts() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Contracts</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Hợp đồng điện tử (Contracts)</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Manage electronic signature envelopes, track real-time DocuSign updates, and sign agreements.
+            Theo dõi chữ ký số DocuSign, kích hoạt thanh toán tự động và lưu trữ pháp lý thương mại.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -222,7 +203,7 @@ export default function Contracts() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search contracts..."
+              placeholder="Tìm kiếm hợp đồng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -248,7 +229,7 @@ export default function Contracts() {
           </button>
 
           <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium">
-            Auto-created from Closed Won Deals
+            Tự động tạo từ Thương vụ được duyệt (CLOSED_WON)
           </div>
         </div>
       </div>
@@ -289,47 +270,49 @@ export default function Contracts() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Contract Type
-            </label>
-            <Select
-              value={filterType}
-              onChange={setFilterType}
-              className="w-full h-11"
-              options={[
-                { value: 'ALL', label: 'All Types' },
-                ...typeOptions,
-              ]}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Contract Status
+              Trạng thái hợp đồng
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Statuses' },
+                { value: 'ALL', label: 'Tất cả trạng thái' },
                 ...statusOptions,
+              ]}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
+              Loại hợp đồng
+            </label>
+            <Select
+              value={filterType}
+              onChange={setFilterType}
+              className="w-full h-11"
+              options={[
+                { value: 'ALL', label: 'Tất cả loại' },
+                ...typeOptions,
               ]}
             />
           </div>
         </div>
       </Drawer>
 
-      {/* Unified Table Container Canvas */}
-      <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
-        <SharedTable
-          columns={columns}
-          dataSource={filteredContracts}
-          onDelete={(rec) => {
-            setContracts(contracts.filter((c) => c.id !== rec.id));
-            message.success('Contract deleted successfully');
-          }}
-        />
-      </div>
+      {isLoading ? (
+        <div className="py-24 flex flex-col justify-center items-center gap-3">
+          <Spin size="large" />
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading contracts list...</span>
+        </div>
+      ) : (
+        <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
+          <SharedTable
+            columns={columns}
+            dataSource={filteredContracts}
+          />
+        </div>
+      )}
     </div>
   );
 }
