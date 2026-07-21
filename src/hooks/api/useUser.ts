@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { BaseResponse } from '@/types/api.types';
 import { UserRole } from '@/types/auth.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export interface UserProfileDto {
@@ -50,10 +51,10 @@ export function useCreateUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      message.success('Tạo nhân viên mới thành công!');
+      message.success(i18n.t('hooks.user.employeeCreated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tạo nhân viên thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.employeeCreationFailed'));
     },
   });
 }
@@ -67,10 +68,10 @@ export function useUpdateUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      message.success('Cập nhật nhân viên thành công!');
+      message.success(i18n.t('hooks.user.employeeUpdated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật nhân viên thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.employeeUpdateFailed'));
     },
   });
 }
@@ -84,10 +85,10 @@ export function useDeleteUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      message.success('Xóa nhân viên thành công!');
+      message.success(i18n.t('hooks.user.employeeDeleted'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Xóa nhân viên thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.employeeDeletionFailed'));
     },
   });
 }
@@ -99,10 +100,10 @@ export function useUpdateProfile() {
       return response.data;
     },
     onSuccess: () => {
-      message.success('Cập nhật thông tin cá nhân thành công!');
+      message.success(i18n.t('hooks.user.profileUpdated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật thông tin thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.profileUpdateFailed'));
     },
   });
 }
@@ -126,10 +127,10 @@ export function useCreateSalesTeam() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-teams'] });
-      message.success('Tạo đội ngũ bán hàng thành công!');
+      message.success(i18n.t('hooks.user.salesTeamCreated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tạo đội ngũ thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.salesTeamCreationFailed'));
     },
   });
 }
@@ -143,10 +144,10 @@ export function useUpdateSalesTeam() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-teams'] });
-      message.success('Cập nhật đội ngũ thành công!');
+      message.success(i18n.t('hooks.user.salesTeamUpdated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật đội ngũ thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.salesTeamUpdateFailed'));
     },
   });
 }
@@ -160,10 +161,10 @@ export function useDeleteSalesTeam() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-teams'] });
-      message.success('Xóa đội ngũ thành công!');
+      message.success(i18n.t('hooks.user.salesTeamDeleted'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Xóa đội ngũ thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.user.salesTeamDeletionFailed'));
     },
   });
 }

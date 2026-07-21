@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Steps, Select, Modal, Progress, message, Table, Spin } from 'antd';
 import { ArrowLeft, User, Calendar, Plus, Trash2, ArrowRight, UserCheck, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Landmark } from 'lucide-react';
 import Link from 'next/link';
@@ -26,6 +27,7 @@ interface ScopeItemRecord {
 
 export default function DealDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState('overview');
 
   // API Queries
@@ -67,13 +69,13 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
     return (
       <div className="py-32 flex flex-col justify-center items-center gap-3">
         <Spin size="large" />
-        <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading deal details...</span>
+        <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('deals.loading')}</span>
       </div>
     );
   }
 
   if (!d) {
-    return <div className="p-8 text-center text-red-500 font-bold">Deal not found</div>;
+    return <div className="p-8 text-center text-red-500 font-bold">{t('deals.notFound')}</div>;
   }
 
   const dealTotalAmount = Number(d.dealValue) || 0;
@@ -107,12 +109,12 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
   const handleSaveMilestones = async () => {
     const totalPercent = milestones.reduce((sum, m) => sum + m.percentage, 0);
     if (totalPercent !== 100) {
-      message.error(`Tổng tỷ lệ phần trăm phải bằng 100% (Hiện tại là: ${totalPercent}%)`);
+      message.error(t('deals.errorTotalPercent', { current: totalPercent }));
       return;
     }
 
     if (milestones.some(m => !m.milestoneName.trim() || !m.dueDate)) {
-      message.error('Tất cả các mốc phải điền Tên mốc và Ngày đến hạn.');
+      message.error(t('deals.errorMilestonesValidation'));
       return;
     }
 
@@ -155,7 +157,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
 
   const scopesColumns = [
     {
-      title: 'Hạng mục dịch vụ',
+      title: t('deals.colServiceItems'),
       dataIndex: 'itemName',
       key: 'itemName',
       render: (val: string, rec: any) => (
@@ -166,13 +168,13 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
       )
     },
     {
-      title: 'Chi tiết bàn giao',
+      title: t('deals.colDeliverableDetails'),
       dataIndex: 'deliverables',
       key: 'deliverables',
       render: (val: string) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || '-'}</span>
     },
     {
-      title: 'Giá trị (VND)',
+      title: t('deals.colValue'),
       dataIndex: 'fixedPrice',
       key: 'fixedPrice',
       align: 'right' as const,
@@ -186,14 +188,14 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
       <div className="flex justify-between items-start shrink-0">
         <div>
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
-            <Link href="/deals" className="hover:underline">Deals</Link>
+            <Link href="/deals" className="hover:underline">{t('deals.breadcrumbDeals')}</Link>
             <span>&gt;</span>
             <span className="text-[var(--color-fg)] font-semibold">{d.dealCode || `DEAL-${d.id.substring(0,8).toUpperCase()}`}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
             {d.name}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Deal Code: {d.dealCode} • Client: {d.opportunity?.account?.name}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('deals.dealCode')}: {d.dealCode} • {t('deals.client')}: {d.opportunity?.account?.name}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -202,7 +204,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
             d.stage === 'CLOSED_LOST' ? 'bg-red-500/10 text-red-500' :
             'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
           }`}>
-            Trạng thái: {d.stage}
+            {t('deals.status')}: {d.stage}
           </span>
         </div>
       </div>
@@ -213,10 +215,10 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
           <Steps
             current={currentStep}
             items={[
-              { title: 'Draft', description: 'Milestones Config' },
-              { title: 'Internal Review', description: 'Manager Approval' },
-              { title: 'Customer Review', description: 'DocuSign Send' },
-              { title: 'Closed Won', description: 'Contract Signed' },
+              { title: t('deals.stepDraft'), description: t('deals.stepDescMilestones') },
+              { title: t('deals.stepInternalReview'), description: t('deals.stepDescManagerApproval') },
+              { title: t('deals.stepCustomerReview'), description: t('deals.stepDescDocuSign') },
+              { title: t('deals.stepClosedWon'), description: t('deals.stepDescContractSigned') },
             ]}
           />
         </div>
@@ -224,8 +226,8 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
         <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex items-center gap-3">
           <AlertTriangle className="text-red-500 shrink-0" size={20} />
           <div className="text-xs text-red-800 font-mono">
-            <span className="font-bold uppercase block">CLOSED LOST</span>
-            <span>Review Notes: {d.reviewNotes || 'No notes provided.'}</span>
+            <span className="font-bold uppercase block">{t('deals.closedLost')}</span>
+            <span>{t('deals.reviewNotes')} {d.reviewNotes || t('deals.noNotes')}</span>
           </div>
         </div>
       )}
@@ -237,9 +239,9 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
         <div className="lg:col-span-3 space-y-6">
           <div className="flex gap-6 border-b border-[var(--color-border)] pb-px">
             {[
-              { id: 'overview', name: 'Overview' },
-              { id: 'milestones', name: 'Cấu hình mốc thanh toán' },
-              { id: 'scopes', name: 'Scope Snapshot' },
+              { id: 'overview', name: t('deals.tabOverview') },
+              { id: 'milestones', name: t('deals.tabPaymentMilestoneConfig') },
+              { id: 'scopes', name: t('deals.tabScopeSnapshot') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -260,29 +262,29 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6 text-sm">
                   <div className="space-y-3">
-                    <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Commercial Terms</h3>
+                    <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">{t('deals.commercialTerms')}</h3>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                      <span className="text-[var(--color-muted-fg)]">Deal Value</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('deals.dealValue')}</span>
                       <span className="font-semibold font-mono">{(Number(d.dealValue) || 0).toLocaleString('vi-VN')} VND</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                      <span className="text-[var(--color-muted-fg)]">Expected Start</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('deals.expectedStart')}</span>
                       <span className="font-semibold font-mono">{d.expectedStart ? d.expectedStart.substring(0, 10) : ''}</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                      <span className="text-[var(--color-muted-fg)]">Payment Terms Description</span>
-                      <span className="font-semibold">{d.paymentTerms || 'Standard'}</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('deals.paymentTermsDescription')}</span>
+                      <span className="font-semibold">{d.paymentTerms || t('deals.standard')}</span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Client Representative</h3>
+                    <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">{t('deals.clientRepresentative')}</h3>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                      <span className="text-[var(--color-muted-fg)]">Company Account</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('deals.companyAccount')}</span>
                       <span className="font-semibold">{d.account?.name || '-'}</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                      <span className="text-[var(--color-muted-fg)]">Representative Contact</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('deals.representativeContact')}</span>
                       <span className="font-semibold">{d.contact ? `${d.contact.firstName || ''} ${d.contact.lastName || ''}`.trim() : '-'}</span>
                     </div>
                   </div>
@@ -290,7 +292,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
 
                 {d.reviewNotes && (
                   <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-2">
-                    <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Review Feedback Notes</h4>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">{t('deals.reviewFeedbackNotes')}</h4>
                     <p className="text-xs text-[var(--color-fg)] whitespace-pre-wrap">{d.reviewNotes}</p>
                   </div>
                 )}
@@ -300,22 +302,22 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
             {activeSubTab === 'milestones' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">Payment Milestones Schedule</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('deals.paymentMilestonesSchedule')}</h3>
                   {d.status === 'DRAFT' && (
                     <div className="flex items-center gap-2">
                       {isEditingMilestones ? (
                         <>
                           <Button size="small" onClick={handleAddMilestone} className="text-xs rounded-lg flex items-center gap-1">
                             <Plus size={10} />
-                            <span>Thêm mốc</span>
+                            <span>{t('deals.addMilestone')}</span>
                           </Button>
                           <Button size="small" type="primary" onClick={handleSaveMilestones} loading={configureMilestonesMutation.isPending} className="text-xs rounded-lg">
-                            Lưu cấu hình
+                            {t('deals.saveConfiguration')}
                           </Button>
                         </>
                       ) : (
                         <Button size="small" onClick={() => setIsEditingMilestones(true)} className="text-xs rounded-lg">
-                          Chỉnh sửa cấu hình
+                          {t('deals.editConfiguration')}
                         </Button>
                       )}
                     </div>
@@ -330,30 +332,30 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
                           onClick={() => handleRemoveMilestone(idx)}
                           className="absolute top-2 right-2 text-[10px] font-semibold text-red-500 hover:underline cursor-pointer"
                         >
-                          Remove
+                          {t('deals.remove')}
                         </button>
                         <div className="grid grid-cols-4 gap-4">
                           <div className="col-span-2">
-                            <FloatingInput label="Tên mốc thanh toán" value={m.milestoneName} onChange={(val) => handleMilestoneFieldChange(idx, 'milestoneName', val)} required />
+                            <FloatingInput label={t('deals.milestoneName')} value={m.milestoneName} onChange={(val) => handleMilestoneFieldChange(idx, 'milestoneName', val)} required />
                           </div>
                           <div>
-                            <FloatingInput label="Tỷ lệ (%)" type="number" value={m.percentage ? String(m.percentage) : ''} onChange={(val) => handleMilestoneFieldChange(idx, 'percentage', Number(val))} required />
+                            <FloatingInput label={t('deals.percentage')} type="number" value={m.percentage ? String(m.percentage) : ''} onChange={(val) => handleMilestoneFieldChange(idx, 'percentage', Number(val))} required />
                           </div>
                           <div>
-                            <FloatingInput label="Ngày đến hạn" type="date" value={m.dueDate} onChange={(val) => handleMilestoneFieldChange(idx, 'dueDate', val)} required />
+                            <FloatingInput label={t('deals.dueDate')} type="date" value={m.dueDate} onChange={(val) => handleMilestoneFieldChange(idx, 'dueDate', val)} required />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <FloatingInput label="Điều kiện nghiệm thu" value={m.acceptanceCondition || ''} onChange={(val) => handleMilestoneFieldChange(idx, 'acceptanceCondition', val)} />
+                          <FloatingInput label={t('deals.acceptanceCriteria')} value={m.acceptanceCondition || ''} onChange={(val) => handleMilestoneFieldChange(idx, 'acceptanceCondition', val)} />
                           <div className="flex items-center pl-2 text-xs font-mono text-[var(--color-muted-fg)] pt-4">
-                            Số tiền tương ứng: <span className="font-bold text-[var(--color-fg)] ml-1">{m.amount.toLocaleString('vi-VN')} VND</span>
+                            {t('deals.correspondingAmount')}: <span className="font-bold text-[var(--color-fg)] ml-1">{m.amount.toLocaleString('vi-VN')} VND</span>
                           </div>
                         </div>
                       </div>
                     ))}
                     {milestones.length === 0 && (
                       <div className="py-8 text-center text-xs text-[var(--color-muted-fg)] border border-dashed border-[var(--color-border)] rounded-xl">
-                        Chưa có mốc thanh toán nào. Nhấn "Thêm mốc" để bắt đầu cấu hình.
+                        {t('deals.noMilestonesEditing')}
                       </div>
                     )}
                   </div>
@@ -363,7 +365,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
                       <div key={idx} className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex justify-between items-center">
                         <div className="space-y-1">
                           <p className="font-semibold text-xs text-[var(--color-fg)]">{m.milestoneName}</p>
-                          <p className="text-[10px] text-[var(--color-muted-fg)]">Đến hạn: {m.dueDate} • Điều kiện: {m.acceptanceCondition || 'Ký nhận bàn giao'}</p>
+                          <p className="text-[10px] text-[var(--color-muted-fg)]">{t('deals.due')}: {m.dueDate} • {t('deals.condition')}: {m.acceptanceCondition || t('deals.signOffAcceptance')}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-mono font-bold text-xs">{m.amount.toLocaleString('vi-VN')} VND</p>
@@ -375,7 +377,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
                     ))}
                     {milestones.length === 0 && (
                       <div className="py-12 text-center text-xs text-[var(--color-muted-fg)]">
-                        Chưa cấu hình mốc thanh toán.
+                        {t('deals.noMilestonesView')}
                       </div>
                     )}
                   </div>
@@ -385,7 +387,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
 
             {activeSubTab === 'scopes' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Scope items details</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('deals.scopeItemsDetails')}</h3>
                 <Table
                   columns={scopesColumns}
                   dataSource={d.quotation?.items || []}
@@ -402,36 +404,36 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Deal Control Panel
+              {t('deals.dealControlPanel')}
             </h3>
 
             <div className="space-y-3">
               {d.status === 'DRAFT' && milestones.length > 0 && (
                 <Button type="primary" onClick={() => { setReviewNotes(''); setReviewModalOpen(true); }} className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl cursor-pointer">
                   <ShieldCheck size={14} />
-                  <span>Submit for Review</span>
+                  <span>{t('deals.submitForReview')}</span>
                 </Button>
               )}
 
               {d.status === 'INTERNAL_REVIEW' && (
                 <Button type="primary" onClick={handleApproveDeal} loading={approveDealMutation.isPending} className="w-full bg-green-600 hover:bg-green-700 border-green-600 flex items-center justify-center gap-1.5 h-10 rounded-xl cursor-pointer">
                   <CheckCircle2 size={14} />
-                  <span>Phê duyệt (Approve)</span>
+                  <span>{t('deals.approve')}</span>
                 </Button>
               )}
             </div>
 
             <div className="space-y-4 border-t border-[var(--color-border)]/50 pt-4 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-[var(--color-muted-fg)]">Revision:</span>
+                <span className="text-[var(--color-muted-fg)]">{t('deals.revision')}</span>
                 <span className="font-semibold">v{d.quotation?.version || 1}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--color-muted-fg)]">Owner:</span>
+                <span className="text-[var(--color-muted-fg)]">{t('deals.owner')}</span>
                 <span className="font-semibold">{assignedOwnerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--color-muted-fg)]">Created At:</span>
+                <span className="text-[var(--color-muted-fg)]">{t('deals.createdAt')}:</span>
                 <span className="font-semibold">{d.createdAt ? d.createdAt.substring(0, 10) : ''}</span>
               </div>
             </div>
@@ -442,18 +444,18 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
 
       {/* Submit for Review notes modal */}
       <Modal
-        title="Gửi phê duyệt nội bộ"
+        title={t('deals.submitForInternalApproval')}
         open={reviewModalOpen}
         onCancel={() => setReviewModalOpen(false)}
         onOk={handleSubmitReview}
         confirmLoading={submitReviewMutation.isPending}
-        okText="Gửi duyệt"
-        cancelText="Hủy"
+        okText={t('deals.submitForApproval')}
+        cancelText={t('deals.cancel')}
       >
         <div className="space-y-4 pt-4">
-          <p className="text-xs text-[var(--color-muted-fg)]">Vui lòng cung cấp ghi chú hoặc đề xuất duyệt mốc thanh toán cho Kế toán và Quản lý.</p>
+          <p className="text-xs text-[var(--color-muted-fg)]">{t('deals.reviewModalDescription')}</p>
           <textarea
-            placeholder="Review notes..."
+            placeholder={t('deals.reviewNotesPlaceholder')}
             value={reviewNotes}
             onChange={(e) => setReviewNotes(e.target.value)}
             className="w-full min-h-[100px] p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-fg)] focus:outline-none"

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Opportunity, CreateOpportunityDto, UpdateOpportunityDto } from '@/types/opportunity.types';
 import { PaginationQuery, PaginatedResponse, BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useOpportunities(query?: PaginationQuery) {
@@ -34,7 +35,7 @@ export function useCreateOpportunity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      message.success('Tạo Cơ hội bán hàng thành công!');
+      message.success(i18n.t('hooks.opportunity.createdSuccess'));
     },
   });
 }
@@ -49,7 +50,7 @@ export function useUpdateOpportunity() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] });
-      message.success('Cập nhật Cơ hội thành công!');
+      message.success(i18n.t('hooks.opportunity.updatedSuccess'));
     },
   });
 }
@@ -64,7 +65,7 @@ export function useCloseLostOpportunity() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] });
-      message.success('Đã cập nhật trạng thái Thất bại!');
+      message.success(i18n.t('hooks.opportunity.closedLost'));
     },
   });
 }
@@ -78,7 +79,7 @@ export function useDeleteOpportunity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      message.success('Xóa cơ hội bán hàng thành công!');
+      message.success(i18n.t('hooks.opportunity.deletedSuccess'));
     },
   });
 }

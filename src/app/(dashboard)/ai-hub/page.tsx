@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button, message, Steps, Tooltip, Badge } from 'antd';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 // React Flow Imports
 import {
@@ -54,10 +55,10 @@ const initialConversations: Conversation[] = [
     title: 'CRM Assistant introductory chat',
     agentType: 'assistant',
     isPinned: true,
-    lastMessage: 'Chào bạn! Tôi là CRM Assistant. Tôi có thể giúp gì cho bạn hôm nay?',
+    lastMessage: 'Hello! I am the CRM Assistant. How can I help you today?',
     updatedAt: '10:30',
     messages: [
-      { role: 'assistant', sender: 'assistant', content: 'Chào bạn! Tôi là CRM Assistant. Tôi có thể giúp gì cho bạn hôm nay?', timestamp: '10:30' }
+      { role: 'assistant', sender: 'assistant', content: 'Hello! I am the CRM Assistant. How can I help you today?', timestamp: '10:30' }
     ]
   },
   {
@@ -65,11 +66,11 @@ const initialConversations: Conversation[] = [
     title: 'Contract risk audit CON-2026-00005',
     agentType: 'deerflow',
     isPinned: true,
-    lastMessage: 'Phân tích rủi ro hoàn tất. Phát hiện 2 điều khoản có độ rủi ro trung bình.',
+    lastMessage: 'Risk analysis complete. Found 2 clauses with medium risk level.',
     updatedAt: '10:15',
     messages: [
-      { role: 'user', sender: 'user', content: 'Hãy phân tích điều khoản phạt hợp đồng CON-2026-00005', timestamp: '10:14' },
-      { role: 'assistant', sender: 'deerflow', content: 'Phân tích rủi ro hoàn tất. Phát hiện 2 điều khoản có độ rủi ro trung bình liên quan đến điều khoản bồi thường thiệt hại và thời gian bàn giao dự án.', timestamp: '10:15' }
+      { role: 'user', sender: 'user', content: 'Please analyze the penalty clauses in contract CON-2026-00005', timestamp: '10:14' },
+      { role: 'assistant', sender: 'deerflow', content: 'Risk analysis complete. Found 2 clauses with medium risk level related to damages compensation and project handover timeline.', timestamp: '10:15' }
     ]
   },
   {
@@ -77,30 +78,25 @@ const initialConversations: Conversation[] = [
     title: 'Telegram lead status notify campaign',
     agentType: 'hermes',
     isPinned: false,
-    lastMessage: 'Đã gửi thông báo thành công cho 5 thành viên nhóm Sales.',
+    lastMessage: 'Successfully notified 5 Sales team members.',
     updatedAt: 'Yesterday',
     messages: [
-      { role: 'user', sender: 'user', content: 'Gửi báo cáo trạng thái Lead hôm nay qua Telegram', timestamp: 'Yesterday' },
-      { role: 'assistant', sender: 'hermes', content: 'Đã gửi thông báo thành công cho 5 thành viên nhóm Sales qua kênh Telegram Bot.', timestamp: 'Yesterday' }
+      { role: 'user', sender: 'user', content: 'Send today Lead status report via Telegram', timestamp: 'Yesterday' },
+      { role: 'assistant', sender: 'hermes', content: 'Successfully notified 5 Sales team members via Telegram Bot.', timestamp: 'Yesterday' }
     ]
   }
 ];
 
-const agents = [
-  { id: 'assistant', name: 'CRM Assistant', description: 'Handles pipeline statistics & client matching', icon: Bot, color: 'indigo', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10', text: 'text-indigo-500', dot: 'bg-indigo-500' },
-  { id: 'deerflow', name: 'DeerFlow Sidecar', description: 'Enforces business rules & contract risk forecasting', icon: Workflow, color: 'emerald', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-500', dot: 'bg-emerald-500' },
-  { id: 'hermes', name: 'Hermes Gateway', description: 'Telegram / Zalo integration auto-responses', icon: Radio, color: 'amber', border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-500', dot: 'bg-amber-500' },
-];
 
 const slashCommands = [
-  { cmd: '/create-lead', desc: 'Tạo Lead mới trên hệ thống', agent: 'assistant' },
-  { cmd: '/create-opportunity', desc: 'Tạo cơ hội kinh doanh mới', agent: 'assistant' },
-  { cmd: '/generate-quotation', desc: 'Soạn thảo báo giá từ deal history', agent: 'deerflow' },
-  { cmd: '/generate-contract', desc: 'Tạo dự thảo hợp đồng pháp lý', agent: 'deerflow' },
-  { cmd: '/forecast', desc: 'Dự báo doanh thu bán hàng 30 ngày', agent: 'deerflow' },
-  { cmd: '/risk-analysis', desc: 'Phân tích rủi ro điều khoản hợp đồng', agent: 'deerflow' },
-  { cmd: '/send-telegram', desc: 'Gửi tin nhắn thông báo Telegram', agent: 'hermes' },
-  { cmd: '/send-zalo', desc: 'Gửi thông báo tin nhắn Zalo OA', agent: 'hermes' }
+  { cmd: '/create-lead', desc: 'Create new Lead in the system', agent: 'assistant' },
+  { cmd: '/create-opportunity', desc: 'Create new business opportunity', agent: 'assistant' },
+  { cmd: '/generate-quotation', desc: 'Generate quotation from deal history', agent: 'deerflow' },
+  { cmd: '/generate-contract', desc: 'Generate legal contract draft', agent: 'deerflow' },
+  { cmd: '/forecast', desc: 'Forecast sales revenue for 30 days', agent: 'deerflow' },
+  { cmd: '/risk-analysis', desc: 'Analyze contract clause risks', agent: 'deerflow' },
+  { cmd: '/send-telegram', desc: 'Send Telegram notification', agent: 'hermes' },
+  { cmd: '/send-zalo', desc: 'Send Zalo OA notification', agent: 'hermes' }
 ];
 
 const entityMentions = [
@@ -112,6 +108,12 @@ const entityMentions = [
 ];
 
 export default function AIHub() {
+  const { t } = useTranslation();
+  const agents = [
+    { id: 'assistant', name: t('aiHub.agentAssistant'), description: t('aiHub.descAssistant'), icon: Bot, color: 'indigo', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10', text: 'text-indigo-500', dot: 'bg-indigo-500' },
+    { id: 'deerflow', name: t('aiHub.agentDeerflow'), description: t('aiHub.descDeerflow'), icon: Workflow, color: 'emerald', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-500', dot: 'bg-emerald-500' },
+    { id: 'hermes', name: t('aiHub.agentHermes'), description: t('aiHub.descHermes'), icon: Radio, color: 'amber', border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-500', dot: 'bg-amber-500' },
+  ];
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeConvId, setActiveConvId] = useState('conv-1');
   const [activeAgent, setActiveAgent] = useState<'assistant' | 'deerflow' | 'hermes'>('assistant');
@@ -168,7 +170,7 @@ export default function AIHub() {
           const parsed = JSON.parse(event.data);
           setLiveLogs((prev) => [parsed, ...prev].slice(0, 100));
           refetchExecutionLogs();
-          message.info(`AI Workflow: ${parsed.agentName || 'Agent'} is ${parsed.status}`);
+          message.info(t('aiHub.workflowNotification', { agent: parsed.agentName || t('aiHub.aiAgent'), status: parsed.status }));
         } catch (e) {}
       };
     } catch (e) {}
@@ -215,7 +217,7 @@ export default function AIHub() {
     setShowSlashMenu(false);
     if (autoRoute) {
       setActiveAgent(agent as any);
-      message.info(`Auto Mode switched active agent to ${agent.toUpperCase()}`);
+      message.info(t('aiHub.autoModeSwitched', { agent: agent.toUpperCase() }));
     }
   };
 
@@ -248,7 +250,7 @@ export default function AIHub() {
     setConversations(
       conversations.map(c => 
         c.id === activeConv.id 
-          ? { ...c, messages: updatedMessages, lastMessage: prompt, updatedAt: 'Just now' }
+          ? { ...c, messages: updatedMessages, lastMessage: prompt, updatedAt: t('aiHub.justNow') }
           : c
       )
     );
@@ -335,27 +337,27 @@ export default function AIHub() {
   };
 
   const triggerAiResponseFallback = (prompt: string, messageHistory: Message[]) => {
-    let responseText = `Tôi đã nhận được yêu cầu "${prompt}". Với vai trò là ${activeAgent === 'assistant' ? 'CRM Assistant' : activeAgent === 'deerflow' ? 'DeerFlow Sidecar' : 'Hermes Gateway'}, tôi đang phân tích các tài nguyên liên quan...`;
+    let responseText = `I have received your request "${prompt}". As a ${activeAgent === 'assistant' ? t('aiHub.agentAssistant') : activeAgent === 'deerflow' ? t('aiHub.agentDeerflow') : t('aiHub.agentHermes')}, I am analyzing the relevant resources...`;
     
     if (prompt.startsWith('/forecast')) {
-      responseText = `### 📊 Báo cáo dự báo doanh thu 30 ngày (Weighted Forecast)
-Dựa trên pipeline của Xantivation Studio và xác suất các cơ hội:
+      responseText = `### 📊 30-Day Revenue Forecast Report (Weighted Forecast)
+Based on Xantivation Studio's pipeline and opportunity probabilities:
 
-| Stage | Số lượng | Tổng giá trị (VND) | Trọng số (%) | Giá trị dự báo |
+| Stage | Count | Total Value (VND) | Weight (%) | Forecast Value |
 |---|---|---|---|---|
 | Discovery | 5 | 120,000,000 | 10% | 12,000,000 |
 | Proposal | 3 | 450,000,000 | 50% | 225,000,000 |
 | Negotiation | 2 | 200,000,000 | 80% | 160,000,000 |
-| **Tổng cộng** | **10** | **770,000,000** | - | **397,000,000 VND** |
+| **Total** | **10** | **770,000,000** | - | **397,000,000 VND** |
 
-Dự báo dòng tiền thực nhận sẽ đạt đỉnh vào ngày 05/08/2026 khi mốc nghiệm thu của cơ hội **CRM Setup** hoàn thành.`;
+Actual cash flow forecast peaks on 05/08/2026 when the acceptance milestone for the **CRM Setup** opportunity is completed.`;
     } else if (prompt.startsWith('/risk-analysis')) {
-      responseText = `### ⚠️ Kết quả rà soát rủi ro pháp lý hợp đồng
-Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
-- **Điều khoản thanh toán**: Thiếu quy định phạt chậm trả tiền (Lãi suất phạt quá hạn). *Mức độ rủi ro: Trung bình*.
-- **Giới hạn trách nhiệm**: Trách nhiệm bồi thường của studio chưa được giới hạn bằng 100% giá trị hợp đồng thực nhận. *Mức độ rủi ro: Cao*.
+      responseText = `### ⚠️ Contract Legal Risk Review Results
+I have reviewed the agreement file and found:
+- **Payment Terms**: Missing late payment penalty clause (Overdue interest rate). *Risk Level: Medium*.
+- **Liability Limitations**: Studio's compensation liability is not limited to 100% of the actual contract value. *Risk Level: High*.
 
-*Khuyến nghị*: Bổ sung điều khoản giới hạn trách nhiệm bồi thường tại Mục 7.2 trước khi kích hoạt DocuSign gửi đối tác.`;
+*Recommendation*: Add liability limitation clause in Section 7.2 before activating DocuSign to send to partner.`;
     }
 
     let words = responseText.split(' ');
@@ -378,23 +380,23 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
     const newId = `conv-${Date.now()}`;
     const newChat: Conversation = {
       id: newId,
-      title: `Conversation ${conversations.length + 1}`,
+      title: t('aiHub.newChatTitle', { count: conversations.length + 1 }),
       agentType: activeAgent,
       isPinned: false,
-      lastMessage: `Hello, active agent is ${activeAgent.toUpperCase()}`,
+      lastMessage: t('aiHub.newChatActiveMessage', { agent: activeAgent.toUpperCase() }),
       updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       messages: [
         {
           role: 'assistant',
           sender: activeAgent,
-          content: `Chào bạn! Tôi là ${agents.find(a => a.id === activeAgent)?.name}. Tôi có thể giúp gì cho bạn?`,
+          content: t('aiHub.newChatWelcome', { agentName: agents.find(a => a.id === activeAgent)?.name }),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]
     };
     setConversations([newChat, ...conversations]);
     setActiveConvId(newId);
-    message.success('New conversation initialized.');
+    message.success(t('aiHub.newConversationInit'));
   };
 
   const handlePinChat = (id: string, e: React.MouseEvent) => {
@@ -402,13 +404,13 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
     setConversations(
       conversations.map(c => c.id === id ? { ...c, isPinned: !c.isPinned } : c)
     );
-    message.success('Conversation status updated.');
+    message.success(t('aiHub.conversationStatusUpdated'));
   };
 
   const handleDeleteChat = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (conversations.length <= 1) {
-      message.error('At least one conversation is required.');
+      message.error(t('aiHub.atLeastOneConversation'));
       return;
     }
     const remaining = conversations.filter(c => c.id !== id);
@@ -416,17 +418,17 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
     if (activeConvId === id) {
       setActiveConvId(remaining[0].id);
     }
-    message.warning('Conversation deleted.');
+    message.warning(t('aiHub.conversationDeleted'));
   };
 
   const handleUploadRag = () => {
-    message.loading('Scanning PDF paragraphs and computing embeddings vector mapping...');
+    message.loading(t('aiHub.scanningPdf'));
     setTimeout(() => {
       setDocuments([
         ...documents,
         { name: `Sales_Brief_Draft_${documents.length + 1}.pdf`, size: '820 KB', uploadedAt: new Date().toISOString().substring(0, 10), status: 'ready' }
       ]);
-      message.success('Vector mapping indexed successfully into FAISS database.');
+      message.success(t('aiHub.vectorMappingSuccess'));
     }, 1500);
   };
 
@@ -449,12 +451,12 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
       <div className="flex justify-between items-center shrink-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)] flex items-center gap-2">
-            <span>AI Hub Workspace</span>
+            <span>{t('aiHub.title')}</span>
             <span className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2 py-0.5 rounded-full border border-[var(--color-accent)]/20 font-mono">
-              V3 Pipeline
+              {t('aiHub.v3Pipeline')}
             </span>
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Multi-Agent cognitive console, automatic workflows routing, and CRM context sidecar.</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('aiHub.subtitle')}</p>
         </div>
 
         {/* View mode page switches */}
@@ -467,7 +469,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                 : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
             }`}
           >
-            Chat Console
+            {t('aiHub.chatConsole')}
           </button>
           <button
             onClick={() => setActiveWorkspaceTab('workflow')}
@@ -477,13 +479,13 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                 : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
             }`}
           >
-            Workflow Monitor
+            {t('aiHub.workflowMonitor')}
           </button>
           <Link
             href="/ai-hub/dashboard"
             className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all flex items-center"
           >
-            AI Analytics Dashboard
+            {t('aiHub.aiAnalyticsDashboard')}
           </Link>
         </div>
       </div>
@@ -498,14 +500,14 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
           <div className="p-4 border-b border-[var(--color-border)] space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Chat History
+                {t('aiHub.chatHistory')}
               </span>
               <button
                 onClick={handleCreateNewChat}
                 className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer"
               >
                 <Plus size={12} />
-                <span>New Chat</span>
+                <span>{t('aiHub.newChat')}</span>
               </button>
             </div>
 
@@ -513,7 +515,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
               <Search size={14} className="text-[var(--color-muted-fg)]" />
               <input
                 type="text"
-                placeholder="Search chats..."
+                placeholder={t('aiHub.searchChats')}
                 value={searchConvQuery}
                 onChange={(e) => setSearchConvQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -526,10 +528,10 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
               onChange={(e) => setFilterAgentType(e.target.value)}
               className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 rounded-lg text-[10px] text-[var(--color-fg)] outline-none"
             >
-              <option value="ALL">All Agents</option>
-              <option value="assistant">CRM Assistant</option>
-              <option value="deerflow">DeerFlow Sidecar</option>
-              <option value="hermes">Hermes Gateway</option>
+              <option value="ALL">{t('aiHub.allAgents')}</option>
+              <option value="assistant">{t('aiHub.filterAssistant')}</option>
+              <option value="deerflow">{t('aiHub.filterDeerflow')}</option>
+              <option value="hermes">{t('aiHub.filterHermes')}</option>
             </select>
           </div>
 
@@ -539,7 +541,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
             {pinnedConvs.length > 0 && (
               <div className="space-y-1">
                 <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase px-2 flex items-center gap-1">
-                  <Pin size={10} className="rotate-45" /> Pinned
+                  <Pin size={10} className="rotate-45" /> {t('aiHub.pinned')}
                 </p>
                 {pinnedConvs.map((c) => (
                   <div
@@ -575,7 +577,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
 
             {/* Recent section */}
             <div className="space-y-1">
-              <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase px-2">Recent chats</p>
+              <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase px-2">{t('aiHub.recentChats')}</p>
               {recentConvs.map((c) => (
                 <div
                   key={c.id}
@@ -606,7 +608,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                 </div>
               ))}
               {recentConvs.length === 0 && pinnedConvs.length === 0 && (
-                <p className="text-[10px] text-[var(--color-muted-fg)] text-center py-4">No conversations found.</p>
+                <p className="text-[10px] text-[var(--color-muted-fg)] text-center py-4">{t('aiHub.noConversations')}</p>
               )}
             </div>
           </div>
@@ -637,9 +639,9 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                                     {
                                       role: 'assistant',
                                       sender: agent.id as any,
-                                      content: `── Switched active model agent to ${agent.name} ──`,
+                                      content: t('aiHub.switchedDivider', { agentName: agent.name }),
                                       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                      dividerText: `Switched to ${agent.name}`
+                                      dividerText: t('aiHub.switchedTo', { name: agent.name })
                                     }
                                   ]
                                 }
@@ -664,7 +666,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
 
             {/* Auto Mode Mode Toggle */}
             <div className="flex items-center gap-2 border-l border-[var(--color-border)] pl-4">
-              <span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Auto Mode</span>
+              <span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('aiHub.autoMode')}</span>
               <button
                 onClick={() => setAutoRoute(!autoRoute)}
                 className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
@@ -672,7 +674,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                     ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-500' 
                     : 'border-[var(--color-border)] text-[var(--color-muted-fg)]'
                 }`}
-                title="Automatically route queries to optimal agent"
+                title={t('aiHub.autoRouteTitle')}
               >
                 <Sparkles size={13} />
               </button>
@@ -683,9 +685,9 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
           <div className="bg-[var(--color-bg)]/40 px-6 py-2 border-b border-[var(--color-border)]/50 text-[10px] font-mono text-[var(--color-muted-fg)] flex justify-between items-center">
             <span className="flex items-center gap-1">
               <span className={`w-1.5 h-1.5 rounded-full ${selectedAgentData.dot}`} />
-              <span>{selectedAgentData.name} • Active routing</span>
+              <span>{t('aiHub.activeRouting', { name: selectedAgentData.name })}</span>
             </span>
-            <span>SSE connection: active</span>
+            <span>{t('aiHub.sseConnection')}</span>
           </div>
 
           {/* Messages Console */}
@@ -717,7 +719,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   <div className={`max-w-[75%] space-y-1`}>
                     <div className="flex items-center gap-2 px-1">
                       <span className="text-[10px] font-semibold text-[var(--color-fg)]">
-                        {isUser ? 'You' : agentData?.name}
+                        {isUser ? t('aiHub.you') : agentData?.name}
                       </span>
                       <span className="text-[8px] font-mono text-[var(--color-muted-fg)]">
                         {msg.timestamp}
@@ -772,7 +774,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                     <span className="text-[10px] font-semibold text-[var(--color-fg)]">
                       {selectedAgentData.name}
                     </span>
-                    <span className="text-[8px] font-mono text-[var(--color-muted-fg)]">Streaming...</span>
+                    <span className="text-[8px] font-mono text-[var(--color-muted-fg)]">{t('aiHub.streaming')}</span>
                   </div>
                   <div className={`p-4 rounded-2xl text-xs leading-relaxed bg-[var(--color-surface)] text-[var(--color-fg)] border border-[var(--color-border)] rounded-tl-none border-l-4 ${selectedAgentData.border}`}>
                     <p className="whitespace-pre-line">{streamingMessage}</p>
@@ -788,7 +790,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
           <div className="relative">
             {showSlashMenu && (
               <div className="absolute bottom-4 left-4 right-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg p-2 max-h-[160px] overflow-y-auto z-50 text-xs">
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] px-3 py-1 border-b border-[var(--color-border)]/50">Slash Commands</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] px-3 py-1 border-b border-[var(--color-border)]/50">{t('aiHub.slashCommands')}</p>
                 {slashCommands.map((item) => (
                   <div
                     key={item.cmd}
@@ -804,7 +806,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
 
             {showMentionMenu && (
               <div className="absolute bottom-4 left-4 right-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg p-2 max-h-[160px] overflow-y-auto z-50 text-xs">
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] px-3 py-1 border-b border-[var(--color-border)]/50">Reference CRM Entities</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] px-3 py-1 border-b border-[var(--color-border)]/50">{t('aiHub.referenceCrmEntities')}</p>
                 {entityMentions.map((item) => (
                   <div
                     key={item.id}
@@ -830,7 +832,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
 
             <input
               type="text"
-              placeholder={`Ask ${selectedAgentData.name} or type / command...`}
+              placeholder={t('aiHub.inputPlaceholder', { name: selectedAgentData.name })}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -840,7 +842,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
             <button
               onClick={handleUploadRag}
               className="p-2.5 text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface)] rounded-xl transition-all cursor-pointer"
-              title="Attach document reference"
+              title={t('aiHub.attachDocument')}
             >
               <Paperclip size={14} />
             </button>
@@ -860,11 +862,11 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
           {/* Tabs header */}
           <div className="flex border-b border-[var(--color-border)] p-1.5 gap-0.5 bg-[var(--color-surface)]/20 overflow-x-auto shrink-0 scrollbar-none">
             {[
-              { id: 'context', label: 'Context' },
-              { id: 'execution', label: 'Exec' },
-              { id: 'tools', label: 'Tools' },
-              { id: 'knowledge', label: 'RAG' },
-              { id: 'memory', label: 'Memory' }
+              { id: 'context' },
+              { id: 'execution' },
+              { id: 'tools' },
+              { id: 'knowledge' },
+              { id: 'memory' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -875,7 +877,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                     : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
                 }`}
               >
-                {tab.label}
+                {tab.id === 'context' ? t('aiHub.tabContext') : tab.id === 'execution' ? t('aiHub.tabExec') : tab.id === 'tools' ? t('aiHub.tabTools') : tab.id === 'knowledge' ? t('aiHub.tabRag') : t('aiHub.tabMemory')}
               </button>
             ))}
           </div>
@@ -887,31 +889,31 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                    Active Business Context
+                    {t('aiHub.activeBusinessContext')}
                   </h4>
                   <span className="text-[8px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded font-mono font-bold">
-                    DETECTED
+                    {t('aiHub.detected')}
                   </span>
                 </div>
 
                 <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-2">
-                  <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase">Account Context</p>
+                  <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase">{t('aiHub.accountContext')}</p>
                   <p className="font-semibold text-[var(--color-fg)]">CyberCore LLC</p>
-                  <p className="text-[10px] text-[var(--color-muted-fg)]">B2B client • Tax code: 010928811</p>
+                  <p className="text-[10px] text-[var(--color-muted-fg)]">{t('aiHub.clientInfo', { taxCode: '010928811' })}</p>
                   <div className="flex gap-2 pt-1 border-t border-[var(--color-border)]/50 mt-2">
                     <Link href="/customers" className="text-[10px] text-[var(--color-accent)] hover:underline flex items-center gap-0.5 font-bold">
-                      <span>View Account</span>
+                      <span>{t('aiHub.viewAccount')}</span>
                       <ArrowRight size={10} />
                     </Link>
                   </div>
                 </div>
 
                 <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl space-y-2">
-                  <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase">Linked Deal & Score</p>
+                  <p className="text-[9px] font-mono text-[var(--color-muted-fg)] uppercase">{t('aiHub.linkedDealScore')}</p>
                   <p className="font-semibold text-[var(--color-fg)]">CyberCore Brand Strategy Setup</p>
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-[var(--color-muted-fg)]">BANT Status:</span>
-                    <span className="font-mono text-emerald-500 font-bold">80% Qualified</span>
+                    <span className="text-[var(--color-muted-fg)]">{t('aiHub.bantStatus')}</span>
+                    <span className="font-mono text-emerald-500 font-bold">{t('aiHub.percentQualified')}</span>
                   </div>
                 </div>
               </div>
@@ -921,7 +923,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                    Agent Workflow Steps
+                    {t('aiHub.agentWorkflowSteps')}
                   </h4>
                   {loading && <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />}
                 </div>
@@ -931,14 +933,14 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   size="small"
                   current={executionStep - 1}
                   items={[
-                    { title: 'Receive Prompt', description: 'Parser check.' },
-                    { title: 'Execution Planning', description: 'Assigning optimal agent.' },
-                    { title: 'Search CRM DB', description: 'Querying entities references.' },
-                    { title: 'Execute SQL Query', description: 'Retrieving data structures.' },
-                    { title: 'Invoke Groq API', description: 'Running inference.' },
-                    { title: 'Execute Sidecar Tools', description: 'Calculating weights.' },
-                    { title: 'Format Markdown', description: 'Organizing tables.' },
-                    { title: 'Finalize Response', description: 'SSE dispatch completed.' },
+                    { title: t('aiHub.stepReceive'), description: t('aiHub.stepDescParser') },
+                    { title: t('aiHub.stepPlanning'), description: t('aiHub.stepDescAssign') },
+                    { title: t('aiHub.stepSearchDb'), description: t('aiHub.stepDescQuery') },
+                    { title: t('aiHub.stepExecuteSql'), description: t('aiHub.stepDescRetrieve') },
+                    { title: t('aiHub.stepInvokeGroq'), description: t('aiHub.stepDescInference') },
+                    { title: t('aiHub.stepSidecar'), description: t('aiHub.stepDescWeights') },
+                    { title: t('aiHub.stepFormat'), description: t('aiHub.stepDescTables') },
+                    { title: t('aiHub.stepFinalize'), description: t('aiHub.stepDescDispatch') },
                   ]}
                   className="text-xs"
                 />
@@ -948,7 +950,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
             {rightPanelTab === 'tools' && (
               <div className="space-y-3">
                 <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] mb-2">
-                  Executed CRM Tools
+                  {t('aiHub.executedCrmTools')}
                 </h4>
 
                 {[
@@ -962,7 +964,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       <span className="text-[8px] font-mono text-[var(--color-muted-fg)]">{tool.time}</span>
                     </div>
                     <p className="text-[10px] text-[var(--color-muted-fg)]">{tool.desc}</p>
-                    <span className="text-[8px] bg-green-500/10 text-green-500 px-1.5 py-0.2 rounded font-mono font-bold inline-block">SUCCESS</span>
+                    <span className="text-[8px] bg-green-500/10 text-green-500 px-1.5 py-0.2 rounded font-mono font-bold inline-block">{t('aiHub.success')}</span>
                   </div>
                 ))}
               </div>
@@ -971,7 +973,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
             {rightPanelTab === 'knowledge' && (
               <div className="space-y-4">
                 <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Vector Knowledge RAG
+                  {t('aiHub.vectorKnowledgeRag')}
                 </h4>
 
                 <div
@@ -979,7 +981,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   className="border-2 border-dashed border-[var(--color-border)] hover:border-[var(--color-accent)] rounded-xl p-4 text-center cursor-pointer transition-colors"
                 >
                   <UploadCloud size={20} className="mx-auto text-[var(--color-muted-fg)] mb-1" />
-                  <p className="text-[10px] font-semibold text-[var(--color-fg)]">Add PDF Reference</p>
+                  <p className="text-[10px] font-semibold text-[var(--color-fg)]">{t('aiHub.addPdfReference')}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -991,7 +993,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       </div>
                       <div className="flex justify-between text-[9px] text-[var(--color-muted-fg)]">
                         <span>{doc.size}</span>
-                        <span className="text-green-500 font-bold">READY</span>
+                        <span className="text-green-500 font-bold">{t('aiHub.ready')}</span>
                       </div>
                     </div>
                   ))}
@@ -1002,7 +1004,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
             {rightPanelTab === 'memory' && (
               <div className="space-y-3">
                 <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Agent Memory Items
+                  {t('aiHub.agentMemoryItems')}
                 </h4>
 
                 {memoryItems.map((item, idx) => (
@@ -1029,16 +1031,16 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5 font-bold text-[var(--color-fg)]">
                   <Terminal size={14} className="text-indigo-500" />
-                  <span>Real-time Workflow Monitor</span>
+                  <span>{t('aiHub.realtimeWorkflowMonitor')}</span>
                 </span>
                 <span className="text-[var(--color-muted-fg)]">|</span>
                 <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--color-muted-fg)]">
-                  Live connection: <Badge status="processing" text="Active SSE" />
+                  {t('aiHub.liveConnection')} <Badge status="processing" text={t('aiHub.activeSse')} />
                 </span>
               </div>
               <div className="flex gap-6 text-[10px] font-mono">
                 <div>
-                  <span className="text-[var(--color-muted-fg)]">RUNNING: </span>
+                  <span className="text-[var(--color-muted-fg)]">{t('aiHub.running')} </span>
                   <span className="font-bold text-blue-500">
                     {(() => {
                       const merged = [
@@ -1050,7 +1052,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   </span>
                 </div>
                 <div>
-                  <span className="text-[var(--color-muted-fg)]">SUCCESS: </span>
+                  <span className="text-[var(--color-muted-fg)]">{t('aiHub.success')} </span>
                   <span className="font-bold text-emerald-500">
                     {(() => {
                       const merged = [
@@ -1062,7 +1064,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   </span>
                 </div>
                 <div>
-                  <span className="text-[var(--color-muted-fg)]">FAILED: </span>
+                  <span className="text-[var(--color-muted-fg)]">{t('aiHub.failed')} </span>
                   <span className="font-bold text-red-500">
                     {(() => {
                       const merged = [
@@ -1098,7 +1100,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       data: {
                         label: (
                           <div className="text-left space-y-1">
-                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">Trigger</span>
+                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">{t('aiHub.trigger')}</span>
                             <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.trigger}</div>
                           </div>
                         )
@@ -1111,9 +1113,9 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       data: {
                         label: (
                           <div className="text-left space-y-1">
-                            <span className="text-[8px] font-extrabold text-indigo-400 uppercase tracking-wider">Executing Agent</span>
-                            <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.agent?.name || log.agentName || 'AI Agent'}</div>
-                            <div className="text-[8px] text-[var(--color-muted-fg)] font-mono truncate">{log.agent?.model?.modelName || 'LLM Model'}</div>
+                            <span className="text-[8px] font-extrabold text-indigo-400 uppercase tracking-wider">{t('aiHub.executingAgent')}</span>
+                            <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.agent?.name || log.agentName || t('aiHub.aiAgent')}</div>
+                            <div className="text-[8px] text-[var(--color-muted-fg)] font-mono truncate">{log.agent?.model?.modelName || t('aiHub.llmModel')}</div>
                           </div>
                         )
                       }
@@ -1125,7 +1127,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       data: {
                         label: (
                           <div className="text-left space-y-1">
-                            <span className="text-[8px] font-extrabold text-amber-500 uppercase tracking-wider">Action</span>
+                            <span className="text-[8px] font-extrabold text-amber-500 uppercase tracking-wider">{t('aiHub.action')}</span>
                             <div className="font-bold text-xs text-[var(--color-fg)] truncate">{log.action}</div>
                             {log.durationMs && (
                               <div className="text-[8px] text-[var(--color-muted-fg)] font-mono">{log.durationMs}ms</div>
@@ -1147,7 +1149,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                       data: {
                         label: (
                           <div className="text-left space-y-1">
-                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">Result Status</span>
+                            <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-wider">{t('aiHub.resultStatus')}</span>
                             <div className={`font-extrabold text-xs ${log.status === 'SUCCESS' ? 'text-emerald-500' : log.status === 'FAILED' ? 'text-red-500' : 'text-indigo-500 animate-pulse'}`}>
                               {log.status}
                             </div>
@@ -1204,8 +1206,8 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                 return (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
                     <Layers size={32} className="text-[var(--color-muted-fg)] mb-2" />
-                    <p className="text-xs text-[var(--color-muted-fg)] font-semibold">Chưa chọn phiên thực thi nào</p>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">Vui lòng chọn một bản ghi từ danh sách lịch sử ở bên phải.</p>
+                    <p className="text-xs text-[var(--color-muted-fg)] font-semibold">{t('aiHub.noExecutionSession')}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">{t('aiHub.selectRecordHint')}</p>
                   </div>
                 );
               })()}
@@ -1216,7 +1218,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
           <div className="lg:col-span-1 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl flex flex-col overflow-hidden min-w-0">
             <div className="p-4 border-b border-[var(--color-border)] shrink-0">
               <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Lịch sử Thực thi (Logs)
+                {t('aiHub.executionHistory')}
               </span>
             </div>
 
@@ -1238,7 +1240,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   >
                     <div className="flex justify-between items-start gap-2">
                       <span className="font-bold text-xs text-[var(--color-fg)] truncate">
-                        {log.agent?.name || log.agentName || 'AI Agent'}
+                        {log.agent?.name || log.agentName || t('aiHub.aiAgent')}
                       </span>
                       <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
                         log.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-500' :
@@ -1247,9 +1249,9 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                         {log.status}
                       </span>
                     </div>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] truncate font-mono">Nhiệm vụ: {log.action}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] truncate font-mono">{t('aiHub.task')} {log.action}</p>
                     <div className="flex justify-between items-center text-[8px] text-[var(--color-muted-fg)] mt-1 pt-1 border-t border-[var(--color-border)]/30">
-                      <span>Trigger: {log.trigger}</span>
+                      <span>{t('aiHub.trigger')}: {log.trigger}</span>
                       <span>{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
@@ -1261,7 +1263,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   ...dbLogsList.filter((dbl) => !liveLogs.some((l) => l.id === dbl.id))
                 ];
                 return merged.length === 0 ? (
-                  <p className="text-[10px] text-[var(--color-muted-fg)] text-center py-8">Chưa có log thực thi nào.</p>
+                  <p className="text-[10px] text-[var(--color-muted-fg)] text-center py-8">{t('aiHub.noExecutionLogs')}</p>
                 ) : null;
               })()}
             </div>
@@ -1273,7 +1275,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                 onClick={() => refetchExecutionLogs()}
                 className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
               >
-                Làm mới
+                {t('aiHub.refresh')}
               </Button>
               <div className="flex gap-1.5">
                 <Button
@@ -1282,7 +1284,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   onClick={() => setLogPage(p => Math.max(1, p - 1))}
                   className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
                 >
-                  Trước
+                  {t('aiHub.prev')}
                 </Button>
                 <Button
                   size="small"
@@ -1290,7 +1292,7 @@ Tôi đã kiểm tra nội dung file thỏa thuận và phát hiện:
                   onClick={() => setLogPage(p => p + 1)}
                   className="text-[10px] rounded-lg cursor-pointer flex items-center justify-center font-mono"
                 >
-                  Sau
+                  {t('aiHub.next')}
                 </Button>
               </div>
             </div>

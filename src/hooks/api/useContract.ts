@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Contract, PaymentSchedule, StartSigningDto, UpdatePaymentDto } from '@/types/contract.types';
 import { PaginationQuery, PaginatedResponse, BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useContracts(query?: PaginationQuery) {
@@ -56,7 +57,7 @@ export function useStartContractSigning() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', variables.id] });
-      message.success('Đã gửi yêu cầu ký số DocuSign!');
+      message.success(i18n.t('hooks.contract.signingRequestSent'));
     },
   });
 }
@@ -71,7 +72,7 @@ export function useForceSignContract() {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
-      message.success('Đã xác nhận ký hợp đồng thủ công!');
+      message.success(i18n.t('hooks.contract.manuallySigned'));
     },
   });
 }
@@ -86,7 +87,7 @@ export function useVoidContract() {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
-      message.success('Đã hủy hợp đồng!');
+      message.success(i18n.t('hooks.contract.cancelled'));
     },
   });
 }
@@ -102,7 +103,7 @@ export function useConfirmPayment() {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
       queryClient.invalidateQueries({ queryKey: ['contract'] });
-      message.success('Xác nhận thanh toán thành công!');
+      message.success(i18n.t('hooks.contract.paymentConfirmed'));
     },
   });
 }

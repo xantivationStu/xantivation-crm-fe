@@ -48,6 +48,7 @@ interface SettingsState {
   erpAutoSyncUtm: boolean;
   erpAutoSyncActivities: boolean;
 
+  locale: string;
   updateSettings: (settings: Partial<Omit<SettingsState, 'updateSettings'>>) => void;
 }
 
@@ -100,6 +101,7 @@ export const useSettingsStore = create<SettingsState>()(
       erpAutoSyncUtm: false,
       erpAutoSyncActivities: false,
 
+      locale: 'en',
       updateSettings: (newSettings) => set((state) => ({ ...state, ...newSettings })),
     }),
     {

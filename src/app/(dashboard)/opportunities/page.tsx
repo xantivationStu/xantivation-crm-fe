@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Modal, Progress, Select, message, Tag, Drawer, Spin } from 'antd';
 import { Plus, Search, Layers, List, ChevronRight, CheckCircle2, XCircle, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
@@ -50,6 +51,7 @@ const stages: ('QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'WON' | 'LOST')[] 
 
 export default function Opportunities() {
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  const { t } = useTranslation();
 
   // API Queries
   const { data: oppsRes, isLoading: isOppsLoading } = useOpportunities({ limit: 100 });
@@ -250,7 +252,7 @@ export default function Opportunities() {
           probability: prob,
         },
       });
-      message.success(`Đã chuyển trạng thái sang ${targetStage}`);
+      message.success(t('opportunities.statusChanged',{stage:targetStage}));
     } catch (err) {
       // Handled
     }
@@ -259,7 +261,7 @@ export default function Opportunities() {
 
   const handleSaveLost = async () => {
     if (!lostReason.trim()) {
-      message.error('Please enter a reason for losing this opportunity');
+      message.error(t('opportunities.lostReasonRequired'));
       return;
     }
     if (!draggedOppId) return;
@@ -289,7 +291,7 @@ export default function Opportunities() {
   // Table Columns
   const tableColumns: ColumnProps<OpportunityRecord>[] = [
     {
-      title: 'Mã cơ hội',
+      title: t('opportunities.code'),
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -299,7 +301,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Tên cơ hội',
+      title: t('opportunities.name'),
       dataIndex: 'name',
       key: 'name',
       render: (val, rec) => (
@@ -312,7 +314,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Khách hàng',
+      title: t('opportunities.customer'),
       dataIndex: 'companyName',
       key: 'companyName',
       render: (val, rec) => (
@@ -322,13 +324,13 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Giá trị dự tính',
+      title: t('opportunities.estimatedValue'),
       dataIndex: 'amount',
       key: 'amount',
       render: (val) => <span className="font-mono font-semibold text-xs text-[var(--color-fg)]">{val.toLocaleString('vi-VN')} VND</span>,
     },
     {
-      title: 'Trạng thái',
+      title: t('opportunities.status'),
       dataIndex: 'stage',
       key: 'stage',
       render: (st) => (
@@ -341,7 +343,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Khả năng chốt',
+      title: t('opportunities.closeProbability'),
       dataIndex: 'probability',
       key: 'probability',
       render: (val) => (
@@ -352,7 +354,7 @@ export default function Opportunities() {
       ),
     },
     {
-      title: 'Ngày dự kiến đóng',
+      title: t('opportunities.expectedCloseDate'),
       dataIndex: 'closeDate',
       key: 'closeDate',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val}</span>,
@@ -367,8 +369,8 @@ export default function Opportunities() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Cơ hội bán hàng</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Quản lý phễu cơ hội (Kanban drag-drop), dự tính doanh thu và tỷ lệ chốt.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('opportunities.title')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">{t('opportunities.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -376,7 +378,7 @@ export default function Opportunities() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Tìm kiếm cơ hội, khách hàng..."
+              placeholder={t('opportunities.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -422,7 +424,7 @@ export default function Opportunities() {
             className="flex items-center gap-2 h-10 px-5 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>Tạo cơ hội</span>
+            <span>{t('opportunities.create')}</span>
           </Button>
         </div>
       </div>
@@ -463,14 +465,14 @@ export default function Opportunities() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Giai đoạn bán hàng
+              {t('opportunities.salesStage')}
             </label>
             <Select
               value={filterStage}
               onChange={setFilterStage}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả giai đoạn' },
+                { value: 'ALL', label: t('opportunities.allStages') },
                 { value: 'QUALIFICATION', label: 'Qualification' },
                 { value: 'PROPOSAL', label: 'Proposal' },
                 { value: 'NEGOTIATION', label: 'Negotiation' },
@@ -482,14 +484,14 @@ export default function Opportunities() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Dịch vụ quan tâm
+              {t('opportunities.serviceInterest')}
             </label>
             <Select
               value={filterInterest}
               onChange={setFilterInterest}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả dịch vụ' },
+                { value: 'ALL', label: t('opportunities.allServices') },
                 ...serviceOptions,
               ]}
             />
@@ -500,7 +502,7 @@ export default function Opportunities() {
       {isOppsLoading ? (
         <div className="py-24 flex flex-col justify-center items-center gap-3">
           <Spin size="large" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading active pipelines...</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('opportunities.loading')}</span>
         </div>
       ) : (
         /* Kanban Board View */
@@ -593,23 +595,23 @@ export default function Opportunities() {
 
       {/* Create / Edit Opportunity Modal */}
       <Modal
-        title={editingOpp ? 'Chỉnh sửa cơ hội' : 'Tạo cơ hội bán hàng'}
+        title={editingOpp ? t('opportunities.edit') : t('opportunities.createTitle')}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
         width={600}
       >
         <div className="space-y-6 pt-4">
-          <FloatingInput label="Tên cơ hội" value={name} onChange={setName} required />
+          <FloatingInput label={t('opportunities.name')} value={name} onChange={setName} required />
           {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name}</p>}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="Giá trị ước lượng (VND)" type="number" value={amount} onChange={setAmount} required />
+              <FloatingInput label={t('opportunities.estimatedValueVnd')} type="number" value={amount} onChange={setAmount} required />
               {errors.amount && <p className="text-red-500 text-[10px] mt-1">{errors.amount}</p>}
             </div>
             <div>
-              <FloatingInput label="Ngày dự kiến chốt (YYYY-MM-DD)" type="date" value={closeDate} onChange={setCloseDate} required />
+              <FloatingInput label={t('opportunities.expectedCloseDateFormat')} type="date" value={closeDate} onChange={setCloseDate} required />
               {errors.closeDate && <p className="text-red-500 text-[10px] mt-1">{errors.closeDate}</p>}
             </div>
           </div>
@@ -617,7 +619,7 @@ export default function Opportunities() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Tài khoản khách hàng
+                {t('opportunities.customerAccount')}
               </label>
               <Select
                 value={companyId}
@@ -628,7 +630,7 @@ export default function Opportunities() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Người đại diện liên hệ
+                {t('opportunities.contactPerson')}
               </label>
               <Select
                 value={contactId}
@@ -642,7 +644,7 @@ export default function Opportunities() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Giai đoạn bán hàng
+                {t('opportunities.salesStage')}
               </label>
               <Select
                 value={stage}
@@ -657,7 +659,7 @@ export default function Opportunities() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Dịch vụ quan tâm
+                {t('opportunities.serviceInterest')}
               </label>
               <Select
                 value={serviceInterest}
@@ -670,7 +672,7 @@ export default function Opportunities() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Nhân viên chịu trách nhiệm (Owner)
+              {t('opportunities.owner')}
             </label>
             <Select
               value={assignedTo}
@@ -682,7 +684,7 @@ export default function Opportunities() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Mô tả chi tiết / Scope
+              {t('opportunities.scopeDescription')}
             </label>
             <textarea
               placeholder="Describe scope, notes..."
@@ -693,26 +695,26 @@ export default function Opportunities() {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button onClick={() => setModalOpen(false)} className="rounded-xl">Hủy</Button>
-            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">Lưu thay đổi</Button>
+            <Button onClick={() => setModalOpen(false)} className="rounded-xl">{t('opportunities.cancel')}</Button>
+            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">{t('opportunities.saveChanges')}</Button>
           </div>
         </div>
       </Modal>
 
       {/* Closed Lost Reason Modal */}
       <Modal
-        title="Đóng cơ hội bán hàng với trạng thái Thất bại (Lost)"
+        title={t('opportunities.closeLost')}
         open={lostModalOpen}
         onCancel={() => { setLostModalOpen(false); setDraggedOppId(null); }}
         onOk={handleSaveLost}
         confirmLoading={closeLostMutation.isPending}
-        okText="Xác nhận Closed Lost"
-        cancelText="Hủy"
+        okText={t('opportunities.confirmCloseLost')}
+        cancelText={t('opportunities.cancel')}
       >
         <div className="space-y-4 pt-4">
-          <p className="text-xs text-[var(--color-muted-fg)]">Để đánh dấu cơ hội này thất bại, vui lòng cung cấp lý do (ví dụ: Giới hạn ngân sách, Đối thủ cạnh tranh thắng, Thay đổi yêu cầu từ phía khách hàng).</p>
+          <p className="text-xs text-[var(--color-muted-fg)]">{t('opportunities.closeLostReason')}</p>
           <textarea
-            placeholder="Lý do thất bại..."
+            placeholder={t('opportunities.lostReasonPlaceholder')}
             value={lostReason}
             onChange={(e) => setLostReason(e.target.value)}
             className="w-full min-h-[100px] p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-fg)] focus:outline-none"

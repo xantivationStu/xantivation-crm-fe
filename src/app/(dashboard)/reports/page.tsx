@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, Skeleton } from 'antd';
@@ -17,6 +18,7 @@ import { useReportSummary } from '@/hooks/api/useReport';
 import { formatVND } from '@/lib/utils';
 
 export default function ReportsOverview() {
+  const { t } = useTranslation();
   const { data, isLoading } = useReportSummary();
 
   const summary = data?.data;
@@ -38,22 +40,22 @@ export default function ReportsOverview() {
 
   const reportLinks = [
     {
-      title: 'Báo cáo Cơ hội & Pipeline',
-      desc: 'Phân tích phễu bán hàng (funnel), tỷ lệ chuyển đổi lead và phân bổ stage.',
+      title: t('reports.pipelineTitle'),
+      desc: t('reports.pipelineDesc'),
       path: '/reports/pipeline',
       icon: PieChart,
       color: 'bg-indigo-500/10 text-indigo-500',
     },
     {
-      title: 'Dự báo Doanh số',
-      desc: 'Dự báo doanh thu tương lai 30-60 ngày dựa trên trọng số cơ hội và xác suất.',
+      title: t('reports.forecastTitle'),
+      desc: t('reports.forecastDesc'),
       path: '/reports/sales-forecast',
       icon: LineChart,
       color: 'bg-emerald-500/10 text-emerald-500',
     },
     {
-      title: 'Dòng tiền & Thanh toán',
-      desc: 'Theo dõi hạn nợ hóa đơn, dòng tiền dự kiến và tổng hợp công nợ khách hàng.',
+      title: t('reports.cashFlowTitle'),
+      desc: t('reports.cashFlowDesc'),
       path: '/reports/payment',
       icon: CreditCard,
       color: 'bg-amber-500/10 text-amber-500',
@@ -64,8 +66,8 @@ export default function ReportsOverview() {
     <div className="space-y-8">
       {/* Editorial Title */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Báo cáo & Phân tích</h1>
-        <p className="text-sm text-[var(--color-muted-fg)]">Đánh giá hiệu suất bán hàng, dòng tiền và dự báo tương lai.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('reports.title')}</h1>
+        <p className="text-sm text-[var(--color-muted-fg)]">{t('reports.subtitle')}</p>
       </div>
 
       {/* Bento Summary Cards */}
@@ -82,7 +84,7 @@ export default function ReportsOverview() {
             {/* Total Pipeline */}
             <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
               <div className="flex justify-between items-start">
-                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Tổng Pipeline</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.totalPipeline')}</span>
                 <Target size={16} className="text-indigo-500" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight mt-2 text-[var(--color-fg)]">
@@ -93,7 +95,7 @@ export default function ReportsOverview() {
             {/* Won this month */}
             <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
               <div className="flex justify-between items-start">
-                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Doanh số Tháng này</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.monthlySales')}</span>
                 <TrendingUp size={16} className="text-emerald-500" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight mt-2 text-[var(--color-fg)]">
@@ -104,7 +106,7 @@ export default function ReportsOverview() {
             {/* Overdue Payments */}
             <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
               <div className="flex justify-between items-start">
-                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Nợ Quá hạn</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.overdueDebt')}</span>
                 <CreditCard size={16} className="text-rose-500" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight mt-2 text-[var(--color-fg)]">
@@ -115,7 +117,7 @@ export default function ReportsOverview() {
             {/* Forecast */}
             <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
               <div className="flex justify-between items-start">
-                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Dự báo 30 Ngày</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.thirtyDayForecast')}</span>
                 <BarChart3 size={16} className="text-amber-500" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight mt-2 text-[var(--color-fg)]">
@@ -151,7 +153,7 @@ export default function ReportsOverview() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-[var(--color-accent)] font-semibold group-hover:gap-2.5 transition-all">
-                      <span>Xem chi tiết</span>
+                      <span>{t('reports.viewDetails')}</span>
                       <ArrowRight size={14} />
                     </div>
                   </div>

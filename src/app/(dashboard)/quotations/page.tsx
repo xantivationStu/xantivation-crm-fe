@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Modal, Select, message, Tag, Drawer, Spin } from 'antd';
 import { Plus, Download, Search, FileText, Check, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
@@ -75,6 +76,7 @@ const statusOptions = [
 ];
 
 export default function Quotations() {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState<QuotationRecord | null>(null);
 
@@ -329,7 +331,7 @@ export default function Quotations() {
   // Table Columns
   const tableColumns: ColumnProps<QuotationRecord>[] = [
     {
-      title: 'Quotation Code',
+      title: t('quotations.code'),
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -339,7 +341,7 @@ export default function Quotations() {
       ),
     },
     {
-      title: 'Project Details',
+      title: t('quotations.projectDetails'),
       dataIndex: 'projectName',
       key: 'projectName',
       render: (val, rec) => (
@@ -352,19 +354,19 @@ export default function Quotations() {
       ),
     },
     {
-      title: 'Customer',
+      title: t('quotations.customer'),
       dataIndex: 'companyName',
       key: 'companyName',
       render: (val) => <span className="text-xs font-semibold text-[var(--color-fg)]">{val}</span>,
     },
     {
-      title: 'Grand Total',
+      title: t('quotations.grandTotal'),
       dataIndex: 'grandTotal',
       key: 'grandTotal',
       render: (val) => <span className="font-mono font-semibold text-xs text-[var(--color-fg)]">{val.toLocaleString('vi-VN')} VND</span>,
     },
     {
-      title: 'Status',
+      title: t('quotations.status'),
       dataIndex: 'status',
       key: 'status',
       render: (st) => (
@@ -377,21 +379,21 @@ export default function Quotations() {
       ),
     },
     {
-      title: 'Valid Until',
+      title: t('quotations.validUntil'),
       dataIndex: 'validUntil',
       key: 'validUntil',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val}</span>,
     },
     {
-      title: 'Actions',
+      title: t('quotations.actions'),
       dataIndex: 'id',
       key: 'actions',
       render: (_: any, rec) => (
         <div className="flex items-center gap-2">
-          <Button size="small" onClick={() => handleCloneVersion(rec.id)} loading={cloneMutation.isPending} className="text-[10px] rounded-lg">Clone v{rec.version + 1}</Button>
+          <Button size="small" onClick={() => handleCloneVersion(rec.id)} loading={cloneMutation.isPending} className="text-[10px] rounded-lg">{t('quotations.clone',{version:rec.version + 1})}</Button>
           <Button size="small" onClick={() => handleDownloadPdf(rec)} className="text-[10px] rounded-lg flex items-center gap-1">
             <Download size={10} />
-            <span>PDF</span>
+            <span>{t('quotations.pdf')}</span>
           </Button>
         </div>
       ),
@@ -406,8 +408,8 @@ export default function Quotations() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Quotations</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Configure project scope, fixed pricing, version controls, and contract generation.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('quotations.title')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">{t('quotations.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -415,7 +417,7 @@ export default function Quotations() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search project, quotation..."
+              placeholder={t('quotations.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -427,7 +429,7 @@ export default function Quotations() {
             className="flex items-center gap-2 border border-[var(--color-border)] bg-[var(--color-bg-tint)] text-[var(--color-fg)] hover:bg-[var(--color-surface)] px-4 h-10 rounded-xl text-xs font-semibold cursor-pointer relative"
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span>{t('quotations.filters')}</span>
             {activeFiltersCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-[var(--color-accent)] text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
@@ -441,7 +443,7 @@ export default function Quotations() {
             className="flex items-center gap-2 h-10 px-5 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>Create Quotation</span>
+            <span>{t('quotations.create')}</span>
           </Button>
         </div>
       </div>
@@ -482,14 +484,14 @@ export default function Quotations() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Quotation Status
+              {t('quotations.statusLabel')}
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Statuses' },
+                { value: 'ALL', label: t('quotations.allStatuses') },
                 ...statusOptions,
               ]}
             />
@@ -497,14 +499,14 @@ export default function Quotations() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Service Type
+              {t('quotations.serviceType')}
             </label>
             <Select
               value={filterService}
               onChange={setFilterService}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Service Types' },
+                { value: 'ALL', label: t('quotations.allServiceTypes') },
                 ...serviceOptions,
               ]}
             />
@@ -515,7 +517,7 @@ export default function Quotations() {
       {isQuotationsLoading ? (
         <div className="py-24 flex flex-col justify-center items-center gap-3">
           <Spin size="large" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading quotations list...</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('quotations.loading')}</span>
         </div>
       ) : (
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">
@@ -529,7 +531,7 @@ export default function Quotations() {
 
       {/* Create / Edit Quotation Modal */}
       <Modal
-        title={editingQuotation ? `Edit Quotation ${editingQuotation.code}` : 'Create New Quotation'}
+        title={editingQuotation ? t('quotations.edit',{code:editingQuotation.code}) : t('quotations.createTitle')}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
@@ -712,8 +714,8 @@ export default function Quotations() {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
-            <Button onClick={() => setModalOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">Save changes</Button>
+            <Button onClick={() => setModalOpen(false)} className="rounded-xl">{t('quotations.cancel')}</Button>
+            <Button type="primary" onClick={handleSave} loading={createMutation.isPending || updateMutation.isPending} className="rounded-xl">{t('quotations.saveChanges')}</Button>
           </div>
         </div>
       </Modal>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Input, Select, Tag, Skeleton, Form, Switch, message, Badge } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -22,6 +23,7 @@ import { useCreateLead } from '@/hooks/api/useLead';
 import { formatVND } from '@/lib/utils';
 
 export default function Conversations() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'open' | 'pending' | 'resolved'>('open');
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -74,7 +76,7 @@ export default function Conversations() {
     if (selectedConversation) {
       refetchMatch();
     }
-    message.success('Đã cập nhật danh sách hội thoại');
+    message.success('Conversation list updated');
   };
 
   const handleQuickCreateLead = async (values: any) => {
@@ -108,15 +110,15 @@ export default function Conversations() {
       {/* Header */}
       <div className="flex justify-between items-center shrink-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Hội thoại Đa kênh</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Quản lý tin nhắn từ Website, Zalo, Facebook và Zalo OA qua kênh Chatwoot tích hợp.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('conversations.title')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('conversations.subtitle')}</p>
         </div>
         <button
           onClick={handleRefresh}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
         >
           <RefreshCw size={12} className={listLoading ? 'animate-spin' : ''} />
-          <span>Đồng bộ hộp thư</span>
+          <span>{t('conversations.syncInbox')}</span>
         </button>
       </div>
 
@@ -139,7 +141,7 @@ export default function Conversations() {
                     : 'text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
                 }`}
               >
-                {tab === 'open' ? 'Đang mở' : tab === 'pending' ? 'Chờ xử lý' : 'Đã đóng'}
+                {tab === 'open' ? t('conversations.open') : tab === 'pending' ? t('conversations.pending') : t('conversations.closed')}
               </button>
             ))}
           </div>
@@ -158,7 +160,7 @@ export default function Conversations() {
             ) : conversations.length === 0 ? (
               <div className="text-center py-8 text-[var(--color-muted-fg)] flex flex-col items-center justify-center space-y-2">
                 <MessageSquare size={24} className="stroke-1 text-[var(--color-muted-fg)]/60" />
-                <span className="text-xs">Không có hội thoại nào</span>
+                <span className="text-xs">{t('conversations.noConversations')}</span>
               </div>
             ) : (
               conversations.map((conv) => {
@@ -176,7 +178,7 @@ export default function Conversations() {
                   >
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-[var(--color-fg)] truncate mr-2">
-                        {conv.contact?.name || 'Ẩn danh'}
+                        {conv.contact?.name || t('conversations.anonymous')}
                       </span>
                       {conv.unreadCount > 0 && (
                         <Badge count={conv.unreadCount} size="small" className="font-mono" />
@@ -208,7 +210,7 @@ export default function Conversations() {
         <div className="lg:col-span-1 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 flex flex-col min-h-0 overflow-y-auto">
           <div className="space-y-6 flex-1">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)] pb-3 border-b border-[var(--color-border)]">
-              CRM Context Matcher
+              {t('conversations.crmContextMatcher')}
             </h3>
 
             {activeContact ? (
@@ -253,28 +255,28 @@ export default function Conversations() {
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-500">
-                              Khớp Hồ sơ: Lead
+                              {t('conversations.matchedLead')}
                             </span>
                             <Tag color="cyan">Lead</Tag>
                           </div>
 
                           <div className="bg-[var(--color-surface)]/60 rounded-xl border border-[var(--color-border)] p-4 space-y-3">
                             <div>
-                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Doanh nghiệp</span>
+                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Company</span>
                               <p className="text-xs font-semibold text-[var(--color-fg)]">
-                                {match.profile?.company || 'Cá nhân'}
+                                {match.profile?.company || 'Individual'}
                               </p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Trạng thái</span>
+                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Status</span>
                                 <p className="text-xs font-semibold text-[var(--color-fg)] mt-0.5">
                                   {match.profile?.status}
                                 </p>
                               </div>
                               <div>
-                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Điểm BANT</span>
+                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">BANT Score</span>
                                 <p className="text-xs font-semibold text-emerald-500 mt-0.5">
                                   {match.profile?.bantScore ?? 0}/100
                                 </p>
@@ -285,12 +287,12 @@ export default function Conversations() {
                               <div className="border-t border-[var(--color-border)] pt-2 space-y-1.5">
                                 {match.profile?.need && (
                                   <p className="text-[10px] text-[var(--color-fg)] leading-relaxed">
-                                    <span className="text-[var(--color-muted-fg)]">Nhu cầu:</span> {match.profile.need}
+                                    <span className="text-[var(--color-muted-fg)]">Need:</span> {match.profile.need}
                                   </p>
                                 )}
                                 {match.profile?.timeline && (
                                   <p className="text-[10px] text-[var(--color-fg)]">
-                                    <span className="text-[var(--color-muted-fg)]">Kế hoạch:</span> {match.profile.timeline}
+                                    <span className="text-[var(--color-muted-fg)]">Timeline:</span> {match.profile.timeline}
                                   </p>
                                 )}
                               </div>
@@ -303,7 +305,7 @@ export default function Conversations() {
                               icon={<ArrowUpRight size={14} />}
                               className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] border-none rounded-xl text-xs h-9 flex items-center justify-center cursor-pointer"
                             >
-                              Xem Hồ sơ Lead
+                              {t('conversations.viewLeadProfile')}
                             </Button>
                           </Link>
                         </motion.div>
@@ -316,20 +318,20 @@ export default function Conversations() {
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-500">
-                              Khớp Hồ sơ: Khách hàng
+                              {t('conversations.matchedCustomer')}
                             </span>
                             <Tag color="green">Customer</Tag>
                           </div>
 
                           <div className="bg-[var(--color-surface)]/60 rounded-xl border border-[var(--color-border)] p-4 space-y-3">
                             <div>
-                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Mã Khách hàng</span>
+                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Customer Code</span>
                               <p className="text-xs font-mono font-semibold text-[var(--color-fg)] mt-0.5">
                                 {match.profile?.code}
                               </p>
                             </div>
                             <div>
-                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Tên Doanh nghiệp</span>
+                              <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Company Name</span>
                               <p className="text-xs font-semibold text-[var(--color-fg)] mt-0.5">
                                 {match.profile?.name}
                               </p>
@@ -337,7 +339,7 @@ export default function Conversations() {
 
                             <div className="grid grid-cols-2 gap-2 border-t border-[var(--color-border)] pt-2">
                               <div>
-                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Khu vực</span>
+                                <span className="text-[10px] font-mono text-[var(--color-muted-fg)]">Region</span>
                                 <p className="text-xs font-semibold text-[var(--color-fg)] mt-0.5">
                                   {match.profile?.region || '-'}
                                 </p>
@@ -357,7 +359,7 @@ export default function Conversations() {
                               icon={<ArrowUpRight size={14} />}
                               className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] border-none rounded-xl text-xs h-9 flex items-center justify-center cursor-pointer"
                             >
-                              Xem Hồ sơ Khách hàng
+                              {t('conversations.viewCustomerProfile')}
                             </Button>
                           </Link>
                         </motion.div>
@@ -372,9 +374,9 @@ export default function Conversations() {
                       <div className="bg-rose-500/10 text-rose-500 p-3 rounded-xl border border-rose-500/20 text-xs flex gap-2 items-start">
                         <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold">Chưa liên kết CRM</p>
+                          <p className="font-semibold">{t('conversations.notLinked')}</p>
                           <p className="text-[10px] opacity-80 mt-0.5">
-                            Liên hệ từ Chatwoot chưa được đồng bộ với dữ liệu Leads/Customers của hệ thống.
+                            {t('conversations.notLinkedDesc')}
                           </p>
                         </div>
                       </div>
@@ -386,11 +388,11 @@ export default function Conversations() {
                           onClick={() => setQuickCreateOpen(true)}
                           className="w-full border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-fg)] rounded-xl text-xs h-9 flex items-center justify-center cursor-pointer"
                         >
-                          Tạo Nhanh Lead CRM
+                          {t('conversations.quickCreateLead')}
                         </Button>
                       ) : (
                         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-xl space-y-4">
-                          <h4 className="text-xs font-bold text-[var(--color-fg)]">Tạo Lead Mới</h4>
+                          <h4 className="text-xs font-bold text-[var(--color-fg)]">{t('conversations.createNewLead')}</h4>
                           <Form
                             form={form}
                             layout="vertical"
@@ -399,8 +401,8 @@ export default function Conversations() {
                           >
                             <Form.Item
                               name="name"
-                              label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Tên khách hàng</span>}
-                              rules={[{ required: true, message: 'Nhập tên' }]}
+                              label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formCustomerName')}</span>}
+                              rules={[{ required: true, message: t('conversations.enterName') }]}
                               className="mb-0"
                             >
                               <Input className="text-xs rounded-lg" />
@@ -408,15 +410,15 @@ export default function Conversations() {
 
                             <Form.Item
                                name="company"
-                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Tên công ty</span>}
+                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formCompanyName')}</span>}
                                className="mb-0"
                              >
-                               <Input className="text-xs rounded-lg" placeholder="N/A nếu cá nhân" />
+                               <Input className="text-xs rounded-lg" placeholder={t('conversations.naIfIndividual')} />
                              </Form.Item>
 
                              <Form.Item
                                name="email"
-                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Email liên hệ</span>}
+                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formContactEmail')}</span>}
                                className="mb-0"
                              >
                                <Input className="text-xs rounded-lg" />
@@ -424,7 +426,7 @@ export default function Conversations() {
 
                              <Form.Item
                                name="phone"
-                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Số điện thoại</span>}
+                               label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formPhoneNumber')}</span>}
                                className="mb-0"
                              >
                                <Input className="text-xs rounded-lg" />
@@ -433,7 +435,7 @@ export default function Conversations() {
                             <div className="grid grid-cols-2 gap-2">
                               <Form.Item
                                 name="budgetApproved"
-                                label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Có Ngân sách</span>}
+                                label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formHasBudget')}</span>}
                                 valuePropName="checked"
                                 className="mb-0"
                               >
@@ -442,7 +444,7 @@ export default function Conversations() {
 
                               <Form.Item
                                 name="authorityMarker"
-                                label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Có Quyết định</span>}
+                                label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formHasAuthority')}</span>}
                                 valuePropName="checked"
                                 className="mb-0"
                               >
@@ -452,7 +454,7 @@ export default function Conversations() {
 
                             <Form.Item
                               name="need"
-                              label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">Nhu cầu cụ thể</span>}
+                              label={<span className="text-[10px] font-mono text-[var(--color-muted-fg)] uppercase">{t('conversations.formSpecificNeed')}</span>}
                               className="mb-0"
                             >
                               <Input.TextArea rows={2} className="text-xs rounded-lg" />
@@ -464,7 +466,7 @@ export default function Conversations() {
                                 onClick={() => setQuickCreateOpen(false)}
                                 className="flex-1 rounded-lg text-xs cursor-pointer"
                               >
-                                Hủy
+                                {t('conversations.cancel')}
                               </Button>
                               <Button
                                 type="primary"
@@ -473,7 +475,7 @@ export default function Conversations() {
                                 loading={createLeadMutation.isPending}
                                 className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] border-none rounded-lg text-xs cursor-pointer"
                               >
-                                Lưu
+                                {t('conversations.save')}
                               </Button>
                             </div>
                           </Form>
@@ -485,7 +487,7 @@ export default function Conversations() {
               </div>
             ) : (
               <div className="text-center py-12 text-[var(--color-muted-fg)]">
-                Chọn một hội thoại để xem ngữ cảnh CRM.
+                {t('conversations.selectConversation')}
               </div>
             )}
           </div>

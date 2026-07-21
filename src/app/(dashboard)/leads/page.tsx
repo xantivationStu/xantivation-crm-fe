@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Modal, Progress, message, Select, Drawer, Spin } from 'antd';
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from '@/hooks/api/useLead';
 import { Plus, Search, Upload, AlertTriangle, SlidersHorizontal } from 'lucide-react';
@@ -86,6 +87,7 @@ const initialLeads: LeadRecord[] = [
 ];
 
 export default function Leads() {
+  const { t } = useTranslation();
   const { data: leadsResponse, isLoading } = useLeads();
   const createMutation = useCreateLead();
   const updateMutation = useUpdateLead();
@@ -160,7 +162,7 @@ export default function Leads() {
 
   const columns: ColumnProps<LeadRecord>[] = [
     {
-      title: 'Lead Code',
+      title: t('leads.leadCode'),
       dataIndex: 'leadCode',
       key: 'leadCode',
       render: (val, rec) => (
@@ -170,7 +172,7 @@ export default function Leads() {
       ),
     },
     {
-      title: 'Name',
+      title: t('leads.name'),
       dataIndex: 'lastName',
       key: 'name',
       render: (_, rec) => (
@@ -182,16 +184,16 @@ export default function Leads() {
         </div>
       ),
     },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
+    { title: t('leads.email'), dataIndex: 'email', key: 'email' },
+    { title: t('leads.phone'), dataIndex: 'phone', key: 'phone' },
     {
-      title: 'Source',
+      title: t('leads.source'),
       dataIndex: 'source',
       key: 'source',
       render: (src: string) => <span className="text-xs text-[var(--color-muted-fg)] font-mono">{src}</span>,
     },
     {
-      title: 'BANT Score',
+      title: t('leads.bantScore'),
       dataIndex: 'bantScore',
       key: 'bantScore',
       render: (score: number) => (
@@ -202,7 +204,7 @@ export default function Leads() {
       ),
     },
     {
-      title: 'Status',
+      title: t('leads.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -212,8 +214,8 @@ export default function Leads() {
         return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${color}`}>{status}</span>;
       },
     },
-    { title: 'Owner', dataIndex: 'owner', key: 'owner', render: (val) => <span className="text-xs text-[var(--color-fg)]">{val}</span> },
-    { title: 'Created At', dataIndex: 'createdAt', key: 'createdAt', render: (val) => <span className="text-xs text-[var(--color-muted-fg)] font-mono">{val}</span> },
+    { title: t('leads.owner'), dataIndex: 'owner', key: 'owner', render: (val) => <span className="text-xs text-[var(--color-fg)]">{val}</span> },
+    { title: t('leads.createdAt'), dataIndex: 'createdAt', key: 'createdAt', render: (val) => <span className="text-xs text-[var(--color-muted-fg)] font-mono">{val}</span> },
   ];
 
   const handleOpenCreate = () => {
@@ -354,8 +356,8 @@ export default function Leads() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Leads</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Manage prospects and qualify them with BANT scores.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('leads.title')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">{t('leads.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -363,7 +365,7 @@ export default function Leads() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Search prospects..."
+              placeholder={t('leads.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -380,7 +382,7 @@ export default function Leads() {
             }`}
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span>{t('leads.filters')}</span>
             {activeFiltersCount > 0 && (
               <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
                 {activeFiltersCount}
@@ -394,7 +396,7 @@ export default function Leads() {
             className="flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
             <Upload size={14} />
-            <span>Import</span>
+            <span>{t('leads.import')}</span>
           </button>
 
           {/* New Lead Button */}
@@ -404,7 +406,7 @@ export default function Leads() {
             className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>New Lead</span>
+            <span>{t('leads.newLead')}</span>
           </Button>
         </div>
       </div>
@@ -413,7 +415,7 @@ export default function Leads() {
       <Drawer
         title={
           <div className="flex items-center justify-between w-full pr-4">
-            <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
+            <span className="text-base font-bold text-[var(--color-fg)]">{t('leads.advancedFilters')}</span>
             {activeFiltersCount > 0 && (
               <button
                 onClick={() => {
@@ -423,7 +425,7 @@ export default function Leads() {
                 }}
                 className="text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer"
               >
-                Clear all
+                {t('leads.clearAll')}
               </button>
             )}
           </div>
@@ -446,14 +448,14 @@ export default function Leads() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Lead Status
+              {t('leads.leadStatus')}
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Statuses' },
+                { value: 'ALL', label: t('leads.allStatuses') },
                 { value: 'NEW', label: 'New' },
                 { value: 'CONTACTED', label: 'Contacted' },
                 { value: 'QUALIFIED', label: 'Qualified' },
@@ -464,14 +466,14 @@ export default function Leads() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Lead Source
+              {t('leads.leadSource')}
             </label>
             <Select
               value={filterSource}
               onChange={setFilterSource}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Sources' },
+                { value: 'ALL', label: t('leads.allSources') },
                 { value: 'WEBSITE', label: 'Website' },
                 { value: 'FACEBOOK', label: 'Facebook' },
                 { value: 'LINKEDIN', label: 'LinkedIn' },
@@ -482,14 +484,14 @@ export default function Leads() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Assigned Owner
+              {t('leads.assignedOwner')}
             </label>
             <Select
               value={filterOwner}
               onChange={setFilterOwner}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'All Owners' },
+                { value: 'ALL', label: t('leads.allOwners') },
                 { value: 'System Admin', label: 'System Admin' },
                 { value: 'Jane Smith', label: 'Jane Smith' },
                 { value: 'John Doe', label: 'John Doe' },
@@ -502,13 +504,13 @@ export default function Leads() {
       {/* Bulk actions trigger bar */}
       {selectedRowKeys.length > 0 && (
         <div className="bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 p-3 rounded-xl flex justify-between items-center text-xs animate-in fade-in slide-in-from-top-2 duration-200">
-          <span className="font-semibold text-[var(--color-fg)]">Selected {selectedRowKeys.length} leads</span>
+          <span className="font-semibold text-[var(--color-fg)]">{t('leads.selectedCount',{count:selectedRowKeys.length})}</span>
           <div className="flex gap-2">
             <button onClick={handleBulkReassign} className="px-3 py-1 bg-white hover:bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg font-semibold cursor-pointer">
-              Reassign Owner
+              {t('leads.reassignOwner')}
             </button>
             <button onClick={handleBulkExport} className="px-3 py-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-lg font-semibold cursor-pointer">
-              Export Excel
+              {t('leads.exportExcel')}
             </button>
           </div>
         </div>
@@ -532,7 +534,7 @@ export default function Leads() {
 
       {/* Create / Edit Modal */}
       <Modal
-        title={editingLead ? 'Edit Lead' : 'Create Lead'}
+        title={editingLead ? t('leads.edit') : t('leads.create')}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
@@ -541,10 +543,10 @@ export default function Leads() {
         <div className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="First Name" value={firstName} onChange={setFirstName} />
+              <FloatingInput label={t('leads.firstName')} value={firstName} onChange={setFirstName} />
             </div>
             <div>
-              <FloatingInput label="Last Name" value={lastName} onChange={setLastName} required />
+              <FloatingInput label={t('leads.lastName')} value={lastName} onChange={setLastName} required />
               {errors.lastName && <p className="text-red-500 text-[10px] mt-1">{errors.lastName}</p>}
             </div>
           </div>
@@ -552,7 +554,7 @@ export default function Leads() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <FloatingInput
-                label="Email Address"
+                label={t('leads.emailAddress')}
                 type="email"
                 value={email}
                 onChange={setEmail}
@@ -563,7 +565,7 @@ export default function Leads() {
             </div>
             <div>
               <FloatingInput
-                label="Phone Number"
+                label={t('leads.phoneNumber')}
                 value={phone}
                 onChange={setPhone}
                 required
@@ -573,12 +575,12 @@ export default function Leads() {
             </div>
           </div>
 
-          <FloatingInput label="Company Name" value={company} onChange={setCompany} />
+          <FloatingInput label={t('leads.companyName')} value={company} onChange={setCompany} />
 
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Lead Source
+                {t('leads.leadSource')}
               </label>
               <Select
                 value={source}
@@ -603,7 +605,7 @@ export default function Leads() {
 
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Service Interest
+                {t('leads.serviceInterest')}
               </label>
               <Select
                 value={serviceInterest}
@@ -623,11 +625,11 @@ export default function Leads() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <FloatingInput label="Estimated Budget ($)" type="number" value={budget} onChange={setBudget} />
+            <FloatingInput label={t('leads.estimatedBudget')} type="number" value={budget} onChange={setBudget} />
 
             <div className="flex flex-col gap-2 pt-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Assigned Owner
+                {t('leads.assignedOwner')}
               </label>
               <Select
                 value={assignedOwner}
@@ -645,7 +647,7 @@ export default function Leads() {
           {/* BANT Qualification segment */}
           <div className="pt-4 border-t border-[var(--color-border)]/50">
             <h4 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)] mb-4">
-              BANT Qualification
+              {t('leads.bantQualification')}
             </h4>
             <div className="grid grid-cols-2 gap-6">
               <label className="flex items-center gap-3 cursor-pointer group">
@@ -655,7 +657,7 @@ export default function Leads() {
                   onChange={(e) => setBudgetApproved(e.target.checked)}
                   className="w-4 h-4 rounded accent-[var(--color-accent)] cursor-pointer"
                 />
-                <span className="text-sm text-[var(--color-fg)] select-none">Budget Approved</span>
+                <span className="text-sm text-[var(--color-fg)] select-none">{t('leads.budgetApproved')}</span>
               </label>
 
               <label className="flex items-center gap-3 cursor-pointer group">
@@ -665,22 +667,22 @@ export default function Leads() {
                   onChange={(e) => setAuthorityMarker(e.target.checked)}
                   className="w-4 h-4 rounded accent-[var(--color-accent)] cursor-pointer"
                 />
-                <span className="text-sm text-[var(--color-fg)] select-none">Authority Confirmed</span>
+                <span className="text-sm text-[var(--color-fg)] select-none">{t('leads.authorityConfirmed')}</span>
               </label>
             </div>
             <div className="space-y-4 mt-2">
-              <FloatingInput label="Describe Need" value={need} onChange={setNeed} />
-              <FloatingInput label="Timeline / Deadline" value={timeline} onChange={setTimeline} />
+              <FloatingInput label={t('leads.describeNeed')} value={need} onChange={setNeed} />
+              <FloatingInput label={t('leads.timeline')} value={timeline} onChange={setTimeline} />
             </div>
           </div>
 
           {/* Submit Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button onClick={() => setModalOpen(false)} className="rounded-xl cursor-pointer">
-              Cancel
+              {t('leads.cancel')}
             </Button>
             <Button type="primary" onClick={handleSave} className="rounded-xl cursor-pointer">
-              Save changes
+              {t('leads.saveChanges')}
             </Button>
           </div>
         </div>
@@ -691,14 +693,14 @@ export default function Leads() {
         title={
           <span className="flex items-center gap-2 text-amber-500 font-bold">
             <AlertTriangle size={18} />
-            <span>Lead Duplicate Detected</span>
+            <span>{t('leads.duplicateDetected')}</span>
           </span>
         }
         open={duplicateWarningOpen}
         onCancel={() => setDuplicateWarningOpen(false)}
         footer={[
           <Button key="close" onClick={() => setDuplicateWarningOpen(false)} className="rounded-xl">
-            Ignore & Continue
+            {t('leads.ignoreContinue')}
           </Button>,
         ]}
       >

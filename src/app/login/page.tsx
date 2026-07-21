@@ -7,15 +7,13 @@ import { Button, message } from 'antd';
 import { FloatingInput } from '@/components/FloatingInput';
 import { useTheme } from '@/components/Providers';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/hooks/useAuth';
 
-// Constants for messages to avoid hardcoded strings
-const MSG_LOGIN_SUCCESS = 'Đăng nhập thành công';
-const MSG_LOGIN_ERROR = 'Đăng nhập thất bại';
-
 export default function Login() {
   const [email, setEmail] = useState('');
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const { login, loading } = useAuth();
   const [currentTime, setCurrentTime] = useState('');
@@ -85,14 +83,14 @@ export default function Login() {
             className="space-y-4 lg:space-y-6 flex flex-col items-center"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-none text-[var(--color-fg)]">
-              OPERATIONAL
+              {t('login.operational')}
               <br />
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-cyan-500 bg-clip-text text-transparent">
-                INTELLIGENCE
+                {t('login.intelligence')}
               </span>
             </h1>
             <p className="text-xs sm:text-sm lg:text-base text-[var(--color-muted-fg)] max-w-md lg:max-w-lg font-medium leading-relaxed">
-              Secure enterprise operations console. Access analytics models, pipeline value, and audit logs.
+              {t('login.heroText')}
             </p>
           </motion.div>
 
@@ -104,7 +102,7 @@ export default function Login() {
             className="space-y-2 border-t border-[var(--color-border)] pt-6 px-12"
           >
             <span className="text-[10px] lg:text-xs font-mono tracking-widest text-[var(--color-muted-fg)] block">
-              STATION LOCAL TIME
+              {t('login.stationLocalTime')}
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extralight tracking-widest text-[var(--color-fg)] font-mono">
               {currentTime || "00:00:00"}
@@ -134,14 +132,14 @@ export default function Login() {
               />
             </Link>
             <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-[var(--color-fg)]">
-              Welcome Back
+              {t('login.welcomeBack')}
             </h2>
-            <p className="text-sm lg:text-base text-[var(--color-muted-fg)] mt-1.5 font-medium">Sign in to manage your sales pipeline.</p>
+            <p className="text-sm lg:text-base text-[var(--color-muted-fg)] mt-1.5 font-medium">{t('login.subtitle')}</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6 lg:space-y-8">
             <FloatingInput
-              label="Email Address"
+              label={t('login.emailLabel')}
               type="email"
               value={email}
               onChange={setEmail}
@@ -149,7 +147,7 @@ export default function Login() {
             />
 
             <FloatingInput
-              label="Password"
+              label={t('login.passwordLabel')}
               type="password"
               value={password}
               onChange={setPassword}
@@ -158,7 +156,7 @@ export default function Login() {
 
             <div className="flex justify-between items-center text-xs lg:text-sm mt-2">
               <span className="text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] cursor-pointer transition-colors font-medium">
-                Forgot password?
+                {t('login.forgotPassword')}
               </span>
             </div>
 
@@ -169,15 +167,15 @@ export default function Login() {
                 loading={loading}
                 className="w-full h-12 lg:h-14 rounded-xl text-base lg:text-lg font-semibold mt-4 cursor-pointer"
               >
-                Sign In
+                {t('login.signIn')}
               </Button>
             </motion.div>
           </form>
 
           <div className="text-center md:text-left text-xs sm:text-sm lg:text-base text-[var(--color-muted-fg)]">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link href="/register" className="text-[var(--color-accent)] hover:underline font-semibold transition-all">
-              Sign up here
+              {t('login.signUp')}
             </Link>
           </div>
         </motion.div>

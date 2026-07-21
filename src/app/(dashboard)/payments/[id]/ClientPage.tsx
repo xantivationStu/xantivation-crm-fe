@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Steps, Modal, Input, message, Spin } from 'antd';
 import { ArrowLeft, User, Calendar, CreditCard, ArrowRight, ShieldCheck, FileText, CheckCircle2, AlertTriangle, Landmark, Ban, Printer, FileDown } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,7 @@ interface PaymentRecord {
 
 export default function PaymentDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('overview');
 
   // API Queries & Mutations
@@ -40,13 +42,13 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
     return (
       <div className="py-32 flex flex-col justify-center items-center gap-3">
         <Spin size="large" />
-        <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading invoice details...</span>
+        <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('payments.loading')}</span>
       </div>
     );
   }
 
   if (!p) {
-    return <div className="p-8 text-center text-red-500 font-bold">Payment record not found</div>;
+    return <div className="p-8 text-center text-red-500 font-bold">{t('payments.notFound')}</div>;
   }
 
   const handleConfirmPayment = async () => {
@@ -69,7 +71,7 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
   };
 
   const handlePrint = () => {
-    message.info('Generating print queue for invoice...');
+    message.info(t('payments.generatingPrint'));
     window.print();
   };
 
@@ -85,14 +87,14 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
       <div className="flex justify-between items-start shrink-0">
         <div>
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
-            <Link href="/payments" className="hover:underline">Payments</Link>
+            <Link href="/payments" className="hover:underline">{t('payments.breadcrumbPayments')}</Link>
             <span>&gt;</span>
             <span className="text-[var(--color-fg)] font-semibold">{invoiceNumber}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
-            Hóa đơn: {invoiceNumber}
+            {t('payments.invoice')}: {invoiceNumber}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Milestone billing: {p.milestoneName} ({p.milestonePercentage}%) • Client: {p.notes || 'Studio Client'}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('payments.milestoneBilling')}: {p.milestoneName} ({p.milestonePercentage}%) • {t('payments.client')}: {p.notes || t('payments.studioClient')}</p>
         </div>
 
         <div>
@@ -101,7 +103,7 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
             p.status === 'PENDING' ? 'bg-blue-500/10 text-blue-500' :
             p.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500' : 'bg-gray-500/10 text-gray-500'
           }`}>
-            Trạng thái: {p.status}
+            {t('payments.status')}: {p.status}
           </span>
         </div>
       </div>
@@ -111,8 +113,8 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
         <Steps
           current={getStepIndex(p.status)}
           items={[
-            { title: 'Awaiting Payment', description: `Due by ${dueDate}` },
-            { title: p.status === 'CANCELLED' ? 'Cancelled / Void' : 'Cleared Payment', description: p.status === 'CANCELLED' ? 'Invoice Cancelled' : (paidAt ? `Paid on ${paidAt}` : 'Cleared') },
+            { title: t('payments.awaitingPayment'), description: `${t('payments.dueBy')} ${dueDate}` },
+            { title: p.status === 'CANCELLED' ? t('payments.cancelledVoid') : t('payments.clearedPayment'), description: p.status === 'CANCELLED' ? t('payments.invoiceCancelled') : (paidAt ? `${t('payments.paidOn')} ${paidAt}` : t('payments.cleared')) },
           ]}
           status={p.status === 'OVERDUE' ? 'error' : 'process'}
         />
@@ -125,8 +127,8 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-3 space-y-6">
           <div className="flex gap-6 border-b border-[var(--color-border)] pb-px">
             {[
-              { id: 'overview', name: 'Thông tin hóa đơn' },
-              { id: 'preview', name: 'Invoice Statement' },
+              { id: 'overview', name: t('payments.tabInvoiceInfo') },
+              { id: 'preview', name: t('payments.tabInvoiceStatement') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -149,28 +151,28 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
                 <div className="grid grid-cols-2 gap-6 text-xs border-b border-[var(--color-border)]/50 pb-6">
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Chi tiết thanh toán
+                      {t('payments.paymentDetails')}
                     </h4>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Số tiền cần thu</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('payments.amountDue')}</span>
                       <span className="font-semibold font-mono text-[var(--color-accent)]">{amount.toLocaleString('vi-VN')} VND</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Hạn thanh toán</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('payments.dueDate')}</span>
                       <span className="font-semibold font-mono">{dueDate}</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Đợt thanh toán</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('payments.paymentTerm')}</span>
                       <span className="font-semibold">{p.milestoneName} ({p.milestonePercentage}%)</span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Thông tin đính kèm
+                      {t('payments.attachments')}
                     </h4>
                     <div className="flex justify-between border-b border-[var(--color-border)] pb-1.5">
-                      <span className="text-[var(--color-muted-fg)]">Khách hàng ghi chú</span>
+                      <span className="text-[var(--color-muted-fg)]">{t('payments.customerNotes')}</span>
                       <span className="font-semibold">{p.notes || '-'}</span>
                     </div>
                   </div>
@@ -178,13 +180,13 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
 
                 {/* Contract context */}
                 <div className="space-y-3 text-xs">
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Hợp đồng điện tử liên quan</h4>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">{t('payments.relatedEContract')}</h4>
                   <div className="p-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <FileText className="text-[var(--color-accent)]" size={24} />
                       <div>
-                        <p className="font-semibold text-xs text-[var(--color-fg)]">Mã Hợp đồng liên quan</p>
-                        <p className="text-[10px] text-[var(--color-muted-fg)]">Generated dynamically from signed deal.</p>
+                        <p className="font-semibold text-xs text-[var(--color-fg)]">{t('payments.relatedContractCode')}</p>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">{t('payments.generatedFromDeal')}</p>
                       </div>
                     </div>
                     {p.contract?.id && (
@@ -192,7 +194,7 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
                         href={`/contracts/${p.contract.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-fg)] transition-all"
                       >
-                        <span>Xem hợp đồng</span>
+                        <span>{t('payments.viewContract')}</span>
                         <ArrowRight size={12} />
                       </Link>
                     )}
@@ -207,46 +209,46 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
                 <button
                   onClick={handlePrint}
                   className="absolute top-4 right-4 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] cursor-pointer"
-                  title="Print Statement"
+                  title={t('payments.printStatement')}
                 >
                   <Printer size={14} />
                 </button>
 
                 <div className="flex justify-between items-start border-b border-[var(--color-border)] pb-6">
                   <div>
-                    <h3 className="font-extrabold text-sm tracking-widest text-[var(--color-fg)] uppercase">XANTIVATION STUDIO</h3>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">Lầu 14, tòa nhà IDMC Duy Tân, Cầu Giấy, Hà Nội</p>
-                    <p className="text-[10px] text-[var(--color-muted-fg)]">contact@xantivation.com | xantivation.com</p>
+                    <h3 className="font-extrabold text-sm tracking-widest text-[var(--color-fg)] uppercase">{t('payments.companyName')}</h3>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-1">{t('payments.companyAddress')}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">{t('payments.companyContact')}</p>
                   </div>
                   <div className="text-right">
-                    <h4 className="font-extrabold text-[var(--color-accent)] text-base">INVOICE STATEMENT</h4>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] font-bold mt-1">Number: {invoiceNumber}</p>
-                    <p className="text-[10px] text-[var(--color-muted-fg)]">Date: {createdAt}</p>
+                    <h4 className="font-extrabold text-[var(--color-accent)] text-base">{t('payments.invoiceStatement')}</h4>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] font-bold mt-1">{t('payments.number')}: {invoiceNumber}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">{t('payments.date')}: {createdAt}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-8 text-[11px] border-b border-[var(--color-border)] pb-6">
                   <div>
-                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">Billed To:</p>
-                    <p className="font-bold">{p.notes || 'Xantivation Client'}</p>
+                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">{t('payments.billedTo')}:</p>
+                    <p className="font-bold">{p.notes || t('payments.xantivationClient')}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">Payment Method:</p>
-                    <p className="font-bold">Bank Transfer (VND)</p>
+                    <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted-fg)] mb-1">{t('payments.paymentMethod')}:</p>
+                    <p className="font-bold">{t('payments.bankTransfer')}</p>
                   </div>
                 </div>
 
                 <table className="w-full text-left text-[11px] border-b border-[var(--color-border)] pb-6">
                   <thead>
                     <tr className="border-b border-[var(--color-border)] text-[var(--color-muted-fg)]">
-                      <th className="pb-2 font-mono font-bold uppercase text-[9px] tracking-wider">Mô tả dịch vụ</th>
-                      <th className="pb-2 text-right font-mono font-bold uppercase text-[9px] tracking-wider">Tổng cộng</th>
+                      <th className="pb-2 font-mono font-bold uppercase text-[9px] tracking-wider">{t('payments.serviceDescription')}</th>
+                      <th className="pb-2 text-right font-mono font-bold uppercase text-[9px] tracking-wider">{t('payments.total')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td className="py-3 font-semibold">
-                        {p.milestoneName} Billing Milestone ({p.milestonePercentage}% contract value)
+                        {p.milestoneName} {t('payments.billingMilestone')} ({p.milestonePercentage}% {t('payments.contractValue')})
                       </td>
                       <td className="py-3 text-right font-bold font-mono">
                         {amount.toLocaleString('vi-VN')} VND
@@ -256,7 +258,7 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
                 </table>
 
                 <div className="flex justify-between items-center text-xs font-mono font-semibold pt-4">
-                  <span className="text-[var(--color-muted-fg)]">Total Bill:</span>
+                  <span className="text-[var(--color-muted-fg)]">{t('payments.totalBill')}:</span>
                   <span className="text-sm font-bold text-[var(--color-fg)]">{amount.toLocaleString('vi-VN')} VND</span>
                 </div>
               </div>
@@ -268,30 +270,30 @@ export default function PaymentDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Finance Controls
+              {t('payments.financeControls')}
             </h3>
 
             <div className="space-y-3">
               {p.status === 'PENDING' && (
                 <Button type="primary" onClick={handleConfirmPayment} loading={confirmPaymentMutation.isPending} className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl cursor-pointer">
                   <CreditCard size={14} />
-                  <span>Xác nhận Thanh toán</span>
+                  <span>{t('payments.confirmPayment')}</span>
                 </Button>
               )}
             </div>
 
             <div className="space-y-4 border-t border-[var(--color-border)]/50 pt-4 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-[var(--color-muted-fg)]">Tỷ lệ:</span>
+                <span className="text-[var(--color-muted-fg)]">{t('payments.percentage')}:</span>
                 <span className="font-semibold">{p.milestonePercentage}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--color-muted-fg)]">Ngày tạo:</span>
+                <span className="text-[var(--color-muted-fg)]">{t('payments.createdDate')}:</span>
                 <span className="font-semibold">{createdAt}</span>
               </div>
               {paidAt && (
                 <div className="flex justify-between">
-                  <span className="text-[var(--color-muted-fg)]">Ngày nhận:</span>
+                  <span className="text-[var(--color-muted-fg)]">{t('payments.receivedDate')}:</span>
                   <span className="font-semibold">{paidAt}</span>
                 </div>
               )}

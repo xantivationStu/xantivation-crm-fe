@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button, Steps, Select, Modal, Progress, message, Spin } from 'antd';
 import { User, Briefcase, Mail, Phone, Calendar, Plus, ArrowRight, UserCheck, FileText, AlertTriangle, Trash2, HelpCircle, Bot, Zap } from 'lucide-react';
 import { useOpportunity, useUpdateOpportunity, useCloseLostOpportunity, useDeleteOpportunity } from '@/hooks/api/useOpportunity';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 
 export default function OpportunityDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useTranslation();
   const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [coachingNotes, setCoachingNotes] = useState('');
@@ -30,7 +32,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
       });
       
       if (!response.ok) {
-        throw new Error('Failed to connect to AI Coach');
+        throw new Error(t('opportunities.coachConnectError'));
       }
 
       const reader = response.body?.getReader();
@@ -69,7 +71,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
         }
       }
     } catch (error: any) {
-      message.error('Lỗi kết nối với AI Coach: ' + error.message);
+      message.error(t('opportunities.coachConnError') + ' ' + error.message);
     } finally {
       setIsStreaming(false);
     }
@@ -95,13 +97,13 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
     return (
       <div className="py-32 flex flex-col justify-center items-center gap-3">
         <Spin size="large" />
-        <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading opportunity details...</span>
+        <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('opportunities.loading')}</span>
       </div>
     );
   }
 
   if (!opp) {
-    return <div className="p-8 text-center text-red-500 font-bold">Opportunity not found</div>;
+    return <div className="p-8 text-center text-red-500 font-bold">{t('opportunities.notFound')}</div>;
   }
 
   const handleStageChange = async (newStage: any) => {
@@ -132,7 +134,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
   const handleConfirmLost = async () => {
     if (!lostReason.trim()) {
-      message.error('Please enter a reason for losing this opportunity');
+      message.error(t('opportunities.lostReasonRequired'));
       return;
     }
 
@@ -149,11 +151,11 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
   const handleDelete = async () => {
     Modal.confirm({
-      title: 'Xác nhận xóa cơ hội bán hàng',
-      content: 'Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa?',
-      okText: 'Xác nhận xóa',
+      title: t('opportunities.confirmDelete'),
+      content: t('opportunities.deleteWarning'),
+      okText: t('opportunities.confirmDeleteBtn'),
       okType: 'danger',
-      cancelText: 'Hủy',
+      cancelText: t('opportunities.cancel'),
       onOk: async () => {
         try {
           await deleteMutation.mutateAsync(opp.id);
@@ -180,7 +182,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
   const stagesOrder = ['QUALIFICATION', 'PROPOSAL', 'NEGOTIATION', 'WON'];
   const currentStep = stagesOrder.indexOf(opp.stage === 'LOST' ? 'WON' : opp.stage);
 
-  const ownerName = opp.owner ? `${opp.owner.firstName || ''} ${opp.owner.lastName || ''}`.trim() : 'System Admin';
+  const ownerName = opp.owner ? `${opp.owner.firstName || ''} ${opp.owner.lastName || ''}`.trim() : t('opportunities.systemAdmin');
 
   return (
     <div className="space-y-8">
@@ -188,14 +190,14 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
       <div className="flex justify-between items-start shrink-0">
         <div>
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
-            <Link href="/opportunities" className="hover:underline">Opportunities</Link>
+            <Link href="/opportunities" className="hover:underline">{t('opportunities.breadcrumbOpportunities')}</Link>
             <span>&gt;</span>
             <span className="text-[var(--color-fg)] font-semibold">{opp.opportunityCode}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
             {opp.name}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Deal Code: {opp.opportunityCode} • {opp.serviceInterest}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('opportunities.dealCode')}: {opp.opportunityCode} • {opp.serviceInterest}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -204,7 +206,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
             opp.stage === 'LOST' ? 'bg-red-500/10 text-red-500' :
             'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
           }`}>
-            Stage: {opp.stage}
+            {t('opportunities.stage')}: {opp.stage}
           </span>
         </div>
       </div>
@@ -215,10 +217,10 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
           <Steps
             current={currentStep}
             items={[
-              { title: 'Qualification', description: '20% Probability' },
-              { title: 'Proposal', description: '50% Probability' },
-              { title: 'Negotiation', description: '80% Probability' },
-              { title: 'Closed Won', description: '100% Probability' },
+              { title: t('opportunities.stepQualification'), description: t('opportunities.prob20') },
+              { title: t('opportunities.stepProposal'), description: t('opportunities.prob50') },
+              { title: t('opportunities.stepNegotiation'), description: t('opportunities.prob80') },
+              { title: t('opportunities.stepClosedWon'), description: t('opportunities.prob100') },
             ]}
           />
         </div>
@@ -226,8 +228,8 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
         <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex items-center gap-3">
           <AlertTriangle className="text-red-500 shrink-0" size={20} />
           <div className="text-xs text-red-800 font-mono">
-            <span className="font-bold uppercase block">CLOSED LOST</span>
-            <span>Reason: {opp.lostReason}</span>
+            <span className="font-bold uppercase block">{t('opportunities.closedLostLabel')}</span>
+            <span>{t('opportunities.reason')}: {opp.lostReason}</span>
           </div>
         </div>
       )}
@@ -240,10 +242,10 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
           {/* Sub Navigation */}
           <div className="flex gap-6 border-b border-[var(--color-border)] pb-px">
             {[
-              { id: 'overview', name: 'Overview' },
-              { id: 'progress', name: 'Stage Progress' },
-              { id: 'activity', name: 'Activity Log' },
-              { id: 'ai-coach', name: 'AI Coach (SSE)' },
+              { id: 'overview', name: t('opportunities.tabOverview') },
+              { id: 'progress', name: t('opportunities.tabProgress') },
+              { id: 'activity', name: t('opportunities.tabActivity') },
+              { id: 'ai-coach', name: t('opportunities.tabAiCoach') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -266,23 +268,23 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Deal Parameters
+                      {t('opportunities.dealParameters')}
                     </h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Estimated Amount</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.estimatedAmount')}</span>
                         <span className="font-semibold font-mono">{(opp.amount || 0).toLocaleString('vi-VN')} VND</span>
                       </div>
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Probability Suggestion</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.probability')}</span>
                         <span className="font-semibold font-mono">{opp.probability || 0}%</span>
                       </div>
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Target Close Date</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.targetCloseDate')}</span>
                         <span className="font-semibold font-mono">{opp.expectedCloseDate ? opp.expectedCloseDate.substring(0, 10) : ''}</span>
                       </div>
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Service Interest</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.serviceInterest')}</span>
                         <span className="font-semibold">{opp.serviceInterest}</span>
                       </div>
                     </div>
@@ -290,22 +292,22 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Customer Relations
+                      {t('opportunities.customerRelations')}
                     </h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Account Customer</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.accountCustomer')}</span>
                         {opp.accountId && (
                           <Link href={`/customers/accounts/${opp.accountId}`} className="font-semibold text-[var(--color-accent)] hover:underline">
-                            {opp.account?.name || 'View Account'}
+                            {opp.account?.name || t('opportunities.viewAccount')}
                           </Link>
                         )}
                       </div>
                       <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-muted-fg)]">Primary Contact</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('opportunities.primaryContact')}</span>
                         {opp.contactId && (
                           <Link href={`/customers/contacts/${opp.contactId}`} className="font-semibold text-[var(--color-accent)] hover:underline">
-                            {opp.contact ? `${opp.contact.firstName || ''} ${opp.contact.lastName || ''}`.trim() : 'View Contact'}
+                            {opp.contact ? `${opp.contact.firstName || ''} ${opp.contact.lastName || ''}`.trim() : t('opportunities.viewContact')}
                           </Link>
                         )}
                       </div>
@@ -315,10 +317,10 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
                 <div className="space-y-2 pt-4 border-t border-[var(--color-border)]/50">
                   <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                    Opportunity Scope Description
+                    {t('opportunities.scopeDescription')}
                   </h3>
                   <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-fg)] whitespace-pre-wrap font-mono">
-                    {opp.description || 'No description provided.'}
+                    {opp.description || t('opportunities.noDescription')}
                   </div>
                 </div>
               </div>
@@ -326,17 +328,17 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
             {activeSubTab === 'progress' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Stage transition history</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('opportunities.stageHistory')}</h3>
                 <div className="relative border-l border-[var(--color-border)] ml-3 pl-6 space-y-6 text-xs font-mono">
                   <div className="relative">
                     <span className="absolute -left-[30px] top-0 bg-[var(--color-accent)] text-white w-4 h-4 rounded-full flex items-center justify-center font-bold font-mono text-[9px]">1</span>
-                    <p className="font-semibold text-[var(--color-fg)]">QUALIFICATION stage reached</p>
-                    <p className="text-[10px] text-[var(--color-muted-fg)]">{opp.createdAt ? opp.createdAt.substring(0, 10) : ''} • System auto-qualify from converter</p>
+                    <p className="font-semibold text-[var(--color-fg)]">{t('opportunities.qualificationReached')}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">{opp.createdAt ? opp.createdAt.substring(0, 10) : ''} • {t('opportunities.systemAutoQualify')}</p>
                   </div>
                   <div className="relative">
                     <span className="absolute -left-[30px] top-0 bg-[var(--color-accent)] text-white w-4 h-4 rounded-full flex items-center justify-center font-bold font-mono text-[9px]">2</span>
-                    <p className="font-semibold text-[var(--color-fg)]">{opp.stage} stage reached</p>
-                    <p className="text-[10px] text-[var(--color-muted-fg)]">{opp.updatedAt ? opp.updatedAt.substring(0, 10) : ''} • Transitioned by {ownerName}</p>
+                    <p className="font-semibold text-[var(--color-fg)]">{opp.stage} {t('opportunities.stageReached')}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)]">{opp.updatedAt ? opp.updatedAt.substring(0, 10) : ''} • {t('opportunities.transitionedBy')} {ownerName}</p>
                   </div>
                 </div>
               </div>
@@ -344,10 +346,10 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
             {activeSubTab === 'activity' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Timeline logs</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('opportunities.timelineLogs')}</h3>
                 <div className="p-6 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
                   <HelpCircle size={32} className="mx-auto text-[var(--color-accent)]/50" />
-                  <span>No customer-facing timeline logs registered.</span>
+                  <span>{t('opportunities.noTimelineLogs')}</span>
                 </div>
               </div>
             )}
@@ -358,9 +360,9 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                   <div>
                     <h3 className="text-sm font-semibold text-[var(--color-fg)] flex items-center gap-2">
                       <Bot size={18} className="text-[var(--color-accent)]" />
-                      <span>Trợ lý Ảo AI Coach</span>
+                      <span>{t('opportunities.aiCoach')}</span>
                     </h3>
-                    <p className="text-[11px] text-[var(--color-muted-fg)] mt-1">AI phân tích hoạt động và báo giá để gợi ý đàm phán</p>
+                    <p className="text-[11px] text-[var(--color-muted-fg)] mt-1">{t('opportunities.aiCoachDesc')}</p>
                   </div>
                   <Button 
                     type="primary" 
@@ -369,7 +371,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                     className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer bg-[var(--color-accent)]"
                   >
                     <Zap size={14} />
-                    <span>{coachingNotes ? 'Nạp lại Gợi ý' : 'Bắt đầu Coach'}</span>
+                    <span>{coachingNotes ? t('opportunities.reloadSuggestions') : t('opportunities.startCoach')}</span>
                   </Button>
                 </div>
 
@@ -378,7 +380,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                     <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-3 font-sans shadow-sm leading-relaxed text-xs">
                       <p className="font-semibold text-xs text-[var(--color-fg)] flex items-center gap-1.5 border-b border-[var(--color-border)]/50 pb-2">
                         <Bot size={14} className="text-[var(--color-accent)]" />
-                        <span>Lời khuyên Đàm phán từ AI Coach:</span>
+                        <span>{t('opportunities.coachAdvice')}</span>
                       </p>
                       <div className="whitespace-pre-wrap text-xs text-[var(--color-fg)] space-y-2 pt-1 font-mono">
                         {coachingNotes}
@@ -386,7 +388,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                       {isStreaming && (
                         <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-accent)] font-mono animate-pulse pt-2">
                           <span className="w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full"></span>
-                          <span>AI đang gõ tư vấn...</span>
+                          <span>{t('opportunities.aiTyping')}</span>
                         </div>
                       )}
                     </div>
@@ -395,10 +397,10 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
                   <div className="text-center py-16 space-y-3 bg-[var(--color-surface)]/10 border border-dashed border-[var(--color-border)] rounded-2xl">
                     <Bot size={44} className="mx-auto text-[var(--color-muted-fg)]/40" />
                     <p className="text-xs text-[var(--color-muted-fg)] max-w-md mx-auto leading-relaxed">
-                      Chưa có gợi ý đàm phán nào được tải. Nhấn nút <strong>Bắt đầu Coach</strong> để AI đọc thông tin cơ hội và phản hồi bằng SSE streaming.
+                      {t('opportunities.coachEmpty')}
                     </p>
                     <Button onClick={handleStartCoaching} loading={isStreaming} className="h-9 px-4 rounded-xl cursor-pointer">
-                      Bắt đầu Coach
+                      {t('opportunities.startCoach')}
                     </Button>
                   </div>
                 )}
@@ -411,23 +413,23 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Deal Control Panel
+              {t('opportunities.controlPanel')}
             </h3>
 
             {/* Change Stage */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Sales Stage Setting
+                {t('opportunities.salesStageSetting')}
               </label>
               <Select
                 value={opp.stage}
                 onChange={handleStageChange}
                 options={[
-                  { value: 'QUALIFICATION', label: 'Qualification' },
-                  { value: 'PROPOSAL', label: 'Proposal' },
-                  { value: 'NEGOTIATION', label: 'Negotiation' },
-                  { value: 'WON', label: 'Closed Won' },
-                  { value: 'LOST', label: 'Closed Lost' },
+                  { value: 'QUALIFICATION', label: t('opportunities.stageQualification') },
+                  { value: 'PROPOSAL', label: t('opportunities.stageProposal') },
+                  { value: 'NEGOTIATION', label: t('opportunities.stageNegotiation') },
+                  { value: 'WON', label: t('opportunities.stageWon') },
+                  { value: 'LOST', label: t('opportunities.stageLost') },
                 ]}
                 className="w-full h-10"
               />
@@ -436,7 +438,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
             {/* Change Owner */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Assigned Owner
+                {t('opportunities.assignedOwner')}
               </label>
               <Select
                 value={opp.ownerId || ''}
@@ -450,7 +452,7 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
             <div className="pt-4 border-t border-[var(--color-border)]/50">
               <Button danger onClick={handleDelete} loading={deleteMutation.isPending} className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer">
                 <Trash2 size={16} />
-                <span>Delete Opportunity</span>
+                <span>{t('opportunities.deleteOpportunity')}</span>
               </Button>
             </div>
           </div>
@@ -460,18 +462,18 @@ export default function OpportunityDetail({ params }: { params: Promise<{ id: st
 
       {/* Closed Lost Reason Modal */}
       <Modal
-        title="Mark Opportunity as Closed Lost"
+        title={t('opportunities.markClosedLost')}
         open={lostModalOpen}
         onCancel={() => setLostModalOpen(false)}
         onOk={handleConfirmLost}
         confirmLoading={closeLostMutation.isPending}
-        okText="Confirm Close Lost"
-        cancelText="Cancel"
+        okText={t('opportunities.confirmCloseLost')}
+        cancelText={t('opportunities.cancel')}
       >
         <div className="space-y-4 pt-4">
-          <p className="text-xs text-[var(--color-muted-fg)]">To close this opportunity as lost, please provide a valid reason.</p>
+          <p className="text-xs text-[var(--color-muted-fg)]">{t('opportunities.lostReasonInstruction')}</p>
           <textarea
-            placeholder="Reason for loss..."
+            placeholder={t('opportunities.lostReasonPlaceholder')}
             value={lostReason}
             onChange={(e) => setLostReason(e.target.value)}
             className="w-full min-h-[100px] p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs text-[var(--color-fg)] focus:outline-none"

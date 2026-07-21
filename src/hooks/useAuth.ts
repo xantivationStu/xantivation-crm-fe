@@ -4,6 +4,7 @@ import { LoginDto, RegisterDto } from '@/types/auth.types';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { message } from 'antd';
+import i18n from '@/lib/i18n';
 
 export function useAuth() {
   const router = useRouter();
@@ -16,10 +17,10 @@ export function useAuth() {
       const response = await api.post('/auth/login', dto);
       const { user: loggedUser, tokens } = response.data.data;
       setAuth(loggedUser, tokens);
-      message.success('Đăng nhập thành công!');
+      message.success(i18n.t('hooks.auth.loginSuccess'));
       router.push('/dashboard');
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Đăng nhập thất bại!';
+      const errorMsg = error.response?.data?.message || i18n.t('hooks.auth.loginFailed');
       message.error(errorMsg);
       throw error;
     } finally {
@@ -33,10 +34,10 @@ export function useAuth() {
       const response = await api.post('/auth/register', dto);
       const { user: registeredUser, tokens } = response.data.data;
       setAuth(registeredUser, tokens);
-      message.success('Đăng ký tài khoản thành công!');
+      message.success(i18n.t('hooks.auth.registerSuccess'));
       router.push('/dashboard');
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Đăng ký thất bại!';
+      const errorMsg = error.response?.data?.message || i18n.t('hooks.auth.registerFailed');
       message.error(errorMsg);
       throw error;
     } finally {
@@ -52,7 +53,7 @@ export function useAuth() {
       // Ignore logout API failures
     } finally {
       storeLogout();
-      message.success('Đăng xuất thành công!');
+      message.success(i18n.t('header.logoutSuccess'));
       router.push('/login');
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tag, Empty } from 'antd';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import {
@@ -15,6 +16,7 @@ import { motion } from 'framer-motion';
 import AnimatedCounter from '@/components/AnimatedCounter';
 
 export default function AccountantDashboard() {
+  const { t } = useTranslation();
   const { data: metricsData, isLoading: metricsLoading } = useDashboardMetrics();
   const { data: overdueData, isLoading: overdueLoading } = useDashboardOverduePayments();
   const { data: upcomingData, isLoading: upcomingLoading } = useDashboardUpcomingPayments();
@@ -65,7 +67,7 @@ export default function AccountantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28 border-l-4 border-l-rose-500">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-rose-500">Tổng nợ Quá hạn</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-rose-500">{t('accountantDashboard.totalOverdue')}</span>
             <AlertTriangle size={16} className="text-rose-500 animate-pulse" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-rose-500">
@@ -75,7 +77,7 @@ export default function AccountantDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Doanh thu Hợp đồng Active</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('accountantDashboard.activeContractRevenue')}</span>
             <TrendingUp size={16} className="text-emerald-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -85,7 +87,7 @@ export default function AccountantDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Hợp đồng Đã ký</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('accountantDashboard.signedContracts')}</span>
             <FileText size={16} className="text-indigo-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -98,7 +100,7 @@ export default function AccountantDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cash Flow Chart */}
         <motion.div variants={itemVariants} className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Dòng tiền Kế hoạch vs Thực tế hàng tháng</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('accountantDashboard.cashFlowTitle')}</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cashFlow} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
@@ -135,8 +137,8 @@ export default function AccountantDashboard() {
                   }}
                 />
                 <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace' }} />
-                <Bar name="Dự thu kế hoạch" dataKey="planned" fill="url(#plannedGrad)" radius={[4, 4, 0, 0]} />
-                <Bar name="Thực thu thực tế" dataKey="actual" fill="url(#actualGrad)" radius={[4, 4, 0, 0]} />
+                <Bar name={t('accountantDashboard.plannedRevenue')} dataKey="planned" fill="url(#plannedGrad)" radius={[4, 4, 0, 0]} />
+                <Bar name={t('accountantDashboard.actualRevenue')} dataKey="actual" fill="url(#actualGrad)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -144,7 +146,7 @@ export default function AccountantDashboard() {
 
         {/* Invoice issuance alerts */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Yêu cầu phát hành hóa đơn</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('accountantDashboard.invoiceRequests')}</h3>
           <div className="space-y-3">
             <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--color-accent)]/20 transition-all duration-200">
               <div className="flex justify-between items-start">
@@ -153,7 +155,7 @@ export default function AccountantDashboard() {
               </div>
               <p className="text-xs font-semibold text-[var(--color-fg)] mt-1 truncate">CyberCore LLC</p>
               <div className="flex justify-between items-center mt-2 text-[10px] text-[var(--color-muted-fg)]">
-                <span>Mốc: Tạm ứng đợt 1 (30%)</span>
+                <span>{t('accountantDashboard.milestone')}: Advance Payment 1 (30%)</span>
                 <span className="font-mono text-indigo-500 font-semibold">{formatVND(105000000)}</span>
               </div>
             </div>
@@ -164,7 +166,7 @@ export default function AccountantDashboard() {
               </div>
               <p className="text-xs font-semibold text-[var(--color-fg)] mt-1 truncate">Alpha Tech</p>
               <div className="flex justify-between items-center mt-2 text-[10px] text-[var(--color-muted-fg)]">
-                <span>Mốc: Bàn giao UI Design</span>
+                <span>{t('accountantDashboard.milestone')}: UI Design Handover</span>
                 <span className="font-mono text-indigo-500 font-semibold">{formatVND(72000000)}</span>
               </div>
             </div>
@@ -177,21 +179,21 @@ export default function AccountantDashboard() {
         {/* Overdue payments list */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
           <h3 className="text-xs font-mono uppercase tracking-wider text-rose-500 mb-6 flex items-center gap-1.5">
-            <AlertTriangle size={14} /> Danh sách Hóa đơn trễ hạn
+            <AlertTriangle size={14} /> {t('accountantDashboard.overdueInvoices')}
           </h3>
           {overdue.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có hóa đơn trễ hạn" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('accountantDashboard.noOverdueInvoices')} />
           ) : (
             <div className="space-y-3">
               {overdue.map((o, idx) => (
                 <div key={idx} className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-rose-500/20 transition-all duration-200">
                   <div>
                     <h4 className="text-xs font-bold text-[var(--color-fg)]">{o.invoiceCode} - {o.account}</h4>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{o.milestone} • Hạn: {formatDate(o.dueDate)}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{o.milestone} • {t('accountantDashboard.due')}: {formatDate(o.dueDate)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-mono font-bold text-rose-500">{formatVND(o.amount)}</p>
-                    <span className="text-[9px] font-semibold text-rose-400 bg-rose-500/5 px-2 py-0.5 rounded-full border border-rose-500/10">Trễ {o.daysOverdue} ngày</span>
+                    <span className="text-[9px] font-semibold text-rose-400 bg-rose-500/5 px-2 py-0.5 rounded-full border border-rose-500/10">{t('accountantDashboard.daysOverdue', {days: o.daysOverdue})}</span>
                   </div>
                 </div>
               ))}
@@ -202,21 +204,21 @@ export default function AccountantDashboard() {
         {/* Upcoming payments list */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
           <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">
-            Các đợt thu tiền sắp tới (7 ngày)
+            {t('accountantDashboard.upcomingCollections')}
           </h3>
           {upcoming.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đợt thu tiền nào trong 7 ngày tới" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('accountantDashboard.noUpcomingCollections')} />
           ) : (
             <div className="space-y-3">
               {upcoming.map((u, idx) => (
                 <div key={idx} className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-emerald-500/20 transition-all duration-200">
                   <div>
                     <h4 className="text-xs font-bold text-[var(--color-fg)]">{u.invoiceCode} - {u.account}</h4>
-                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{u.milestone} • Hạn: {formatDate(u.dueDate)}</p>
+                    <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{u.milestone} • {t('accountantDashboard.due')}: {formatDate(u.dueDate)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-mono font-bold text-emerald-500">{formatVND(u.amount)}</p>
-                    <span className="text-[9px] text-emerald-500 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10 font-semibold">Sắp đến hạn</span>
+                    <span className="text-[9px] text-emerald-500 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10 font-semibold">{t('accountantDashboard.upcoming')}</span>
                   </div>
                 </div>
               ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Table, Select, Skeleton } from 'antd';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { usePipelineReport } from '@/hooks/api/useReport';
@@ -9,6 +10,7 @@ import { Filter, PieChart, Users, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function PipelineReport() {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState('30d');
   const { data, isLoading } = usePipelineReport();
 
@@ -25,7 +27,7 @@ export default function PipelineReport() {
 
   const tableColumns = [
     {
-      title: 'Sales Stage',
+      title: t('reports.salesStage'),
       dataIndex: 'stage',
       key: 'stage',
       render: (stage: string) => (
@@ -33,27 +35,27 @@ export default function PipelineReport() {
       ),
     },
     {
-      title: 'Số lượng Cơ hội',
+      title: t('reports.opportunityCount'),
       dataIndex: 'count',
       key: 'count',
       align: 'center' as const,
       render: (val: number) => <span className="font-mono">{val}</span>,
     },
     {
-      title: 'Tổng Giá trị (VND)',
+      title: t('reports.totalValue'),
       dataIndex: 'totalValue',
       key: 'totalValue',
       render: (val: number) => <span className="font-mono font-semibold">{formatVND(val)}</span>,
     },
     {
-      title: 'Thời gian TB (Ngày)',
+      title: t('reports.avgTime'),
       dataIndex: 'avgDaysInStage',
       key: 'avgDaysInStage',
       align: 'center' as const,
-      render: (val: number) => <span className="font-mono">{val} ngày</span>,
+      render: (val: number) => <span className="font-mono">{val} days</span>,
     },
     {
-      title: 'Xác suất TB (%)',
+      title: t('reports.avgProbability'),
       dataIndex: 'winRate',
       key: 'winRate',
       align: 'center' as const,
@@ -66,23 +68,23 @@ export default function PipelineReport() {
       {/* Header and Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Báo cáo Pipeline</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Phân tích hiệu suất phễu bán hàng và tỷ lệ chuyển đổi chốt deal.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('reports.pipelineReportTitle')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('reports.pipelineReportSubtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3 bg-[var(--color-bg-tint)] border border-[var(--color-border)] px-4 py-2 rounded-xl">
           <Filter size={14} className="text-[var(--color-muted-fg)]" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Thời gian:</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('reports.period')}:</span>
           <Select
             value={period}
             onChange={setPeriod}
             bordered={false}
             dropdownStyle={{ minWidth: 120 }}
             options={[
-              { value: '7d', label: '7 ngày qua' },
-              { value: '30d', label: '30 ngày qua' },
-              { value: '90d', label: '90 ngày qua' },
-              { value: 'ytd', label: 'Năm nay (YTD)' },
+              { value: '7d', label: t('reports.period7d') },
+              { value: '30d', label: t('reports.period30d') },
+              { value: '90d', label: t('reports.period90d') },
+              { value: 'ytd', label: t('reports.periodYtd') },
             ]}
             className="text-xs text-[var(--color-fg)] font-semibold"
           />
@@ -96,7 +98,7 @@ export default function PipelineReport() {
             <Users size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Chuyển đổi Lead → Customer</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.leadToCustomerConversion')}</p>
             <h2 className="text-2xl font-bold text-[var(--color-fg)] mt-1">
               {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.conversionRates?.leadToCustomer}%`}
             </h2>
@@ -108,7 +110,7 @@ export default function PipelineReport() {
             <TrendingUp size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Tỷ lệ Chốt (Proposal → Won)</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.closeRate')}</p>
             <h2 className="text-2xl font-bold text-[var(--color-fg)] mt-1">
               {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.conversionRates?.proposalToWon}%`}
             </h2>
@@ -120,7 +122,7 @@ export default function PipelineReport() {
             <PieChart size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Đạt chuẩn (Qualified Rate)</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.qualifiedRate')}</p>
             <h2 className="text-2xl font-bold text-[var(--color-fg)] mt-1">
               {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.conversionRates?.qualifiedRate}%`}
             </h2>
@@ -130,7 +132,7 @@ export default function PipelineReport() {
 
       {/* Funnel Chart */}
       <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6">
-        <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Giá trị Pipeline theo Giai đoạn (VND)</h3>
+        <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.pipelineByStage')}</h3>
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : (
@@ -144,7 +146,7 @@ export default function PipelineReport() {
                 <XAxis type="number" stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis dataKey="stage" type="category" stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
-                  formatter={(value: any) => [formatVND(Number(value)), 'Tổng Giá trị']}
+                  formatter={(value: any) => [formatVND(Number(value)), t('reports.totalValue')]}
                   contentStyle={{
                     backgroundColor: 'var(--color-bg-tint)',
                     borderColor: 'var(--color-border)',
@@ -170,7 +172,7 @@ export default function PipelineReport() {
         transition={{ duration: 0.45 }}
       >
         <Card className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Bảng chi tiết các bước trong phễu</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.funnelStageDetail')}</h3>
           <Table
             dataSource={report?.breakdown}
             columns={tableColumns}

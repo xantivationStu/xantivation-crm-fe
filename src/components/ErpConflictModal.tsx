@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Modal, Button, Table, Badge } from 'antd';
+import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 
 export interface DuplicateRecord {
@@ -28,6 +29,7 @@ export default function ErpConflictModal({
   onResolve,
   isSubmitting = false,
 }: ErpConflictModalProps) {
+  const { t } = useTranslation();
   const [resolutions, setResolutions] = React.useState<Record<string, 'link' | 'ignore'>>({});
 
   React.useEffect(() => {
@@ -52,7 +54,7 @@ export default function ErpConflictModal({
 
   const columns: ColumnsType<DuplicateRecord> = [
     {
-      title: 'Tên ghi nhận',
+      title: t('erp.recordName'),
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -61,7 +63,7 @@ export default function ErpConflictModal({
           <div className="flex gap-2 mt-1">
             <Badge
               status={record.type === 'customer' ? 'processing' : 'warning'}
-              text={record.type === 'customer' ? 'Khách hàng' : 'Cơ hội'}
+              text={record.type === 'customer' ? t('erp.customer') : t('erp.opportunity')}
               className="text-[10px]"
             />
           </div>
@@ -69,17 +71,17 @@ export default function ErpConflictModal({
       ),
     },
     {
-      title: 'Thông tin liên hệ',
+      title: t('erp.contactInfo'),
       key: 'contact',
       render: (_, record) => (
         <div className="text-[11px] text-[var(--color-muted-fg)] space-y-0.5">
           {record.email && <div>Email: {record.email}</div>}
-          {record.phone && <div>SĐT: {record.phone}</div>}
+          {record.phone && <div>Phone: {record.phone}</div>}
         </div>
       ),
     },
     {
-      title: 'Hành động đề xuất',
+      title: t('erp.recommendedAction'),
       key: 'action',
       render: (_, record) => {
         const option = resolutions[record.id] || 'link';
@@ -91,7 +93,7 @@ export default function ErpConflictModal({
               onClick={() => handleOptionChange(record.id, 'link')}
               className="text-xs rounded-lg"
             >
-              Liên kết (Khuyên dùng)
+              {t('erp.linkRecommended')}
             </Button>
             <Button
               size="small"
@@ -100,7 +102,7 @@ export default function ErpConflictModal({
               onClick={() => handleOptionChange(record.id, 'ignore')}
               className="text-xs rounded-lg"
             >
-              Bỏ qua
+              {t('erp.skip')}
             </Button>
           </div>
         );
@@ -112,14 +114,14 @@ export default function ErpConflictModal({
     <Modal
       title={
         <div className="text-sm font-bold text-[var(--color-fg)] mb-2">
-          Xử lý trùng lặp dữ liệu ERP
+          ERP Data Duplicate Resolution
         </div>
       }
       open={open}
       onCancel={onClose}
       footer={[
         <Button key="cancel" onClick={onClose} disabled={isSubmitting} className="rounded-lg">
-          Hủy bỏ
+          Cancel
         </Button>,
         <Button
           key="confirm"
@@ -128,7 +130,7 @@ export default function ErpConflictModal({
           loading={isSubmitting}
           className="rounded-lg"
         >
-          Xác nhận xử lý
+          Confirm Resolution
         </Button>,
       ]}
       width={700}
@@ -136,8 +138,8 @@ export default function ErpConflictModal({
     >
       <div className="space-y-4 my-4">
         <p className="text-xs text-[var(--color-muted-fg)] leading-relaxed">
-          Hệ thống phát hiện một số thông tin (Email hoặc Số điện thoại) trùng khớp giữa cơ sở dữ liệu CRM và ERP. 
-          Vui lòng chọn liên kết để hợp nhất hoặc bỏ qua để giữ độc lập.
+          The system detected matching information (Email or Phone) between CRM and ERP databases.
+          Please choose Link to merge or Skip to keep them separate.
         </p>
 
         <Table

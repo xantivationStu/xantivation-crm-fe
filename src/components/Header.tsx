@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTheme } from './Providers';
+import { useTranslation } from 'react-i18next';
 import { Sun, Moon, Laptop, Bell, Search, LogOut, User } from 'lucide-react';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
@@ -9,23 +10,24 @@ import MagneticButton from './MagneticButton';
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
 
   const themeMenu: MenuProps['items'] = [
     {
       key: 'light',
-      label: 'Light Mode',
+      label: t('header.lightMode'),
       icon: <Sun size={14} />,
       onClick: () => setTheme('light'),
     },
     {
       key: 'dark',
-      label: 'Dark Mode',
+      label: t('header.darkMode'),
       icon: <Moon size={14} />,
       onClick: () => setTheme('dark'),
     },
     {
       key: 'auto',
-      label: 'Auto / System',
+      label: t('header.autoSystem'),
       icon: <Laptop size={14} />,
       onClick: () => setTheme('auto'),
     },
@@ -34,7 +36,7 @@ export default function Header() {
   const userMenu: MenuProps['items'] = [
     {
       key: 'profile',
-      label: 'My Profile',
+      label: t('header.myProfile'),
       icon: <User size={14} />,
     },
     {
@@ -42,7 +44,7 @@ export default function Header() {
     },
     {
       key: 'logout',
-      label: 'Logout',
+      label: t('header.logout'),
       icon: <LogOut size={14} />,
       danger: true,
     },
@@ -57,7 +59,7 @@ export default function Header() {
         </span>
         <input
           type="text"
-          placeholder="Search Leads, Customers..."
+          placeholder={t('header.searchPlaceholder')}
           className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl py-1.5 pl-10 pr-4 text-sm text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] focus:outline-none focus:border-[var(--color-accent)] transition-all duration-200"
         />
       </div>

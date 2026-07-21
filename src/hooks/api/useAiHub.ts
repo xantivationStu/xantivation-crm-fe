@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { AiConversation, AiMessage, AiUsageMetrics, KnowledgeDocument, MemoryItem } from '@/types/ai-hub.types';
 import { BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useAiConversations() {
@@ -71,10 +72,10 @@ export function useUploadKnowledgeDocument() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
-      message.success('Đã tải lên tài liệu RAG!');
+      message.success(i18n.t('hooks.aiHub.documentUploaded'));
     },
     onError: () => {
-      message.error('Tải lên tài liệu thất bại!');
+      message.error(i18n.t('hooks.aiHub.documentUploadFailed'));
     },
   });
 }
@@ -97,7 +98,7 @@ export function useDeleteMemoryItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-memory-items'] });
-      message.success('Đã quên thông tin ghi nhớ!');
+      message.success(i18n.t('hooks.aiHub.memoryCleared'));
     },
   });
 }

@@ -7,17 +7,17 @@ import { Button, message } from 'antd';
 import { FloatingInput } from '@/components/FloatingInput';
 import { useTheme } from '@/components/Providers';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/hooks/useAuth';
 
-// Constants for messages to avoid hardcoded strings
-const MSG_REGISTER_SUCCESS = 'Đăng ký tài khoản thành công';
-const MSG_REGISTER_ERROR = 'Đăng ký thất bại';
+// Messages are handled via useTranslation
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const { t } = useTranslation();
   const { register, loading } = useAuth();
   const [currentTime, setCurrentTime] = useState('');
   const router = useRouter();
@@ -138,14 +138,14 @@ export default function Register() {
               />
             </Link>
             <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-[var(--color-fg)]">
-              Create Account
+              {t('register.title')}
             </h2>
-            <p className="text-sm lg:text-base text-[var(--color-muted-fg)] mt-1.5 font-medium">Get started with Xantivation CRM workspace.</p>
+            <p className="text-sm lg:text-base text-[var(--color-muted-fg)] mt-1.5 font-medium">{t('register.subtitle')}</p>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-6 lg:space-y-8">
             <FloatingInput
-              label="Full Name"
+              label={t('register.fullNameLabel')}
               type="text"
               value={name}
               onChange={setName}
@@ -153,7 +153,7 @@ export default function Register() {
             />
 
             <FloatingInput
-              label="Email Address"
+              label={t('register.emailLabel')}
               type="email"
               value={email}
               onChange={setEmail}
@@ -161,7 +161,7 @@ export default function Register() {
             />
 
             <FloatingInput
-              label="Password"
+              label={t('register.passwordLabel')}
               type="password"
               value={password}
               onChange={setPassword}
@@ -175,15 +175,15 @@ export default function Register() {
                 loading={loading}
                 className="w-full h-12 lg:h-14 rounded-xl text-base lg:text-lg font-semibold mt-4 cursor-pointer"
               >
-                Sign Up
+                {t('register.register')}
               </Button>
             </motion.div>
           </form>
 
           <div className="text-center md:text-left text-xs sm:text-sm lg:text-base text-[var(--color-muted-fg)]">
-            Already have an account?{' '}
+            {t('register.haveAccount')}{' '}
             <Link href="/login" className="text-[var(--color-accent)] hover:underline font-semibold transition-all">
-              Sign in here
+              {t('register.signIn')}
             </Link>
           </div>
         </motion.div>

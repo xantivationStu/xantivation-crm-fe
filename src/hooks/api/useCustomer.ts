@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Customer, Contact, CreateCustomerDto, CreateContactDto } from '@/types/customer.types';
 import { PaginationQuery, PaginatedResponse, BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useCustomers(query?: PaginationQuery) {
@@ -55,7 +56,7 @@ export function useCreateCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      message.success('Tạo Khách hàng thành công!');
+      message.success(i18n.t('hooks.customer.createdSuccess'));
     },
   });
 }
@@ -70,7 +71,7 @@ export function useCreateContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['customer'] });
-      message.success('Tạo Liên hệ thành công!');
+      message.success(i18n.t('hooks.customer.contactCreated'));
     },
   });
 }
@@ -85,7 +86,7 @@ export function useSetPrimaryContact(accountId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['customer', accountId] });
-      message.success('Đã đặt liên hệ chính!');
+      message.success(i18n.t('hooks.customer.primaryContactSet'));
     },
   });
 }
@@ -100,10 +101,10 @@ export function useUpdateCustomer() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer', variables.id] });
-      message.success('Cập nhật Khách hàng thành công!');
+      message.success(i18n.t('hooks.customer.updatedSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật Khách hàng thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.customer.updateFailed'));
     },
   });
 }
@@ -117,10 +118,10 @@ export function useDeleteCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      message.success('Xóa Khách hàng thành công!');
+      message.success(i18n.t('hooks.customer.deletedSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Xóa Khách hàng thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.customer.deletionFailed'));
     },
   });
 }
@@ -136,10 +137,10 @@ export function useUpdateContact() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['customer'] });
-      message.success('Cập nhật Liên hệ thành công!');
+      message.success(i18n.t('hooks.customer.contactUpdated'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật Liên hệ thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.customer.contactUpdateFailed'));
     },
   });
 }
@@ -154,10 +155,10 @@ export function useDeleteContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['customer'] });
-      message.success('Xóa Liên hệ thành công!');
+      message.success(i18n.t('hooks.customer.contactDeleted'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Xóa Liên hệ thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.customer.contactDeletionFailed'));
     },
   });
 }
