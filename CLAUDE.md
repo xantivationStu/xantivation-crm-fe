@@ -1,20 +1,20 @@
 # CRM Frontend (Next.js) Developer Memory
 
-## Lệnh Chạy & Build
-- Chạy môi trường phát triển (Dev): `npm run dev`
-- Build dự án: `npm run build`
-- Chạy tests: `npm run test`
+## Run & Build Commands
+- Development environment: `npm run dev`
+- Build project: `npm run build`
+- Run tests: `npm run test`
 
-## Các Tính Năng AI Governance & Workflow Đã Tích Hợp
-Chúng ta đã chuyển đổi giao diện AI Hub và cài đặt sang hệ thống quản trị mô hình đa dạng và giám sát thời gian thực.
+## Integrated AI Governance & Workflow Features
+We have upgraded the AI Hub UI and Settings to support multi-model governance and real-time monitoring.
 
 ### 1. AI Governance Settings (`/settings` page)
-- Tab **AI Governance** mới (chỉ hiển thị với ADMIN và SALES_MANAGER).
-- CRUD Providers & API Keys: Giao diện quản lý mã hóa API Key, test kết nối nhanh và scan model tự động.
-- Agent Tree Canvas: Bản đồ cây sơ đồ đại lý AI phân cấp dạng mạng lưới sử dụng `@xyflow/react` (React Flow), cho phép kéo thả và chỉnh sửa cấu hình chi tiết (role, prompt, key/model override) ở thanh sidebar.
+- **AI Governance** tab (visible only to ADMIN and SALES_MANAGER).
+- CRUD Providers & API Keys: Manage encrypted API keys, test connection, and auto-scan models.
+- Agent Tree Canvas: Hierarchical AI agent tree diagram using `@xyflow/react` (React Flow), supports drag-and-drop and detailed configuration (role, prompt, key/model override) via sidebar.
 
 ### 2. Workflow Monitor (`/ai-hub` page)
-- Tab **Workflow Monitor** mới kế bên Chat Console.
-- Luồng n8n-style Node Graph: Hiển thị quy trình thực thi **Trigger ➔ Agent ➔ Action ➔ Result** theo thời gian thực.
-- SSE Real-time Logs Sync: Kết nối trực tiếp với backend SSE stream, tự động cập nhật trạng thái chạy và hiệu ứng animation nhấp nháy cho các node đang thực thi.
-- Sidebar Logs History: Lịch sử chạy của các Agent, hỗ trợ phân trang và chọn để tải xem chi tiết sơ đồ luồng.
+- **Workflow Monitor** tab next to Chat Console.
+- n8n-style Node Graph: Displays real-time execution flow of **Trigger ➔ Agent ➔ Action ➔ Result**.
+- SSE Real-time Logs Sync: Direct connection to backend SSE stream, auto-updates execution status with blinking animation for active nodes.
+- Sidebar Logs History: Execution logs with pagination, click to load detailed flow diagram.

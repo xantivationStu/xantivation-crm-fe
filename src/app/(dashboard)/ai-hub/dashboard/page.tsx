@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button, message, Tag } from 'antd';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 // Mock charts data
 const requestsData = [
@@ -43,14 +44,15 @@ const toolUsageData = [
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444'];
 
 export default function AiHubDashboard() {
+  const { t } = useTranslation();
   const [activeAccordion, setActiveAccordion] = useState<string | null>('prompt');
   const [systemPrompt, setSystemPrompt] = useState('You are a premium CRM assistant for Xantivation Studio. Answer concisely, format numeric variables to VND currency.');
   const [testLogLoading, setTestLogLoading] = useState(false);
 
   const handleTestBullMqJob = () => {
-    message.loading('Triggering manual BullMQ job check_overdue_payments...');
+    message.loading(t('aiHub.triggeringBullMq'));
     setTimeout(() => {
-      message.success('BullMQ worker checked: 0 overdue invoices flagged.');
+      message.success(t('aiHub.bullMqResult'));
     }, 1200);
   };
 
@@ -63,8 +65,8 @@ export default function AiHubDashboard() {
       {/* Title */}
       <div className="flex justify-between items-center shrink-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">AI Analytics Dashboard</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Admin panel tracking model usage cost, BullMQ queues, and system prompts.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('aiHub.dashboardTitle')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('aiHub.dashboardSubtitle')}</p>
         </div>
 
         {/* View mode switches */}
@@ -73,13 +75,13 @@ export default function AiHubDashboard() {
             href="/ai-hub"
             className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all"
           >
-            Chat Console
+            {t('aiHub.chatConsole')}
           </Link>
           <Link
             href="/ai-hub/dashboard"
             className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-[var(--color-accent)] text-white shadow-sm"
           >
-            AI Analytics Dashboard
+            {t('aiHub.dashboardNav')}
           </Link>
         </div>
       </div>
@@ -87,12 +89,12 @@ export default function AiHubDashboard() {
       {/* 6 Metrics cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {[
-          { label: 'Total Requests', val: '1,830', change: '+12% vs yesterday' },
-          { label: 'Success Rate', val: '98.5%', change: '0 failures today' },
-          { label: 'Total Tokens', val: '5.1M', change: 'Input: 3.5M | Output: 1.6M' },
-          { label: 'Est. Cost', val: '$10.20', change: 'Based on Groq rates' },
-          { label: 'Avg Latency', val: '280ms', change: '99th percentile: 620ms' },
-          { label: 'Queue Load', val: '0 pending', change: 'BullMQ status: idle' },
+          { label: t('aiHub.metricTotalRequests'), val: '1,830', change: t('aiHub.changeRequests') },
+          { label: t('aiHub.metricSuccessRate'), val: '98.5%', change: t('aiHub.changeSuccessRate') },
+          { label: t('aiHub.metricTotalTokens'), val: '5.1M', change: t('aiHub.changeTokens') },
+          { label: t('aiHub.metricEstCost'), val: '$10.20', change: t('aiHub.changeCost') },
+          { label: t('aiHub.metricAvgLatency'), val: '280ms', change: t('aiHub.changeLatency') },
+          { label: t('aiHub.metricQueueLoad'), val: '0 pending', change: t('aiHub.changeQueue') },
         ].map((item, idx) => (
           <div key={idx} className="p-4 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl space-y-1">
             <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{item.label}</span>
@@ -106,7 +108,7 @@ export default function AiHubDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Requests Chart */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-4 space-y-3">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">Daily Requests</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">{t('aiHub.dailyRequests')}</span>
           <div className="h-64 text-xs">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={requestsData}>
@@ -128,7 +130,7 @@ export default function AiHubDashboard() {
 
         {/* Tokens Chart */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-4 space-y-3">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">Token Allocation</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">{t('aiHub.tokenAllocation')}</span>
           <div className="h-64 text-xs">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={tokensData}>
@@ -137,8 +139,8 @@ export default function AiHubDashboard() {
                 <YAxis stroke="var(--color-muted-fg)" />
                 <ChartTooltip />
                 <Legend />
-                <Bar dataKey="input" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Input Tokens" />
-                <Bar dataKey="output" fill="#10B981" radius={[4, 4, 0, 0]} name="Output Tokens" />
+                <Bar dataKey="input" fill="#4F46E5" radius={[4, 4, 0, 0]} name={t('aiHub.inputTokens')} />
+                <Bar dataKey="output" fill="#10B981" radius={[4, 4, 0, 0]} name={t('aiHub.outputTokens')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -146,7 +148,7 @@ export default function AiHubDashboard() {
 
         {/* Tool Distribution Chart */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-4 space-y-3">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">Tool Trigger Frequency</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)] block">{t('aiHub.toolTriggerFrequency')}</span>
           <div className="h-64 text-xs flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -178,25 +180,25 @@ export default function AiHubDashboard() {
         <div className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-4">
           <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--color-fg)]">BullMQ Background Workers</h3>
-              <p className="text-xs text-[var(--color-muted-fg)]">Active asynchronous queue jobs matching Redis broker client.</p>
+              <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('aiHub.bullMqWorkers')}</h3>
+              <p className="text-xs text-[var(--color-muted-fg)]">{t('aiHub.bullMqDescription')}</p>
             </div>
-            <Button size="small" icon={<RefreshCw size={12} />} onClick={handleTestBullMqJob}>Check Worker</Button>
+            <Button size="small" icon={<RefreshCw size={12} />} onClick={handleTestBullMqJob}>{t('aiHub.checkWorker')}</Button>
           </div>
 
           <div className="space-y-3">
             {[
-              { id: 'job_lead_bant_qualification', progress: 100, status: 'Completed', detail: 'Processed budget check for LEAD-2026-00001' },
-              { id: 'job_docusign_webhook_receiver', progress: 100, status: 'Completed', detail: 'Registered signed envelope status for CON-2026-00001' },
-              { id: 'job_sales_forecast_weighting_calculation', progress: 100, status: 'Completed', detail: 'Rendered weighted forecast matrix formulas' },
-              { id: 'job_cron_overdue_payments_daily', progress: 0, status: 'Active (Idle)', detail: 'Trigger cron schedules check every 24 hours' }
+              { id: 'job_lead_bant_qualification', progress: 100, status: t('aiHub.completed'), detail: 'Processed budget check for LEAD-2026-00001' },
+              { id: 'job_docusign_webhook_receiver', progress: 100, status: t('aiHub.completed'), detail: 'Registered signed envelope status for CON-2026-00001' },
+              { id: 'job_sales_forecast_weighting_calculation', progress: 100, status: t('aiHub.completed'), detail: 'Rendered weighted forecast matrix formulas' },
+              { id: 'job_cron_overdue_payments_daily', progress: 0, status: t('aiHub.activeIdle'), detail: 'Trigger cron schedules check every 24 hours' }
             ].map((job, idx) => (
               <div key={idx} className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex justify-between items-center text-xs">
                 <div>
                   <span className="font-mono font-semibold text-[var(--color-fg)] block">{job.id}</span>
                   <span className="text-[10px] text-[var(--color-muted-fg)] block mt-0.5">{job.detail}</span>
                 </div>
-                <Tag color={job.status === 'Completed' ? 'success' : 'processing'}>{job.status}</Tag>
+                <Tag color={job.status === t('aiHub.completed') ? 'success' : 'processing'}>{job.status}</Tag>
               </div>
             ))}
           </div>
@@ -205,15 +207,15 @@ export default function AiHubDashboard() {
         {/* Right Side: Activity Timeline (1 col) */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-4">
           <h3 className="text-sm font-semibold text-[var(--color-fg)] border-b border-[var(--color-border)] pb-3">
-            Activity Timeline
+            {t('aiHub.activityTimeline')}
           </h3>
 
           <div className="relative border-l border-[var(--color-border)] ml-3 pl-4 space-y-5 text-xs">
             {[
-              { text: 'RAG Document embedded: Sales_Brief_2.pdf', time: '10:30', tag: 'Vector RAG' },
-              { text: 'Tool queryDatabase executed: matches CON-001', time: '10:28', tag: 'Tool execution' },
-              { text: 'DocuSign Webhook processed: status completed', time: '10:15', tag: 'E-signature' },
-              { text: 'Cron overdue check triggered manually', time: '09:00', tag: 'BullMQ queue' }
+              { text: 'RAG Document embedded: Sales_Brief_2.pdf', time: '10:30', tag: t('aiHub.tagVectorRag') },
+              { text: 'Tool queryDatabase executed: matches CON-001', time: '10:28', tag: t('aiHub.tagToolExecution') },
+              { text: 'DocuSign Webhook processed: status completed', time: '10:15', tag: t('aiHub.tagEsignature') },
+              { text: 'Cron overdue check triggered manually', time: '09:00', tag: t('aiHub.tagBullMq') }
             ].map((event, idx) => (
               <div key={idx} className="relative">
                 <span className="absolute -left-[22px] top-1 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-white" />
@@ -234,7 +236,7 @@ export default function AiHubDashboard() {
       <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-4">
         <h3 className="text-sm font-semibold text-[var(--color-fg)] flex items-center gap-1.5">
           <Shield size={16} className="text-red-500" />
-          <span>Admin Debug Settings</span>
+          <span>{t('aiHub.adminDebugSettings')}</span>
         </h3>
 
         <div className="border border-[var(--color-border)] rounded-xl overflow-hidden divide-y divide-[var(--color-border)]">
@@ -244,7 +246,7 @@ export default function AiHubDashboard() {
               onClick={() => handleToggleAccordion('prompt')}
               className="w-full px-4 py-3 bg-[var(--color-surface)] flex justify-between items-center text-xs font-mono font-bold cursor-pointer text-[var(--color-fg)]"
             >
-              <span>[01] System Prompt Template Tuning</span>
+              <span>[01] {t('aiHub.sectionPrompt')}</span>
               {activeAccordion === 'prompt' ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             {activeAccordion === 'prompt' && (
@@ -255,8 +257,8 @@ export default function AiHubDashboard() {
                   className="w-full min-h-[100px] p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs font-mono text-[var(--color-fg)] outline-none focus:border-[var(--color-accent)]"
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="small" onClick={() => setSystemPrompt('You are a premium CRM assistant for Xantivation Studio. Answer concisely.')}>Reset</Button>
-                  <Button size="small" type="primary" onClick={() => message.success('System Prompt Template updated in database')}>Save Prompt</Button>
+                  <Button size="small" onClick={() => setSystemPrompt('You are a premium CRM assistant for Xantivation Studio. Answer concisely.')}>{t('aiHub.reset')}</Button>
+                  <Button size="small" type="primary" onClick={() => message.success(t('aiHub.promptUpdated'))}>{t('aiHub.savePrompt')}</Button>
                 </div>
               </div>
             )}
@@ -268,15 +270,15 @@ export default function AiHubDashboard() {
               onClick={() => handleToggleAccordion('rag')}
               className="w-full px-4 py-3 bg-[var(--color-surface)] flex justify-between items-center text-xs font-mono font-bold cursor-pointer text-[var(--color-fg)]"
             >
-              <span>[02] Vector RAG Retrieve Debug logs</span>
+              <span>[02] {t('aiHub.sectionRag')}</span>
               {activeAccordion === 'rag' ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             {activeAccordion === 'rag' && (
               <div className="p-4 bg-[var(--color-bg)]/20 text-xs font-mono text-[var(--color-muted-fg)] space-y-2">
-                <p className="text-[10px] text-green-500">// Last matched vectors query text: "giới hạn trách nhiệm pháp lý"</p>
+                <p className="text-[10px] text-green-500">// Last matched vectors query text: "legal liability limitation"</p>
                 <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg space-y-2">
-                  <p><strong>chunk_1 (Score: 0.89)</strong>: "Mục 7.1: Giới hạn bồi thường tối đa của Studio..."</p>
-                  <p><strong>chunk_2 (Score: 0.74)</strong>: "Mục 7.2: Thỏa thuận bồi thường không áp dụng cho..."</p>
+                  <p><strong>chunk_1 (Score: 0.89)</strong>: "Section 7.1: Maximum compensation liability of Studio..."</p>
+                  <p><strong>chunk_2 (Score: 0.74)</strong>: "Section 7.2: Compensation agreement does not apply to..."</p>
                 </div>
               </div>
             )}
@@ -288,7 +290,7 @@ export default function AiHubDashboard() {
               onClick={() => handleToggleAccordion('tool-io')}
               className="w-full px-4 py-3 bg-[var(--color-surface)] flex justify-between items-center text-xs font-mono font-bold cursor-pointer text-[var(--color-fg)]"
             >
-              <span>[03] Execution Tool Inputs & Outputs</span>
+              <span>[03] {t('aiHub.sectionToolIo')}</span>
               {activeAccordion === 'tool-io' ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             {activeAccordion === 'tool-io' && (

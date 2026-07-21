@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Table, Select, Skeleton, Tag } from 'antd';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { usePaymentReport } from '@/hooks/api/useReport';
@@ -9,6 +10,7 @@ import { Filter, AlertTriangle, Calendar, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function PaymentReport() {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState('Month');
   const { data, isLoading } = usePaymentReport({ period });
 
@@ -16,36 +18,36 @@ export default function PaymentReport() {
 
   const tableColumns = [
     {
-      title: 'Số Hóa đơn',
+      title: t('reports.invoiceNumber'),
       dataIndex: 'invoiceCode',
       key: 'invoiceCode',
       render: (val: string) => <span className="font-mono text-xs">{val}</span>,
     },
     {
-      title: 'Khách hàng',
+      title: t('reports.customer'),
       dataIndex: 'account',
       key: 'account',
     },
     {
-      title: 'Mốc thanh toán',
+      title: t('reports.paymentMilestone'),
       dataIndex: 'milestone',
       key: 'milestone',
       render: (val: string) => <span className="text-xs text-[var(--color-muted-fg)] font-medium">{val}</span>,
     },
     {
-      title: 'Số tiền (VND)',
+      title: t('reports.amount'),
       dataIndex: 'amount',
       key: 'amount',
       render: (val: number) => <span className="font-mono font-semibold">{formatVND(val)}</span>,
     },
     {
-      title: 'Hạn thanh toán',
+      title: t('reports.dueDate'),
       dataIndex: 'dueDate',
       key: 'dueDate',
       render: (val: string) => <span className="font-mono">{formatDate(val)}</span>,
     },
     {
-      title: 'Trạng thái',
+      title: t('reports.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -54,13 +56,13 @@ export default function PaymentReport() {
       },
     },
     {
-      title: 'Trễ hạn (Ngày)',
+      title: t('reports.overdueDays'),
       dataIndex: 'daysOverdue',
       key: 'daysOverdue',
       align: 'center' as const,
       render: (val: number) => (
         <span className={`font-mono ${val > 0 ? 'text-rose-500 font-semibold' : 'text-[var(--color-muted-fg)]'}`}>
-          {val > 0 ? `${val} ngày` : '-'}
+          {val > 0 ? `${val} days` : '-'}
         </span>
       ),
     },
@@ -71,21 +73,21 @@ export default function PaymentReport() {
       {/* Header and Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Dòng tiền & Thanh toán</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Phân tích thực tế thu hồi công nợ, dòng tiền dự kiến và hóa đơn trễ hạn.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('reports.cashFlowTitle')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('reports.cashFlowDesc')}</p>
         </div>
         
         <div className="flex items-center gap-3 bg-[var(--color-bg-tint)] border border-[var(--color-border)] px-4 py-2 rounded-xl">
           <Filter size={14} className="text-[var(--color-muted-fg)]" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Xem theo:</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('reports.viewBy')}:</span>
           <Select
             value={period}
             onChange={setPeriod}
             bordered={false}
             dropdownStyle={{ minWidth: 120 }}
             options={[
-              { value: 'Month', label: 'Từng Tháng' },
-              { value: 'Quarter', label: 'Từng Quý' },
+              { value: 'Month', label: t('reports.monthly') },
+              { value: 'Quarter', label: t('reports.quarterly') },
             ]}
             className="text-xs text-[var(--color-fg)] font-semibold"
           />
@@ -99,9 +101,9 @@ export default function PaymentReport() {
             <AlertTriangle size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Hóa đơn Quá hạn</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.overdueInvoices')}</p>
             <h2 className="text-2xl font-bold text-rose-500 mt-1">
-              {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.overdueSummary?.count} hóa đơn`}
+              {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.overdueSummary?.count} invoices`}
             </h2>
           </div>
         </div>
@@ -111,7 +113,7 @@ export default function PaymentReport() {
             <Wallet size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Tổng tiền trễ hạn</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.totalOverdueAmount')}</p>
             <h2 className="text-2xl font-bold text-[var(--color-fg)] mt-1">
               {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : formatVND(report?.overdueSummary?.amount)}
             </h2>
@@ -123,9 +125,9 @@ export default function PaymentReport() {
             <Calendar size={20} />
           </div>
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Số ngày trễ trung bình</p>
+            <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('reports.avgDaysOverdue')}</p>
             <h2 className="text-2xl font-bold text-[var(--color-fg)] mt-1">
-              {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.overdueSummary?.avgDays} ngày`}
+              {isLoading ? <Skeleton.Input active size="small" style={{ width: 60 }} /> : `${report?.overdueSummary?.avgDays} days`}
             </h2>
           </div>
         </div>
@@ -133,7 +135,7 @@ export default function PaymentReport() {
 
       {/* Cash Flow Chart */}
       <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6">
-        <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Biểu đồ Dòng tiền thực tế vs Dự kiến (Planned vs Actual)</h3>
+        <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.cashFlowPlannedVsActual')}</h3>
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 5 }} />
         ) : (
@@ -153,7 +155,7 @@ export default function PaymentReport() {
                 <XAxis dataKey="period" stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
-                  formatter={(value: any) => [formatVND(Number(value)), 'Giá trị']}
+                  formatter={(value: any) => [formatVND(Number(value)), t('reports.value')]}
                   contentStyle={{
                     backgroundColor: 'var(--color-bg-tint)',
                     borderColor: 'var(--color-border)',
@@ -162,8 +164,8 @@ export default function PaymentReport() {
                   }}
                 />
                 <Legend verticalAlign="top" height={36} iconType="circle" />
-                <Area name="Dự thu kế hoạch" type="monotone" dataKey="planned" stroke="#818CF8" strokeWidth={2} fillOpacity={1} fill="url(#planGrad)" />
-                <Area name="Thực thu thực tế" type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#paidGrad)" />
+                <Area name={t('reports.plannedRevenue')} type="monotone" dataKey="planned" stroke="#818CF8" strokeWidth={2} fillOpacity={1} fill="url(#planGrad)" />
+                <Area name={t('reports.actualRevenue')} type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#paidGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -177,7 +179,7 @@ export default function PaymentReport() {
         transition={{ duration: 0.45 }}
       >
         <Card className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Theo dõi hóa đơn thanh toán</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.invoicePaymentTracking')}</h3>
           <Table
             dataSource={report?.invoices}
             columns={tableColumns}

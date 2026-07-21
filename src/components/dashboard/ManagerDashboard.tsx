@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table } from 'antd';
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import {
@@ -16,6 +17,7 @@ import { motion } from 'framer-motion';
 import AnimatedCounter from '@/components/AnimatedCounter';
 
 export default function ManagerDashboard() {
+  const { t } = useTranslation();
   const { data: metricsData, isLoading: metricsLoading } = useDashboardMetrics();
   const { data: funnelData, isLoading: funnelLoading } = useDashboardPipelineFunnel();
   const { data: forecastData, isLoading: forecastLoading } = useDashboardRevenueForecast();
@@ -32,7 +34,7 @@ export default function ManagerDashboard() {
 
   const performerColumns = [
     {
-      title: 'Hạng',
+      title: t('managerDashboard.rank'),
       key: 'rank',
       width: 60,
       align: 'center' as const,
@@ -41,20 +43,20 @@ export default function ManagerDashboard() {
       ),
     },
     {
-      title: 'Tên nhân viên',
+      title: t('managerDashboard.employeeName'),
       dataIndex: 'name',
       key: 'name',
       render: (val: string) => <span className="font-semibold text-[var(--color-fg)] text-xs">{val}</span>,
     },
     {
-      title: 'Cơ hội chốt',
+      title: t('managerDashboard.closedOpportunities'),
       dataIndex: 'count',
       key: 'count',
       align: 'center' as const,
       render: (val: number) => <span className="font-mono text-xs">{val} deal</span>,
     },
     {
-      title: 'Doanh thu',
+      title: t('managerDashboard.revenue'),
       dataIndex: 'wonAmount',
       key: 'wonAmount',
       render: (val: number) => <span className="font-mono text-emerald-500 font-semibold text-xs">{formatVND(val)}</span>,
@@ -101,7 +103,7 @@ export default function ManagerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Tổng giá trị Pipeline</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('managerDashboard.totalPipelineValue')}</span>
             <TrendingUp size={16} className="text-indigo-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -111,7 +113,7 @@ export default function ManagerDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Dự báo 30 ngày (Weighted)</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('managerDashboard.forecast30d')}</span>
             <BarChart3 size={16} className="text-emerald-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -121,7 +123,7 @@ export default function ManagerDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Hợp đồng Active</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('managerDashboard.activeContracts')}</span>
             <Users size={16} className="text-amber-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -134,7 +136,7 @@ export default function ManagerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pipeline Value chart */}
         <motion.div variants={itemVariants} className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Pipeline toàn team theo Giai đoạn (VND)</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('managerDashboard.pipelineByStage')}</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={funnel} layout="vertical" margin={{ left: 10, right: 30, top: 10, bottom: 10 }}>
@@ -159,7 +161,7 @@ export default function ManagerDashboard() {
                             {formatVND(Number(payload[0].value))}
                           </p>
                           <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">
-                            {payload[0].payload.count} cơ hội
+                            {t('managerDashboard.opportunities', {count: payload[0].payload.count})}
                           </p>
                         </div>
                       );
@@ -179,7 +181,7 @@ export default function ManagerDashboard() {
 
         {/* Lead source Pie chart */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Nguồn Lead tiềm năng</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('managerDashboard.leadSources')}</h3>
           <div className="h-72 flex flex-col justify-between">
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
@@ -232,7 +234,7 @@ export default function ManagerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Forecast chart */}
         <motion.div variants={itemVariants} className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Dự báo Doanh số 6 tháng tới (VND)</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('managerDashboard.forecast6m')}</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={forecast} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
@@ -267,8 +269,8 @@ export default function ManagerDashboard() {
                     return null;
                   }}
                 />
-                <Area name="Dự thu" type="monotone" dataKey="forecast" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#foreGradM)" />
-                <Area name="Thực thu" type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#actGradM)" />
+                <Area name={t('managerDashboard.forecast')} type="monotone" dataKey="forecast" stroke="#4F46E5" strokeWidth={2.5} fillOpacity={1} fill="url(#foreGradM)" />
+                <Area name={t('managerDashboard.actual')} type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#actGradM)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -277,7 +279,7 @@ export default function ManagerDashboard() {
         {/* Top Performers */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Xếp hạng Sales Team</h3>
+            <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('managerDashboard.salesTeamRanking')}</h3>
             <Award size={16} className="text-amber-500" />
           </div>
           <Table

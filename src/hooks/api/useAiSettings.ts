@@ -12,6 +12,7 @@ import {
   CreateModelDto,
   CreateAgentDto,
 } from '@/types/ai-settings.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 // === Providers Hooks ===
@@ -34,7 +35,7 @@ export function useCreateProvider() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
-      message.success('Đã thêm nhà cung cấp LLM mới');
+      message.success(i18n.t('hooks.aiSettings.providerAdded'));
     },
   });
 }
@@ -48,7 +49,7 @@ export function useUpdateProvider() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
-      message.success('Đã cập nhật nhà cung cấp LLM');
+      message.success(i18n.t('hooks.aiSettings.providerUpdated'));
     },
   });
 }
@@ -61,7 +62,7 @@ export function useDeleteProvider() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
-      message.success('Đã xóa nhà cung cấp LLM');
+      message.success(i18n.t('hooks.aiSettings.providerDeleted'));
     },
   });
 }
@@ -85,7 +86,7 @@ export function useFetchModelsFromProvider() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] });
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
-      message.success('Đã tự động quét và cập nhật danh sách model!');
+      message.success(i18n.t('hooks.aiSettings.modelsScanned'));
     },
   });
 }
@@ -110,7 +111,7 @@ export function useCreateApiKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
-      message.success('Đã lưu API Key thành công (encrypted)');
+      message.success(i18n.t('hooks.aiSettings.apiKeySaved'));
     },
   });
 }
@@ -124,7 +125,7 @@ export function useUpdateApiKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
-      message.success('Đã cập nhật API Key');
+      message.success(i18n.t('hooks.aiSettings.apiKeyUpdated'));
     },
   });
 }
@@ -137,7 +138,7 @@ export function useDeleteApiKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
-      message.success('Đã xóa API Key');
+      message.success(i18n.t('hooks.aiSettings.apiKeyDeleted'));
     },
   });
 }
@@ -162,7 +163,7 @@ export function useCreateModel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] });
-      message.success('Đã thêm mô hình LLM');
+      message.success(i18n.t('hooks.aiSettings.modelAdded'));
     },
   });
 }
@@ -175,7 +176,7 @@ export function useDeleteModel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] });
-      message.success('Đã xóa mô hình LLM');
+      message.success(i18n.t('hooks.aiSettings.modelDeleted'));
     },
   });
 }
@@ -200,7 +201,7 @@ export function useCreateAgent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
-      message.success('Đã tạo AI Agent mới');
+      message.success(i18n.t('hooks.aiSettings.agentCreated'));
     },
   });
 }
@@ -214,7 +215,7 @@ export function useUpdateAgent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
-      message.success('Đã cập nhật AI Agent');
+      message.success(i18n.t('hooks.aiSettings.agentUpdated'));
     },
   });
 }
@@ -227,7 +228,7 @@ export function useDeleteAgent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
-      message.success('Đã xóa AI Agent');
+      message.success(i18n.t('hooks.aiSettings.agentDeleted'));
     },
   });
 }

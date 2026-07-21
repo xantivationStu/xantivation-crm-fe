@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Quotation, CreateQuotationDto } from '@/types/quotation.types';
 import { PaginationQuery, PaginatedResponse, BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useQuotations(query?: PaginationQuery) {
@@ -34,7 +35,7 @@ export function useCreateQuotation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      message.success('Tạo Báo giá thành công!');
+      message.success(i18n.t('hooks.quotation.createdSuccess'));
     },
   });
 }
@@ -49,7 +50,7 @@ export function useCloneQuotation() {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       queryClient.invalidateQueries({ queryKey: ['quotation', id] });
-      message.success('Đã nhân bản phiên bản báo giá mới!');
+      message.success(i18n.t('hooks.quotation.duplicatedSuccess'));
     },
   });
 }
@@ -65,7 +66,7 @@ export function useUpdateQuotationStatus() {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       queryClient.invalidateQueries({ queryKey: ['quotation', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      message.success('Cập nhật trạng thái báo giá thành công!');
+      message.success(i18n.t('hooks.quotation.statusUpdated'));
     },
   });
 }
@@ -80,7 +81,7 @@ export function useUpdateQuotation() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       queryClient.invalidateQueries({ queryKey: ['quotation', variables.id] });
-      message.success('Cập nhật Báo giá thành công!');
+      message.success(i18n.t('hooks.quotation.updatedSuccess'));
     },
   });
 }

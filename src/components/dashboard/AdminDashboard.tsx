@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, Switch, Tag, message } from 'antd';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import {
@@ -19,6 +20,7 @@ import { motion } from 'framer-motion';
 import AnimatedCounter from '@/components/AnimatedCounter';
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { data: overviewData, isLoading: overviewLoading } = useDashboardSystemOverview();
   const { data: logsData, isLoading: logsLoading } = useDashboardRecentAuditLogs();
   const { data: integrationsData, isLoading: integrationsLoading } = useDashboardIntegrationStatus();
@@ -29,25 +31,25 @@ export default function AdminDashboard() {
 
   // User activity mockup data
   const userActivityData = [
-    { name: 'Thứ 2', logins: 18, actions: 82 },
-    { name: 'Thứ 3', logins: 24, actions: 110 },
-    { name: 'Thứ 4', logins: 22, actions: 95 },
-    { name: 'Thứ 5', logins: 29, actions: 132 },
-    { name: 'Thứ 6', logins: 27, actions: 120 },
-    { name: 'Thứ 7', logins: 12, actions: 40 },
-    { name: 'Chủ Nhật', logins: 5, actions: 12 },
+    { name: t('adminDashboard.mon'), logins: 18, actions: 82 },
+    { name: t('adminDashboard.tue'), logins: 24, actions: 110 },
+    { name: t('adminDashboard.wed'), logins: 22, actions: 95 },
+    { name: t('adminDashboard.thu'), logins: 29, actions: 132 },
+    { name: t('adminDashboard.fri'), logins: 27, actions: 120 },
+    { name: t('adminDashboard.sat'), logins: 12, actions: 40 },
+    { name: t('adminDashboard.sun'), logins: 5, actions: 12 },
   ];
 
   const logColumns = [
     {
-      title: 'Thời gian',
+      title: t('adminDashboard.time'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
       render: (val: string) => <span className="font-mono text-[10px] text-[var(--color-muted-fg)]">{new Date(val).toLocaleString()}</span>,
     },
     {
-      title: 'Hành động',
+      title: 'Action',
       dataIndex: 'type',
       key: 'type',
       width: 110,
@@ -61,7 +63,7 @@ export default function AdminDashboard() {
       }
     },
     {
-      title: 'Mô tả',
+      title: t('adminDashboard.description'),
       dataIndex: 'description',
       key: 'description',
       render: (val: string) => <span className="text-xs text-[var(--color-fg)] font-medium">{val}</span>,
@@ -69,7 +71,7 @@ export default function AdminDashboard() {
   ];
 
   const handleToggleGov = (checked: boolean, field: string) => {
-    message.success(`Cập nhật AI Governance: ${field} -> ${checked ? 'ON' : 'OFF'}`);
+    message.success(t('adminDashboard.aiGovernanceUpdated', { field, status: checked ? 'ON' : 'OFF' }));
   };
 
   const containerVariants = {
@@ -112,7 +114,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Hệ thống Lead</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('adminDashboard.leadSystem')}</span>
             <Users size={16} className="text-indigo-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -122,7 +124,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Khách hàng (Customer)</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('adminDashboard.customer')}</span>
             <Shield size={16} className="text-emerald-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -132,7 +134,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Cơ hội (Opportunity)</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('adminDashboard.opportunity')}</span>
             <Layers size={16} className="text-amber-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -142,7 +144,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action flex flex-col justify-between h-28">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">Hợp đồng Active</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)]">{t('adminDashboard.activeContracts')}</span>
             <Activity size={16} className="text-purple-500" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-fg)]">
@@ -155,7 +157,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Activity Chart */}
         <motion.div variants={itemVariants} className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Thống kê hoạt động của User hàng tuần</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('adminDashboard.weeklyActivity')}</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={userActivityData} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
@@ -182,7 +184,7 @@ export default function AdminDashboard() {
                             <div key={idx} className="flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.fill === 'url(#loginsGrad)' ? '#818CF8' : '#34D399' }}></span>
                               <span className="text-[10px] text-[var(--color-muted-fg)]">{p.name}:</span>
-                              <span className="text-[10px] font-mono text-[var(--color-fg)] font-semibold">{p.value} lượt</span>
+                              <span className="text-[10px] font-mono text-[var(--color-fg)] font-semibold">{t('adminDashboard.actions', {count: p.value})}</span>
                             </div>
                           ))}
                         </div>
@@ -191,8 +193,8 @@ export default function AdminDashboard() {
                     return null;
                   }}
                 />
-                <Bar name="Lượt đăng nhập" dataKey="logins" fill="url(#loginsGrad)" radius={[4, 4, 0, 0]} />
-                <Bar name="Lượt thao tác" dataKey="actions" fill="url(#actionsGrad)" radius={[4, 4, 0, 0]} />
+                <Bar name={t('adminDashboard.logins')} dataKey="logins" fill="url(#loginsGrad)" radius={[4, 4, 0, 0]} />
+                <Bar name={t('adminDashboard.actionsLabel')} dataKey="actions" fill="url(#actionsGrad)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -207,21 +209,21 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-[var(--color-accent)]/20 transition-all duration-200">
               <div>
                 <p className="text-xs font-semibold text-[var(--color-fg)]">Lead BANT scoring</p>
-                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">Tự động chấm điểm leads</p>
+                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{t('adminDashboard.aiLeadScoring')}</p>
               </div>
               <Switch defaultChecked onChange={(chk) => handleToggleGov(chk, 'Lead BANT scoring')} />
             </div>
             <div className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-[var(--color-accent)]/20 transition-all duration-200">
               <div>
                 <p className="text-xs font-semibold text-[var(--color-fg)]">Opp Coach assistant</p>
-                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">Hỗ trợ phân tích chốt deal</p>
+                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{t('adminDashboard.aiDealAnalysis')}</p>
               </div>
               <Switch defaultChecked onChange={(chk) => handleToggleGov(chk, 'Opp Coach assistant')} />
             </div>
             <div className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-[var(--color-accent)]/20 transition-all duration-200">
               <div>
                 <p className="text-xs font-semibold text-[var(--color-fg)]">Contract Risk Audit</p>
-                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">Tự động phân tích rủi ro hợp đồng</p>
+                <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">{t('adminDashboard.aiContractRisk')}</p>
               </div>
               <Switch defaultChecked onChange={(chk) => handleToggleGov(chk, 'Contract Risk Audit')} />
             </div>
@@ -233,7 +235,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Audit Logs */}
         <motion.div variants={itemVariants} className="lg:col-span-2 bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Logs kiểm toán hệ thống gần đây</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('adminDashboard.auditLogs')}</h3>
           <Table
             dataSource={logs}
             columns={logColumns}
@@ -247,7 +249,7 @@ export default function AdminDashboard() {
 
         {/* Integration Connection status */}
         <motion.div variants={itemVariants} className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 hover-action">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Trạng thái kết nối dịch vụ</h3>
+          <h3 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('adminDashboard.serviceStatus')}</h3>
           <div className="space-y-3">
             {integrations.map((item, idx) => (
               <div key={idx} className="flex justify-between items-center bg-[var(--color-bg)] border border-[var(--color-border)] p-3 rounded-xl hover:border-[var(--color-accent)]/20 transition-all duration-200">

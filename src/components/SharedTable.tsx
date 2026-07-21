@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import MagneticButton from './MagneticButton';
 
 export interface ColumnProps<T> {
@@ -31,6 +32,8 @@ export default function SharedTable<T extends { id: string }>({
   actionsLabel = 'Actions',
   rowSelection,
 }: SharedTableProps<T>) {
+  const { t } = useTranslation();
+  const effectiveActionsLabel = actionsLabel || t('common.actions');
   const isAllSelected = dataSource.length > 0 && rowSelection?.selectedRowKeys.length === dataSource.length;
   
   const handleSelectAll = (checked: boolean) => {
@@ -80,7 +83,7 @@ export default function SharedTable<T extends { id: string }>({
             ))}
             {(onEdit || onDelete) && (
               <th className="px-6 py-4 text-[10px] font-mono uppercase tracking-wider text-[var(--color-muted-fg)] font-semibold text-right">
-                {actionsLabel}
+                {effectiveActionsLabel}
               </th>
             )}
           </tr>
@@ -145,7 +148,7 @@ export default function SharedTable<T extends { id: string }>({
                 colSpan={columns.length + (rowSelection ? 1 : 0) + ((onEdit || onDelete) ? 1 : 0)}
                 className="px-6 py-12 text-center text-xs text-[var(--color-muted-fg)] font-mono uppercase tracking-wider"
               >
-                No records found.
+                {t('common.noData')}
               </td>
             </tr>
           )}

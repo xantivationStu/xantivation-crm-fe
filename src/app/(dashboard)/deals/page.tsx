@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Select, Tag, message, Drawer, Spin } from 'antd';
 import { Search, ChevronRight, CheckCircle2, ShieldCheck, XCircle, AlertCircle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
@@ -35,6 +36,8 @@ export default function Deals() {
   const [filterStage, setFilterStage] = useState('ALL');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
+  const { t } = useTranslation();
+
   // API Queries
   const { data: dealsRes, isLoading } = useDeals();
 
@@ -66,7 +69,7 @@ export default function Deals() {
 
   const columns: ColumnProps<DealRecord>[] = [
     {
-      title: 'Mã Deal',
+      title: t('deals.dealCode'),
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -79,7 +82,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Tên dự án & Khách hàng',
+      title: t('deals.projectCustomer'),
       dataIndex: 'name',
       key: 'name',
       render: (val, rec) => (
@@ -92,7 +95,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Giá trị',
+      title: t('deals.value'),
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
@@ -102,7 +105,7 @@ export default function Deals() {
       ),
     },
     {
-      title: 'Giai đoạn duyệt',
+      title: t('deals.approvalStage'),
       dataIndex: 'stage',
       key: 'stage',
       render: (stage: string) => {
@@ -115,23 +118,23 @@ export default function Deals() {
       },
     },
     {
-      title: 'Bắt đầu dự kiến',
+      title: t('deals.expectedStart'),
       dataIndex: 'expectedStart',
       key: 'expectedStart',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Số mốc thanh toán',
+      title: t('deals.paymentMilestones'),
       dataIndex: 'milestonesCount',
       key: 'milestonesCount',
       render: (count: number) => (
         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-fg)] font-mono">
-          {count} mốc
+          {t('deals.milestoneCount',{count})}
         </span>
       ),
     },
     {
-      title: 'Thao tác',
+      title: t('deals.actions'),
       dataIndex: 'id',
       key: 'action',
       render: (_, rec) => (
@@ -139,7 +142,7 @@ export default function Deals() {
           href={`/deals/${rec.id}`}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
         >
-          <span>Quản lý</span>
+          <span>{t('deals.manage')}</span>
           <ChevronRight size={12} />
         </Link>
       ),
@@ -153,9 +156,9 @@ export default function Deals() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Thỏa thuận thương mại (Deals)</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('deals.title')}</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Quản lý quy trình phê duyệt thương vụ, cấu hình mốc thanh toán và theo dõi tiến độ hợp đồng.
+            {t('deals.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -164,7 +167,7 @@ export default function Deals() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Tìm kiếm thương vụ..."
+              placeholder={t('deals.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -190,7 +193,7 @@ export default function Deals() {
           </button>
 
           <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium">
-            Tự động tạo từ Báo giá được Duyệt
+            {t('deals.autoCreate')}
           </div>
         </div>
       </div>
@@ -228,14 +231,14 @@ export default function Deals() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Giai đoạn duyệt
+              Approval Stage
             </label>
             <Select
               value={filterStage}
               onChange={setFilterStage}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả giai đoạn' },
+                { value: 'ALL', label: t('deals.allStages') },
                 ...stageOptions,
               ]}
             />
@@ -246,7 +249,7 @@ export default function Deals() {
       {isLoading ? (
         <div className="py-24 flex flex-col justify-center items-center gap-3">
           <Spin size="large" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading active deals...</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('deals.loading')}</span>
         </div>
       ) : (
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">

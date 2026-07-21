@@ -6,6 +6,7 @@ import { useCustomer, useCreateContact, useSetPrimaryContact, useUpdateCustomer,
 import { Building, Landmark, Globe, MapPin, Calendar, Plus, FileText, Trash2 } from 'lucide-react';
 import { FloatingInput } from '@/components/FloatingInput';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 interface Contact {
   id: string;
@@ -71,7 +72,8 @@ const mockContacts: Contact[] = [
 
 export default function AccountDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  
+  const { t } = useTranslation();
+
   const { data: customerResponse, isLoading } = useCustomer(id);
   const createContactMutation = useCreateContact();
   const setPrimaryContactMutation = useSetPrimaryContact(id);
@@ -123,18 +125,18 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
   if (isLoading) {
     return (
       <div className="p-12 flex justify-center items-center h-96">
-        <Spin size="large" tip="Đang tải chi tiết Khách hàng..." />
+        <Spin size="large" tip={t('customers.loading')} />
       </div>
     );
   }
 
   if (!account) {
-    return <div className="p-8 text-center text-red-500 font-bold">Account not found</div>;
+    return <div className="p-8 text-center text-red-500 font-bold">{t('customers.accountNotFound')}</div>;
   }
 
   const handleAddContact = () => {
     if (!lastName.trim() || !contactEmail.trim() || !contactPhone.trim()) {
-      message.error('Please fill in all required fields');
+      message.error(t('customers.requiredFields'));
       return;
     }
 
@@ -169,7 +171,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
   const handleSaveNotes = () => {
     setNotes(notesDraft);
     setEditingNotes(false);
-    message.success('Notes saved successfully');
+    message.success(t('customers.notesSaved'));
   };
 
   return (
@@ -178,21 +180,21 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
       <div className="flex justify-between items-start shrink-0">
         <div>
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
-            <Link href="/customers" className="hover:underline">Customers</Link>
+            <Link href="/customers" className="hover:underline">{t('customers.breadcrumbCustomers')}</Link>
             <span>&gt;</span>
             <span className="text-[var(--color-fg)] font-semibold">{account.code}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
             {account.name}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Account Code: {account.code} • {account.industry}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('customers.accountCode')}: {account.code} • {account.industry}</p>
         </div>
 
         <div className="flex items-center gap-3">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
             account.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
           }`}>
-            Status: {account.status}
+            {t('customers.status')}: {account.status}
           </span>
         </div>
       </div>
@@ -205,11 +207,11 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
           {/* Sub Navigation */}
           <div className="flex border-b border-[var(--color-border)] gap-6 pb-px">
             {[
-              { id: 'overview', name: 'Overview' },
-              { id: 'contacts', name: 'Contacts' },
-              { id: 'opportunities', name: 'Opportunities' },
-              { id: 'contracts', name: 'Contracts' },
-              { id: 'notes', name: 'Notes' },
+              { id: 'overview', name: t('customers.tabOverview') },
+              { id: 'contacts', name: t('customers.tabContacts') },
+              { id: 'opportunities', name: t('customers.tabOpportunities') },
+              { id: 'contracts', name: t('customers.tabContracts') },
+              { id: 'notes', name: t('customers.tabNotes') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -232,7 +234,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Business Details
+                      {t('customers.businessDetails')}
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5 text-sm">
@@ -241,18 +243,18 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                       </div>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Landmark size={16} className="text-[var(--color-muted-fg)]" />
-                        <span className="text-[var(--color-fg)] font-mono">Tax Code: {account.taxCode || 'N/A'}</span>
+                        <span className="text-[var(--color-fg)] font-mono">{t('customers.taxCode', { code: account.taxCode || t('customers.na') })}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Globe size={16} className="text-[var(--color-muted-fg)]" />
-                        <a href={account.website} target="_blank" className="text-[var(--color-accent)] font-mono hover:underline">{account.website || 'N/A'}</a>
+                        <a href={account.website} target="_blank" className="text-[var(--color-accent)] font-mono hover:underline">{account.website || t('customers.na')}</a>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Locations & Dates
+                      {t('customers.locationsDates')}
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5 text-sm">
@@ -261,7 +263,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                       </div>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Calendar size={16} className="text-[var(--color-muted-fg)]" />
-                        <span className="text-[var(--color-muted-fg)]">Created At: {account.createdAt}</span>
+                        <span className="text-[var(--color-muted-fg)]">{t('customers.createdAt')}: {account.createdAt}</span>
                       </div>
                     </div>
                   </div>
@@ -272,10 +274,10 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
             {activeSubTab === 'contacts' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">Key Contacts</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('customers.keyContacts')}</h3>
                   <Button type="primary" onClick={() => setContactModalOpen(true)} className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer">
                     <Plus size={14} />
-                    <span>Add Contact</span>
+                    <span>{t('customers.addContact')}</span>
                   </Button>
                 </div>
 
@@ -289,7 +291,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                         </div>
                         {c.isPrimary && (
                           <span className="text-[9px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            Primary
+                            {t('customers.primary')}
                           </span>
                         )}
                       </div>
@@ -302,7 +304,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                           onClick={() => handleSetPrimary(c.id)}
                           className="opacity-0 group-hover:opacity-100 absolute bottom-4 right-4 text-xs font-semibold text-[var(--color-accent)] hover:underline cursor-pointer transition-opacity"
                         >
-                          Set Primary
+                          {t('customers.setPrimary')}
                         </button>
                       )}
                     </div>
@@ -313,20 +315,20 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
 
             {activeSubTab === 'opportunities' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Opportunities mini tracker</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('customers.opportunitiesMiniTracker')}</h3>
                 <div className="p-6 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
                   <FileText size={32} className="mx-auto text-[var(--color-accent)]/50" />
-                  <span>No active opportunities currently linked to this customer account.</span>
+                  <span>{t('customers.noOpportunities')}</span>
                 </div>
               </div>
             )}
 
             {activeSubTab === 'contracts' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Related Contracts</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('customers.relatedContracts')}</h3>
                 <div className="p-6 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
                   <FileText size={32} className="mx-auto text-[var(--color-accent)]/50" />
-                  <span>No contracts currently registered under this account name.</span>
+                  <span>{t('customers.noContracts')}</span>
                 </div>
               </div>
             )}
@@ -334,22 +336,22 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
             {activeSubTab === 'notes' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">Internal private notes</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('customers.internalPrivateNotes')}</h3>
                   {!editingNotes ? (
                     <Button onClick={() => { setNotesDraft(notes); setEditingNotes(true); }} className="rounded-xl h-9 px-4 cursor-pointer">
-                      Edit notes
+                      {t('customers.editNotes')}
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <Button onClick={() => setEditingNotes(false)} className="rounded-xl h-9 px-4">Cancel</Button>
-                      <Button type="primary" onClick={handleSaveNotes} className="rounded-xl h-9 px-4">Save</Button>
+                      <Button onClick={() => setEditingNotes(false)} className="rounded-xl h-9 px-4">{t('customers.cancel')}</Button>
+                      <Button type="primary" onClick={handleSaveNotes} className="rounded-xl h-9 px-4">{t('customers.save')}</Button>
                     </div>
                   )}
                 </div>
 
                 {!editingNotes ? (
                   <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl min-h-[120px] text-xs text-[var(--color-fg)] whitespace-pre-wrap">
-                    {notes || 'No private notes saved.'}
+                    {notes || t('customers.noNotesSaved')}
                   </div>
                 ) : (
                   <textarea
@@ -367,13 +369,13 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Account Control Panel
+              {t('customers.accountControlPanel')}
             </h3>
 
             {/* Change Status */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Status Setting
+                {t('customers.statusSetting')}
               </label>
               <Select
                 value={account.status}
@@ -381,8 +383,8 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                   updateCustomerMutation.mutate({ id, dto: { status: val } });
                 }}
                 options={[
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'INACTIVE', label: 'Inactive' },
+                  { value: 'ACTIVE', label: t('customers.active') },
+                  { value: 'INACTIVE', label: t('customers.inactive') },
                 ]}
                 className="w-full h-10"
               />
@@ -391,7 +393,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
             {/* Change Owner */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Assigned Owner
+                {t('customers.assignedOwner')}
               </label>
               <Select
                 value={account.assignedTo}
@@ -413,10 +415,10 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                 danger
                 onClick={() => {
                   Modal.confirm({
-                    title: 'Xác nhận xóa Khách hàng',
-                    content: 'Bạn có chắc chắn muốn xóa khách hàng này? Tất cả các liên hệ trực thuộc cũng sẽ bị xóa. Hành động này không thể hoàn tác.',
-                    okText: 'Xóa',
-                    cancelText: 'Hủy',
+                    title: t('customers.confirmDeleteTitle'),
+                    content: t('customers.confirmDeleteContent'),
+                    okText: t('customers.delete'),
+                    cancelText: t('customers.cancel'),
                     okButtonProps: { danger: true },
                     onOk: () => {
                       deleteCustomerMutation.mutate(id, {
@@ -430,7 +432,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer"
               >
                 <Trash2 size={16} />
-                <span>Delete Account</span>
+                <span>{t('customers.deleteAccount')}</span>
               </Button>
             </div>
           </div>
@@ -440,23 +442,23 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
 
       {/* Contact Creation Modal inside Account detail */}
       <Modal
-        title="Add Associated Contact Person"
+        title={t('customers.addContactPerson')}
         open={contactModalOpen}
         onCancel={() => setContactModalOpen(false)}
         onOk={handleAddContact}
-        okText="Add Contact"
-        cancelText="Cancel"
+        okText={t('customers.addContact')}
+        cancelText={t('customers.cancel')}
       >
         <div className="space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-4">
-            <FloatingInput label="First Name" value={firstName} onChange={setFirstName} />
-            <FloatingInput label="Last Name" value={lastName} onChange={setLastName} required />
+            <FloatingInput label={t('customers.firstName')} value={firstName} onChange={setFirstName} />
+            <FloatingInput label={t('customers.lastName')} value={lastName} onChange={setLastName} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <FloatingInput label="Email Address" type="email" value={contactEmail} onChange={setContactEmail} required />
-            <FloatingInput label="Phone Number" value={contactPhone} onChange={setContactPhone} required />
+            <FloatingInput label={t('customers.emailAddress')} type="email" value={contactEmail} onChange={setContactEmail} required />
+            <FloatingInput label={t('customers.phoneNumber')} value={contactPhone} onChange={setContactPhone} required />
           </div>
-          <FloatingInput label="Job Title" value={contactJobTitle} onChange={setContactJobTitle} />
+          <FloatingInput label={t('customers.jobTitle')} value={contactJobTitle} onChange={setContactJobTitle} />
           
           <label className="flex items-center gap-3 cursor-pointer group mt-4">
             <input
@@ -465,7 +467,7 @@ export default function AccountDetail({ params }: { params: Promise<{ id: string
               onChange={(e) => setIsPrimaryVal(e.target.checked)}
               className="w-4 h-4 rounded accent-[var(--color-accent)] cursor-pointer"
             />
-            <span className="text-xs text-[var(--color-fg)] select-none">Set as Primary Contact</span>
+            <span className="text-xs text-[var(--color-fg)] select-none">{t('customers.setAsPrimary')}</span>
           </label>
         </div>
       </Modal>

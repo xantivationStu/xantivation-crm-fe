@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, message, Select, Spin, Modal } from 'antd';
 import { useContact, useUpdateContact, useDeleteContact, useSetPrimaryContact } from '@/hooks/api/useCustomer';
 import { User, Mail, Phone, Briefcase, FileText, Check, ShieldCheck, Trash2 } from 'lucide-react';
@@ -51,7 +52,8 @@ const mockContacts: ContactRecord[] = [
 
 export default function ContactDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  
+  const { t } = useTranslation();
+
   const { data: contactResponse, isLoading } = useContact(id);
   const deleteContactMutation = useDeleteContact();
   const updateContactMutation = useUpdateContact();
@@ -78,13 +80,13 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
   if (isLoading) {
     return (
       <div className="p-12 flex justify-center items-center h-96">
-        <Spin size="large" tip="Đang tải chi tiết Liên hệ..." />
+        <Spin size="large" tip={t('customers.contactLoading')} />
       </div>
     );
   }
 
   if (!contact) {
-    return <div className="p-8 text-center text-red-500 font-bold">Contact not found</div>;
+    return <div className="p-8 text-center text-red-500 font-bold">{t('customers.contactNotFound')}</div>;
   }
 
   return (
@@ -93,23 +95,23 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
       <div className="flex justify-between items-start shrink-0">
         <div>
           <div className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1.5 mb-2 font-mono">
-            <Link href="/customers" className="hover:underline">Customers</Link>
+            <Link href="/customers" className="hover:underline">{t('customers.breadcrumbCustomers')}</Link>
             <span>&gt;</span>
-            <span className="text-xs text-[var(--color-muted-fg)]">Contacts</span>
+            <span className="text-xs text-[var(--color-muted-fg)]">{t('customers.breadcrumbContacts')}</span>
             <span>&gt;</span>
             <span className="text-[var(--color-fg)] font-semibold">{contact.firstName} {contact.lastName}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">
             {contact.firstName} {contact.lastName}
           </h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Associated Account: <Link href={`/customers/accounts/${contact.companyId}`} className="text-[var(--color-accent)] hover:underline">{contact.companyName}</Link></p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('customers.associatedAccount')}: <Link href={`/customers/accounts/${contact.companyId}`} className="text-[var(--color-accent)] hover:underline">{contact.companyName}</Link></p>
         </div>
 
         <div className="flex items-center gap-3">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
             contact.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
           }`}>
-            Status: {contact.status}
+            {t('customers.status')}: {contact.status}
           </span>
         </div>
       </div>
@@ -122,8 +124,8 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
           {/* Sub Navigation */}
           <div className="flex gap-6 border-b border-[var(--color-border)]">
             {[
-              { id: 'overview', name: 'Overview' },
-              { id: 'opportunities', name: 'Opportunities' },
+              { id: 'overview', name: t('customers.tabOverview') },
+              { id: 'opportunities', name: t('customers.tabRepresentedOpportunities') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -146,7 +148,7 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Personal Details
+                      {t('customers.personalDetails')}
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5 text-sm">
@@ -168,16 +170,16 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
 
                   <div className="space-y-4">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                      Professional Info
+                      {t('customers.professionalInfo')}
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5 text-sm">
                         <Briefcase size={16} className="text-[var(--color-muted-fg)]" />
-                        <span className="text-[var(--color-fg)] font-medium">{contact.jobTitle || 'N/A'}</span>
+                        <span className="text-[var(--color-fg)] font-medium">{contact.jobTitle || t('customers.na')}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-sm">
                         <ShieldCheck size={16} className="text-[var(--color-muted-fg)]" />
-                        <span className="text-[var(--color-fg)]">Internal Role: {contact.role || 'Representative'}</span>
+                        <span className="text-[var(--color-fg)]">{t('customers.internalRole')}: {contact.role || t('customers.representative')}</span>
                       </div>
                     </div>
                   </div>
@@ -189,8 +191,8 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                     <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-start gap-3">
                       <Check size={16} className="text-amber-600 mt-0.5" />
                       <div className="text-xs text-amber-800 space-y-1">
-                        <p className="font-semibold uppercase tracking-wider">Primary Account Contact</p>
-                        <p>This person is marked as the primary contact representative for {contact.companyName}. All financial and contract transactions will route to this contact by default.</p>
+                        <p className="font-semibold uppercase tracking-wider">{t('customers.primaryAccountContact')}</p>
+                        <p>{t('customers.primaryAccountContactDesc', { companyName: contact.companyName })}</p>
                       </div>
                     </div>
                   </div>
@@ -200,10 +202,10 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
 
             {activeSubTab === 'opportunities' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--color-fg)]">Represented Opportunities</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-fg)]">{t('customers.representedOpportunities')}</h3>
                 <div className="p-6 bg-[var(--color-surface)]/20 border border-[var(--color-border)]/50 rounded-2xl flex flex-col gap-3 justify-center min-h-[160px] text-center text-[var(--color-muted-fg)] text-xs font-mono">
                   <FileText size={32} className="mx-auto text-[var(--color-accent)]/50" />
-                  <span>No opportunities currently mapped under this contact as primary agent.</span>
+                  <span>{t('customers.noContactOpportunities')}</span>
                 </div>
               </div>
             )}
@@ -214,7 +216,7 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Contact Control Panel
+              {t('customers.contactControlPanel')}
             </h3>
 
             {/* Set Primary Button */}
@@ -226,14 +228,14 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                 }}
                 className="w-full h-10 rounded-xl"
               >
-                Set as Primary
+                {t('customers.setAsPrimary')}
               </Button>
             )}
 
             {/* Change Status */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Status Setting
+                {t('customers.statusSetting')}
               </label>
               <Select
                 value={contact.status}
@@ -241,8 +243,8 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                   updateContactMutation.mutate({ id, dto: { status: val } });
                 }}
                 options={[
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'INACTIVE', label: 'Inactive' },
+                  { value: 'ACTIVE', label: t('customers.active') },
+                  { value: 'INACTIVE', label: t('customers.inactive') },
                 ]}
                 className="w-full h-10"
               />
@@ -254,10 +256,10 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                 danger
                 onClick={() => {
                   Modal.confirm({
-                    title: 'Xác nhận xóa Liên hệ',
-                    content: `Bạn có chắc chắn muốn xóa liên hệ này?`,
-                    okText: 'Xóa',
-                    cancelText: 'Hủy',
+                    title: t('customers.confirmDeleteTitle'),
+                    content: t('customers.confirmDeleteContactContent'),
+                    okText: t('customers.delete'),
+                    cancelText: t('customers.cancel'),
                     okButtonProps: { danger: true },
                     onOk: () => {
                       deleteContactMutation.mutate(id, {
@@ -271,7 +273,7 @@ export default function ContactDetail({ params }: { params: Promise<{ id: string
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-xl cursor-pointer"
               >
                 <Trash2 size={16} />
-                <span>Delete Contact</span>
+                <span>{t('customers.deleteContact')}</span>
               </Button>
             </div>
           </div>

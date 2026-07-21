@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './Providers';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   UserPlus,
@@ -23,40 +24,41 @@ import {
 } from 'lucide-react';
 import MagneticButton from './MagneticButton';
 
-const sidebarGroups = [
-  {
-    title: 'Sales Operations',
-    items: [
-      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { name: 'Leads', path: '/leads', icon: UserPlus },
-      { name: 'Customers', path: '/customers', icon: Building2 },
-      { name: 'Opportunities', path: '/opportunities', icon: TrendingUp },
-    ],
-  },
-  {
-    title: 'Billing & Documents',
-    items: [
-      { name: 'Quotations', path: '/quotations', icon: FileText },
-      { name: 'Deals', path: '/deals', icon: Handshake },
-      { name: 'Contracts', path: '/contracts', icon: FileSignature },
-      { name: 'Payments', path: '/payments', icon: CreditCard },
-    ],
-  },
-  {
-    title: 'Intelligence',
-    items: [
-      { name: 'Conversations', path: '/conversations', icon: MessageSquare },
-      { name: 'AI Hub', path: '/ai-hub', icon: BrainCircuit },
-      { name: 'Reports', path: '/reports', icon: BarChart3 },
-      { name: 'Settings', path: '/settings', icon: Settings },
-    ],
-  },
-];
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { theme } = useTheme();
+  const { t } = useTranslation();
+
+  const sidebarGroups = [
+    {
+      title: t('sidebar.salesOperations'),
+      items: [
+        { name: t('sidebar.dashboard'), path: '/dashboard', icon: LayoutDashboard },
+        { name: t('sidebar.leads'), path: '/leads', icon: UserPlus },
+        { name: t('sidebar.customers'), path: '/customers', icon: Building2 },
+        { name: t('sidebar.opportunities'), path: '/opportunities', icon: TrendingUp },
+      ],
+    },
+    {
+      title: t('sidebar.billingDocuments'),
+      items: [
+        { name: t('sidebar.quotations'), path: '/quotations', icon: FileText },
+        { name: t('sidebar.deals'), path: '/deals', icon: Handshake },
+        { name: t('sidebar.contracts'), path: '/contracts', icon: FileSignature },
+        { name: t('sidebar.payments'), path: '/payments', icon: CreditCard },
+      ],
+    },
+    {
+      title: t('sidebar.intelligence'),
+      items: [
+        { name: t('sidebar.conversations'), path: '/conversations', icon: MessageSquare },
+        { name: t('sidebar.aiHub'), path: '/ai-hub', icon: BrainCircuit },
+        { name: t('sidebar.reports'), path: '/reports', icon: BarChart3 },
+        { name: t('sidebar.settings'), path: '/settings', icon: Settings },
+      ],
+    },
+  ];
 
   // Choose logo version based on light/dark mode
   const logoSrc = theme === 'dark' ? '/White_Logo.png' : '/Black_Logo.png';

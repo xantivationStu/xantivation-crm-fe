@@ -29,6 +29,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var s=localStorage.getItem('crm-settings-storage');if(s){var d=JSON.parse(s);var l=d&&d.state&&d.state.locale;if(l&&['en','vi','ja','zh'].includes(l)){document.documentElement.lang=l}}}catch(e){}})()`
+        }} />
+      </head>
       <body className="min-h-full flex flex-col bg-[var(--color-bg)] text-[var(--color-fg)]">
         <Providers>{children}</Providers>
       </body>

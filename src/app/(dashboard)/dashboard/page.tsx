@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/auth.store';
 import { UserRole } from '@/types/auth.types';
 import { Skeleton } from 'antd';
@@ -10,6 +11,7 @@ import AccountantDashboard from '@/components/dashboard/AccountantDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
 
   if (!user) {
@@ -44,26 +46,26 @@ export default function DashboardPage() {
   // Headings based on role
   const headings = {
     [UserRole.SALES_REP]: {
-      title: 'Bảng làm việc của tôi',
-      subtitle: 'Theo dõi leads hôm nay, báo giá sắp hết hạn và phễu cơ hội cá nhân.',
+      title: t('dashboard.myDashboard'),
+      subtitle: t('dashboard.myDashboardSub'),
     },
     [UserRole.SALES_MANAGER]: {
-      title: 'Bảng quản trị kinh doanh',
-      subtitle: 'Giám sát chỉ số phễu, nguồn lead, dự báo và xếp hạng sales team.',
+      title: t('dashboard.salesManagement'),
+      subtitle: t('dashboard.salesManagementSub'),
     },
     [UserRole.ACCOUNTANT]: {
-      title: 'Bảng điều khiển tài chính',
-      subtitle: 'Theo dõi các đợt thanh toán sắp đến hạn, quá hạn và biểu đồ dòng tiền.',
+      title: t('dashboard.financial'),
+      subtitle: t('dashboard.financialSub'),
     },
     [UserRole.ADMIN]: {
-      title: 'Bảng điều trị hệ thống',
-      subtitle: 'Giám sát hoạt động của người dùng, kiểm soát AI và trạng thái kết nối tích hợp.',
+      title: t('dashboard.systemAdmin'),
+      subtitle: t('dashboard.systemAdminSub'),
     },
   };
 
   const currentHeading = headings[user.role] || {
-    title: 'Dashboard',
-    subtitle: 'Chỉ số hoạt động chung hệ thống.',
+    title: t('dashboard.dashboard'),
+    subtitle: t('dashboard.overallMetrics'),
   };
 
   const renderDashboard = () => {
@@ -89,7 +91,7 @@ export default function DashboardPage() {
           {currentHeading.title}
         </h1>
         <p className="text-sm text-[var(--color-muted-fg)]">
-          Chào mừng trở lại, {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}. {currentHeading.subtitle}
+          {t('dashboard.welcomeBack')}, {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}. {currentHeading.subtitle}
         </p>
       </div>
 

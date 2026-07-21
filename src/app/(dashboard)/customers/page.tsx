@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Modal, message, Select, Drawer, Spin } from 'antd';
 import { useCustomers, useContacts, useCreateCustomer, useCreateContact, useUpdateCustomer, useUpdateContact, useDeleteCustomer, useDeleteContact } from '@/hooks/api/useCustomer';
 import { Plus, Search, Download, Check, SlidersHorizontal } from 'lucide-react';
@@ -108,6 +109,7 @@ const mockContacts: ContactRecord[] = [
 ];
 
 export default function Customers() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'accounts' | 'contacts'>('accounts');
 
   const { data: customersResponse, isLoading: isCustomersLoading } = useCustomers();
@@ -195,7 +197,7 @@ export default function Customers() {
   // Columns for Accounts Table
   const accountColumns: ColumnProps<AccountRecord>[] = [
     {
-      title: 'Account Code',
+      title: t('customers.accountCode'),
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -205,7 +207,7 @@ export default function Customers() {
       ),
     },
     {
-      title: 'Company Name',
+      title: t('customers.companyName'),
       dataIndex: 'name',
       key: 'name',
       render: (val, rec) => (
@@ -214,17 +216,17 @@ export default function Customers() {
         </Link>
       ),
     },
-    { title: 'Tax Code', dataIndex: 'taxCode', key: 'taxCode', render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val || 'N/A'}</span> },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: t('customers.taxCode'), dataIndex: 'taxCode', key: 'taxCode', render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val || 'N/A'}</span> },
+    { title: t('customers.phone'), dataIndex: 'phone', key: 'phone' },
+    { title: t('customers.email'), dataIndex: 'email', key: 'email' },
     {
-      title: 'Client Type',
+      title: t('customers.clientType'),
       dataIndex: 'clientType',
       key: 'clientType',
       render: (val) => <span className="text-xs font-semibold">{val}</span>,
     },
     {
-      title: 'Status',
+      title: t('customers.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
@@ -234,7 +236,7 @@ export default function Customers() {
       ),
     },
     {
-      title: 'Contacts',
+      title: t('customers.contacts'),
       dataIndex: 'contactsCount',
       key: 'contactsCount',
       render: (count) => <span className="text-xs text-[var(--color-muted-fg)] font-mono font-semibold">{count}</span>,
@@ -244,7 +246,7 @@ export default function Customers() {
   // Columns for Contacts Table
   const contactColumns: ColumnProps<ContactRecord>[] = [
     {
-      title: 'Name',
+      title: t('customers.name'),
       dataIndex: 'lastName',
       key: 'name',
       render: (_, rec) => (
@@ -253,11 +255,11 @@ export default function Customers() {
         </Link>
       ),
     },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Job Title', dataIndex: 'jobTitle', key: 'jobTitle', render: (val) => <span className="text-xs">{val || 'N/A'}</span> },
+    { title: t('customers.email'), dataIndex: 'email', key: 'email' },
+    { title: t('customers.phone'), dataIndex: 'phone', key: 'phone' },
+    { title: t('customers.jobTitle'), dataIndex: 'jobTitle', key: 'jobTitle', render: (val) => <span className="text-xs">{val || 'N/A'}</span> },
     {
-      title: 'Account',
+      title: t('customers.account'),
       dataIndex: 'companyName',
       key: 'companyName',
       render: (val, rec) => (
@@ -267,12 +269,12 @@ export default function Customers() {
       ),
     },
     {
-      title: 'Primary',
+      title: t('customers.primary'),
       dataIndex: 'isPrimary',
       key: 'isPrimary',
       render: (isPri) => isPri ? (
         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-          <Check size={10} /> Primary
+          <Check size={10} /> {t('customers.primary')}
         </span>
       ) : <span className="text-xs text-[var(--color-muted-fg)]">-</span>,
     },
@@ -452,8 +454,8 @@ export default function Customers() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Customers</h1>
-          <p className="text-sm text-[var(--color-muted-fg)] mt-1">Manage company accounts and key customer contacts.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('customers.title')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)] mt-1">{t('customers.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
@@ -461,7 +463,7 @@ export default function Customers() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder={`Search ${activeTab === 'accounts' ? 'accounts' : 'contacts'}...`}
+              placeholder={t('customers.searchPlaceholder',{tab:activeTab === 'accounts' ? 'accounts' : 'contacts'})}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -492,7 +494,7 @@ export default function Customers() {
             className="flex items-center gap-2 h-10 px-3.5 text-xs font-semibold rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
             <Download size={14} />
-            <span>Export Excel</span>
+            <span>{t('customers.exportExcel')}</span>
           </button>
 
           {/* New Account / Contact Button */}
@@ -502,7 +504,7 @@ export default function Customers() {
             className="flex items-center gap-2 h-10 px-4 rounded-xl cursor-pointer"
           >
             <Plus size={16} />
-            <span>{activeTab === 'accounts' ? 'New Account' : 'New Contact'}</span>
+            <span>{activeTab === 'accounts' ? t('customers.newAccount') : t('customers.newContact')}</span>
           </Button>
         </div>
       </div>
@@ -517,7 +519,7 @@ export default function Customers() {
               : 'border-transparent text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
           }`}
         >
-          Accounts
+          {t('customers.accounts')}
         </button>
         <button
           onClick={() => { setActiveTab('contacts'); setSearchQuery(''); }}
@@ -527,7 +529,7 @@ export default function Customers() {
               : 'border-transparent text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]'
           }`}
         >
-          Contacts
+          {t('customers.contacts')}
         </button>
       </div>
 
@@ -573,32 +575,32 @@ export default function Customers() {
             <>
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Account Status
+                  {t('customers.accountStatus')}
                 </label>
                 <Select
                   value={filterStatus}
                   onChange={setFilterStatus}
                   className="w-full h-11"
                   options={[
-                    { value: 'ALL', label: 'All Statuses' },
-                    { value: 'ACTIVE', label: 'Active' },
-                    { value: 'INACTIVE', label: 'Inactive' },
+                    { value: 'ALL', label: t('customers.allStatuses') },
+                    { value: 'ACTIVE', label: t('customers.active') },
+                    { value: 'INACTIVE', label: t('customers.inactive') },
                   ]}
                 />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Client Type
+                  {t('customers.clientType')}
                 </label>
                 <Select
                   value={filterClientType}
                   onChange={setFilterClientType}
                   className="w-full h-11"
                   options={[
-                    { value: 'ALL', label: 'All Types' },
-                    { value: 'BUSINESS', label: 'Business' },
-                    { value: 'INDIVIDUAL', label: 'Individual' },
+                    { value: 'ALL', label: t('customers.allTypes') },
+                    { value: 'BUSINESS', label: t('customers.business') },
+                    { value: 'INDIVIDUAL', label: t('customers.individual') },
                   ]}
                 />
               </div>
@@ -606,16 +608,16 @@ export default function Customers() {
           ) : (
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Contact Role
+                {t('customers.contactRole')}
               </label>
               <Select
                 value={filterPrimary}
                 onChange={setFilterPrimary}
                 className="w-full h-11"
                 options={[
-                  { value: 'ALL', label: 'All Roles' },
-                  { value: 'PRIMARY', label: 'Primary Only' },
-                  { value: 'REGULAR', label: 'Regular Only' },
+                  { value: 'ALL', label: t('customers.allRoles') },
+                  { value: 'PRIMARY', label: t('customers.primaryOnly') },
+                  { value: 'REGULAR', label: t('customers.regularOnly') },
                 ]}
               />
             </div>
@@ -635,7 +637,7 @@ export default function Customers() {
               }}
               className="px-3 py-1 bg-white hover:bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg font-semibold cursor-pointer"
             >
-              Deactivate
+              {t('customers.deactivate')}
             </button>
             <button
               onClick={() => {
@@ -644,7 +646,7 @@ export default function Customers() {
               }}
               className="px-3 py-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-lg font-semibold cursor-pointer"
             >
-              Export Selected
+              {t('customers.exportSelected')}
             </button>
           </div>
         </div>
@@ -661,7 +663,7 @@ export default function Customers() {
               }}
               className="px-3 py-1 bg-white hover:bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg font-semibold cursor-pointer"
             >
-              Send Sync Invite
+              {t('customers.sendSyncInvite')}
             </button>
           </div>
         </div>
@@ -677,10 +679,10 @@ export default function Customers() {
               onEdit={handleOpenAccountEdit}
               onDelete={(rec) => {
                 Modal.confirm({
-                  title: 'Xác nhận xóa Khách hàng',
-                  content: `Bạn có chắc chắn muốn xóa khách hàng "${rec.name}"? Hành động này không thể hoàn tác.`,
-                  okText: 'Xóa',
-                  cancelText: 'Hủy',
+                  title: t('customers.confirmDeleteCustomer'),
+                  content: t('customers.deleteCustomerContent',{name:rec.name}),
+                  okText: t('customers.delete'),
+                  cancelText: t('customers.cancel'),
                   okButtonProps: { danger: true },
                   onOk: () => {
                     deleteCustomerMutation.mutate(rec.id);
@@ -699,10 +701,10 @@ export default function Customers() {
               onEdit={handleOpenContactEdit}
               onDelete={(rec) => {
                 Modal.confirm({
-                  title: 'Xác nhận xóa Liên hệ',
-                  content: `Bạn có chắc chắn muốn xóa liên hệ "${rec.firstName} ${rec.lastName}"?`,
-                  okText: 'Xóa',
-                  cancelText: 'Hủy',
+                  title: t('customers.confirmDeleteContact'),
+                  content: t('customers.deleteContactContent',{name:`${rec.firstName} ${rec.lastName}`}),
+                  okText: t('customers.delete'),
+                  cancelText: t('customers.cancel'),
                   okButtonProps: { danger: true },
                   onOk: () => {
                     deleteContactMutation.mutate(rec.id);
@@ -720,7 +722,7 @@ export default function Customers() {
 
       {/* Create / Edit Account Modal */}
       <Modal
-        title={editingAccount ? 'Edit Account' : 'Create Account'}
+        title={editingAccount ? t('customers.editAccount') : t('customers.createAccount')}
         open={accountModalOpen}
         onCancel={() => setAccountModalOpen(false)}
         footer={null}
@@ -730,44 +732,44 @@ export default function Customers() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Client Type
+                {t('customers.clientType')}
               </label>
               <Select
                 value={clientTypeVal}
                 onChange={setClientTypeVal}
                 options={[
-                  { value: 'BUSINESS', label: 'Business (B2B)' },
-                  { value: 'INDIVIDUAL', label: 'Individual (B2C)' },
+                  { value: 'BUSINESS', label: t('customers.businessB2b') },
+                  { value: 'INDIVIDUAL', label: t('customers.individualB2c') },
                 ]}
                 className="w-full h-11"
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Account Status
+                {t('customers.accountStatus')}
               </label>
               <Select
                 value={accountStatus}
                 onChange={setAccountStatus}
                 options={[
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'INACTIVE', label: 'Inactive' },
+                  { value: 'ACTIVE', label: t('customers.active') },
+                  { value: 'INACTIVE', label: t('customers.inactive') },
                 ]}
                 className="w-full h-11"
               />
             </div>
           </div>
 
-          <FloatingInput label="Company Account Name" value={accountName} onChange={setAccountName} required />
+          <FloatingInput label={t('customers.companyAccountName')} value={accountName} onChange={setAccountName} required />
           {errors.accountName && <p className="text-red-500 text-[10px] mt-1">{errors.accountName}</p>}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="Email Address" type="email" value={accountEmail} onChange={setAccountEmail} required />
+              <FloatingInput label={t('customers.emailAddress')} type="email" value={accountEmail} onChange={setAccountEmail} required />
               {errors.accountEmail && <p className="text-red-500 text-[10px] mt-1">{errors.accountEmail}</p>}
             </div>
             <div>
-              <FloatingInput label="Phone Number" value={accountPhone} onChange={setAccountPhone} required />
+              <FloatingInput label={t('customers.phoneNumber')} value={accountPhone} onChange={setAccountPhone} required />
               {errors.accountPhone && <p className="text-red-500 text-[10px] mt-1">{errors.accountPhone}</p>}
             </div>
           </div>
@@ -775,28 +777,28 @@ export default function Customers() {
           {clientTypeVal === 'BUSINESS' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <FloatingInput label="Tax Code (MST)" value={taxCodeVal} onChange={setTaxCodeVal} required />
+                <FloatingInput label={t('customers.taxCodeMst')} value={taxCodeVal} onChange={setTaxCodeVal} required />
                 {errors.taxCode && <p className="text-red-500 text-[10px] mt-1">{errors.taxCode}</p>}
               </div>
               <div>
-                <FloatingInput label="Industry Sector" value={industryVal} onChange={setIndustryVal} />
+                <FloatingInput label={t('customers.industrySector')} value={industryVal} onChange={setIndustryVal} />
               </div>
             </div>
           )}
 
-          <FloatingInput label="Website Address (https://...)" value={websiteVal} onChange={setWebsiteVal} />
-          <FloatingInput label="Office Location Address" value={accountAddress} onChange={setAccountAddress} />
+          <FloatingInput label={t('customers.websiteAddress')} value={websiteVal} onChange={setWebsiteVal} />
+          <FloatingInput label={t('customers.officeLocationAddress')} value={accountAddress} onChange={setAccountAddress} />
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button onClick={() => setAccountModalOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button type="primary" onClick={handleSaveAccount} className="rounded-xl">Save changes</Button>
+            <Button onClick={() => setAccountModalOpen(false)} className="rounded-xl">{t('customers.cancel')}</Button>
+            <Button type="primary" onClick={handleSaveAccount} className="rounded-xl">{t('customers.saveChanges')}</Button>
           </div>
         </div>
       </Modal>
 
       {/* Create / Edit Contact Modal */}
       <Modal
-        title={editingContact ? 'Edit Contact' : 'Create Contact'}
+        title={editingContact ? t('customers.editContact') : t('customers.createContact')}
         open={contactModalOpen}
         onCancel={() => setContactModalOpen(false)}
         footer={null}
@@ -805,38 +807,38 @@ export default function Customers() {
         <div className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="First Name" value={contactFirstName} onChange={setContactFirstName} />
+              <FloatingInput label={t('customers.firstName')} value={contactFirstName} onChange={setContactFirstName} />
             </div>
             <div>
-              <FloatingInput label="Last Name" value={contactLastName} onChange={setContactLastName} required />
+              <FloatingInput label={t('customers.lastName')} value={contactLastName} onChange={setContactLastName} required />
               {errors.contactLastName && <p className="text-red-500 text-[10px] mt-1">{errors.contactLastName}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="Email Address" type="email" value={contactEmail} onChange={setContactEmail} required />
+              <FloatingInput label={t('customers.emailAddress')} type="email" value={contactEmail} onChange={setContactEmail} required />
               {errors.contactEmail && <p className="text-red-500 text-[10px] mt-1">{errors.contactEmail}</p>}
             </div>
             <div>
-              <FloatingInput label="Phone Number" value={contactPhone} onChange={setContactPhone} required />
+              <FloatingInput label={t('customers.phoneNumber')} value={contactPhone} onChange={setContactPhone} required />
               {errors.contactPhone && <p className="text-red-500 text-[10px] mt-1">{errors.contactPhone}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FloatingInput label="Job Title" value={contactJobTitle} onChange={setContactJobTitle} />
+              <FloatingInput label={t('customers.jobTitle')} value={contactJobTitle} onChange={setContactJobTitle} />
             </div>
             <div>
-              <FloatingInput label="Internal Role/Notes" value={contactRoleVal} onChange={setContactRoleVal} />
+              <FloatingInput label={t('customers.internalRoleNotes')} value={contactRoleVal} onChange={setContactRoleVal} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                Associated Account
+                {t('customers.associatedAccount')}
               </label>
               <Select
                 value={contactCompanyId}
@@ -853,13 +855,13 @@ export default function Customers() {
                 onChange={(e) => setContactIsPrimary(e.target.checked)}
                 className="w-4 h-4 rounded accent-[var(--color-accent)] cursor-pointer"
               />
-              <span className="text-sm text-[var(--color-fg)] select-none">Set as Primary Contact</span>
+              <span className="text-sm text-[var(--color-fg)] select-none">{t('customers.setAsPrimary')}</span>
             </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button onClick={() => setContactModalOpen(false)} className="rounded-xl">Cancel</Button>
-            <Button type="primary" onClick={handleSaveContact} className="rounded-xl">Save changes</Button>
+            <Button onClick={() => setContactModalOpen(false)} className="rounded-xl">{t('customers.cancel')}</Button>
+            <Button type="primary" onClick={handleSaveContact} className="rounded-xl">{t('customers.saveChanges')}</Button>
           </div>
         </div>
       </Modal>

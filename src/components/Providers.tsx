@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import I18nProvider from './I18nProvider';
 
 const themeContext = createContext<{
   theme: 'light' | 'dark';
@@ -72,7 +73,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               },
             }}
           >
-            {children}
+            <I18nProvider>{children}</I18nProvider>
           </ConfigProvider>
         </AntdRegistry>
       </QueryClientProvider>

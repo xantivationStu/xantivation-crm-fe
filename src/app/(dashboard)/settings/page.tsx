@@ -57,7 +57,9 @@ export default function Settings() {
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profilePassword, setProfilePassword] = useState('');
-  const [profileLanguage, setProfileLanguage] = useState('en');
+  // Language preference read from persisted settings store
+  const settingsLocale = useSettingsStore((state) => state.locale);
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -476,22 +478,22 @@ export default function Settings() {
   };
 
   const teamColumns: ColumnProps<any>[] = [
-    { title: 'Tên nhóm', dataIndex: 'name', key: 'name', render: (val) => <span className="font-semibold text-[var(--color-fg)]">{val}</span> },
-    { title: 'Mô tả', dataIndex: 'description', key: 'description', render: (val) => <span className="text-xs text-[var(--color-muted-fg)]">{val || '—'}</span> },
+    { title: 'Team Name', dataIndex: 'name', key: 'name', render: (val) => <span className="font-semibold text-[var(--color-fg)]">{val}</span> },
+    { title: 'Description', dataIndex: 'description', key: 'description', render: (val) => <span className="text-xs text-[var(--color-muted-fg)]">{val || '—'}</span> },
     {
-      title: 'Trưởng nhóm (Leader)',
+      title: 'Team Leader',
       dataIndex: 'leader',
       key: 'leader',
-      render: (leader) => <span className="text-xs font-semibold text-[var(--color-fg)]">{leader?.name || 'Chưa gán'}</span>,
+      render: (leader) => <span className="text-xs font-semibold text-[var(--color-fg)]">{leader?.name || 'Unassigned'}</span>,
     },
     {
-      title: 'Số thành viên',
+      title: 'Member Count',
       dataIndex: 'members',
       key: 'members',
-      render: (members) => <span className="text-xs text-[var(--color-muted-fg)] font-mono">{(members || []).length} nhân viên</span>,
+      render: (members) => <span className="text-xs text-[var(--color-muted-fg)] font-mono">{(members || []).length} employees</span>,
     },
     {
-      title: 'Luật phân công',
+      title: 'Assignment Rule',
       dataIndex: 'assignmentRule',
       key: 'assignmentRule',
       render: (rule) => (
@@ -542,14 +544,14 @@ export default function Settings() {
       const res = await testProviderConnectionMutation.mutateAsync(providerId);
       if (res.success) {
         setProviderStatuses(prev => ({ ...prev, [providerId]: 'success' }));
-        message.success(`Kết nối thành công tới nhà cung cấp!`);
+        message.success(`Successfully connected to provider!`);
       } else {
         setProviderStatuses(prev => ({ ...prev, [providerId]: 'failed' }));
-        message.error(`Kết nối thất bại: ${res.message}`);
+        message.error(`Connection failed: ${res.message}`);
       }
     } catch (err: any) {
       setProviderStatuses(prev => ({ ...prev, [providerId]: 'failed' }));
-      message.error(`Lỗi kết nối: ${err.message || err}`);
+      message.error(`Connection error: ${err.message || err}`);
     }
   };
 
@@ -586,11 +588,11 @@ export default function Settings() {
 
   const handleSaveProvider = async () => {
     if (!providerNameInput.trim()) {
-      message.error('Vui lòng nhập tên nhà cung cấp');
+      message.error('Please enter provider name');
       return;
     }
     if (!providerBaseUrlInput.trim()) {
-      message.error('Vui lòng nhập Base URL');
+      message.error('Please enter Base URL');
       return;
     }
     const payload = {
@@ -612,10 +614,10 @@ export default function Settings() {
 
   const handleDeleteProvider = async (id: string) => {
     Modal.confirm({
-      title: 'Xác nhận xóa nhà cung cấp?',
-      content: 'Hành động này sẽ xóa tất cả API Keys và Models liên kết.',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
+      title: 'Confirm delete provider?',
+      content: 'This action will delete all associated API Keys and Models.',
+      okText: 'Delete',
+      cancelText: 'Cancel',
       okType: 'danger',
       onOk: async () => {
         try {
@@ -634,15 +636,15 @@ export default function Settings() {
 
   const handleSaveKey = async () => {
     if (!keyProviderIdInput) {
-      message.error('Vui lòng chọn nhà cung cấp');
+      message.error('Please select a provider');
       return;
     }
     if (!keyLabelInput.trim()) {
-      message.error('Vui lòng nhập nhãn khóa');
+      message.error('Please enter key label');
       return;
     }
     if (!keyValInput.trim()) {
-      message.error('Vui lòng nhập API Key');
+      message.error('Please enter API Key');
       return;
     }
     try {
@@ -657,9 +659,9 @@ export default function Settings() {
 
   const handleDeleteKey = (id: string) => {
     Modal.confirm({
-      title: 'Xác nhận xóa API Key?',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
+      title: 'Confirm delete API Key?',
+      okText: 'Delete',
+      cancelText: 'Cancel',
       okType: 'danger',
       onOk: async () => {
         try {
@@ -707,19 +709,19 @@ export default function Settings() {
 
   const handleSaveAgent = async () => {
     if (!agentNameInput.trim()) {
-      message.error('Vui lòng nhập tên Agent');
+      message.error('Please enter Agent name');
       return;
     }
     if (!agentSlugInput.trim()) {
-      message.error('Vui lòng nhập Slug định danh');
+      message.error('Please enter identifier slug');
       return;
     }
     if (!agentPromptInput.trim()) {
-      message.error('Vui lòng nhập System Prompt');
+      message.error('Please enter System Prompt');
       return;
     }
     if (!agentModelIdInput) {
-      message.error('Vui lòng chọn mô hình LLM');
+      message.error('Please select LLM model');
       return;
     }
     const payload = {
@@ -752,10 +754,10 @@ export default function Settings() {
 
   const handleDeleteAgent = (id: string) => {
     Modal.confirm({
-      title: 'Xác nhận xóa AI Agent?',
-      content: 'Hành động này sẽ xóa vĩnh viễn Agent và tất cả Subagents trực thuộc.',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
+      title: 'Confirm delete AI Agent?',
+      content: 'This action will permanently delete the Agent and all its Subagents.',
+      okText: 'Delete',
+      cancelText: 'Cancel',
       okType: 'danger',
       onOk: async () => {
         try {
@@ -770,10 +772,10 @@ export default function Settings() {
 
 
   const userColumns: ColumnProps<SystemUser>[] = [
-    { title: 'Tên nhân viên', dataIndex: 'name', key: 'name', render: (val) => <span className="font-semibold text-[var(--color-fg)]">{val}</span> },
+    { title: 'Employee Name', dataIndex: 'name', key: 'name', render: (val) => <span className="font-semibold text-[var(--color-fg)]">{val}</span> },
     { title: 'Email', dataIndex: 'email', key: 'email', render: (val) => <span className="font-mono text-xs text-[var(--color-muted-fg)]">{val}</span> },
     {
-      title: 'Vai trò',
+      title: 'Role',
       dataIndex: 'role',
       key: 'role',
       render: (role: string) => {
@@ -790,14 +792,14 @@ export default function Settings() {
   const isManagerOrAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SALES_MANAGER;
 
   const allTabs = [
-    { id: 'profile', name: 'Hồ sơ', icon: User },
+    { id: 'profile', name: 'Profile', icon: User },
     ...(isAdmin ? [
-      { id: 'users', name: 'Quản lý nhân viên', icon: Shield },
-      { id: 'sales-teams', name: 'Đội ngũ bán hàng', icon: Users }
+      { id: 'users', name: 'Employee Management', icon: Shield },
+      { id: 'sales-teams', name: 'Sales Teams', icon: Users }
     ] : []),
     ...(isManagerOrAdmin ? [
       { id: 'ai-governance', name: 'AI Governance', icon: Radio },
-      { id: 'integrations', name: 'Tích hợp bên thứ 3', icon: Key }
+      { id: 'integrations', name: 'Third-Party Integrations', icon: Key }
     ] : []),
   ];
 
@@ -805,8 +807,8 @@ export default function Settings() {
     <div className="space-y-8">
       {/* Title */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Cài đặt</h1>
-        <p className="text-sm text-[var(--color-muted-fg)]">Cấu hình kết nối tích hợp hệ thống, quản lý tài khoản nhân viên và cài đặt AI.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Settings</h1>
+        <p className="text-sm text-[var(--color-muted-fg)]">Configure system integrations, manage employee accounts, and AI settings.</p>
       </div>
 
       {/* Sub Tabs */}
@@ -835,30 +837,32 @@ export default function Settings() {
       <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6 min-h-[400px]">
         {activeSubTab === 'profile' && (
           <div className="max-w-xl space-y-6">
-            <h3 className="text-sm font-semibold text-[var(--color-fg)]">Thông tin cá nhân</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-fg)]">Personal Information</h3>
             <div className="space-y-4">
               <div>
-                <FloatingInput label="Họ và Tên" value={profileName} onChange={setProfileName} required />
+                <FloatingInput label="Full Name" value={profileName} onChange={setProfileName} required />
                 {profileErrors.name && <p className="text-red-500 text-[10px] mt-1">{profileErrors.name}</p>}
               </div>
               <div>
-                <FloatingInput label="Email đăng nhập" value={profileEmail} onChange={setProfileEmail} required />
+                <FloatingInput label="Login Email" value={profileEmail} onChange={setProfileEmail} required />
                 {profileErrors.email && <p className="text-red-500 text-[10px] mt-1">{profileErrors.email}</p>}
               </div>
               <div>
-                <FloatingInput label="Thay đổi mật khẩu (Bỏ trống nếu giữ nguyên)" type="password" value={profilePassword} onChange={setProfilePassword} />
+                <FloatingInput label="Change Password (Leave blank to keep current)" type="password" value={profilePassword} onChange={setProfilePassword} />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-                  Ngôn ngữ hiển thị
+                  Display Language
                 </label>
                 <Select
-                  value={profileLanguage}
-                  onChange={setProfileLanguage}
+                  value={settingsLocale}
+                  onChange={(val) => updateSettings({ locale: val })}
                   options={[
                     { value: 'en', label: 'English' },
                     { value: 'vi', label: 'Tiếng Việt' },
+                    { value: 'ja', label: '日本語' },
+                    { value: 'zh', label: '中文' },
                   ]}
                   className="w-full h-11"
                 />
@@ -868,7 +872,7 @@ export default function Settings() {
             <div className="pt-4">
               <Button type="primary" onClick={handleSaveProfile} loading={updateProfileMutation.isPending} className="flex items-center gap-2 h-10 px-5 rounded-xl cursor-pointer">
                 <Save size={16} />
-                <span>Lưu thay đổi</span>
+                <span>Save Changes</span>
               </Button>
             </div>
           </div>
@@ -877,10 +881,10 @@ export default function Settings() {
         {activeSubTab === 'users' && isAdmin && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Quản lý Tài khoản (Admin Only)</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Account Management (Admin Only)</h3>
               <Button type="primary" onClick={handleOpenCreateUser} className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer">
                 <Plus size={14} />
-                <span>Thêm nhân viên</span>
+                <span>Add Employee</span>
               </Button>
             </div>
 
@@ -900,12 +904,12 @@ export default function Settings() {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 w-full max-w-md space-y-6 shadow-xl">
                   <h4 className="font-semibold text-lg text-[var(--color-fg)]">
-                    {editingUser ? 'Chỉnh sửa tài khoản' : 'Tạo tài khoản nhân viên'}
+                    {editingUser ? 'Edit Account' : 'Create Employee Account'}
                   </h4>
 
                   <div className="space-y-4">
                     <div>
-                      <FloatingInput label="Họ và Tên" value={userNameInput} onChange={setUserNameInput} required />
+                      <FloatingInput label="Full Name" value={userNameInput} onChange={setUserNameInput} required />
                       {userErrors.name && <p className="text-red-500 text-[10px] mt-1">{userErrors.name}</p>}
                     </div>
                     <div>
@@ -913,11 +917,11 @@ export default function Settings() {
                       {userErrors.email && <p className="text-red-500 text-[10px] mt-1">{userErrors.email}</p>}
                     </div>
                     <div>
-                      <FloatingInput label="Mật khẩu" type="password" value={userPasswordInput} onChange={setUserPasswordInput} required={!editingUser} />
+                      <FloatingInput label="Password" type="password" value={userPasswordInput} onChange={setUserPasswordInput} required={!editingUser} />
                       {userErrors.password && <p className="text-red-500 text-[10px] mt-1">{userErrors.password}</p>}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Vai trò hệ thống</label>
+                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">System Role</label>
                       <Select
                         value={userRoleInput}
                         onChange={setUserRoleInput}
@@ -933,8 +937,8 @@ export default function Settings() {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
-                    <Button onClick={() => setUserModalOpen(false)} className="rounded-xl">Hủy</Button>
-                    <Button type="primary" onClick={handleSaveUser} loading={createUserMutation.isPending || updateUserMutation.isPending} className="rounded-xl">Lưu</Button>
+                    <Button onClick={() => setUserModalOpen(false)} className="rounded-xl">Cancel</Button>
+                    <Button type="primary" onClick={handleSaveUser} loading={createUserMutation.isPending || updateUserMutation.isPending} className="rounded-xl">Save</Button>
                   </div>
                 </div>
               </div>
@@ -945,10 +949,10 @@ export default function Settings() {
         {activeSubTab === 'sales-teams' && isAdmin && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Quản lý Đội ngũ Bán hàng (Admin Only)</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Sales Team Management (Admin Only)</h3>
               <Button type="primary" onClick={handleOpenCreateTeam} className="flex items-center gap-2 h-9 px-4 rounded-xl cursor-pointer">
                 <Plus size={14} />
-                <span>Thêm đội ngũ</span>
+                <span>Add Team</span>
               </Button>
             </div>
 
@@ -968,24 +972,24 @@ export default function Settings() {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 w-full max-w-md space-y-6 shadow-xl">
                   <h4 className="font-semibold text-lg text-[var(--color-fg)]">
-                    {editingTeam ? 'Chỉnh sửa đội ngũ' : 'Tạo đội ngũ bán hàng'}
+                    {editingTeam ? 'Edit Team' : 'Create Sales Team'}
                   </h4>
 
                   <div className="space-y-4">
                     <div>
-                      <FloatingInput label="Tên đội ngũ" value={teamNameInput} onChange={setTeamNameInput} required />
+                      <FloatingInput label="Team Name" value={teamNameInput} onChange={setTeamNameInput} required />
                       {teamErrors.name && <p className="text-red-500 text-[10px] mt-1">{teamErrors.name}</p>}
                     </div>
                     <div>
-                      <FloatingInput label="Mô tả nhóm" value={teamDescInput} onChange={setTeamDescInput} />
+                      <FloatingInput label="Team Description" value={teamDescInput} onChange={setTeamDescInput} />
                     </div>
                     
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Trưởng nhóm (Leader)</label>
+                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Team Leader</label>
                       <Select
                         value={teamLeaderInput}
                         onChange={setTeamLeaderInput}
-                        placeholder="Chọn Trưởng nhóm"
+                        placeholder="Select Team Leader"
                         options={usersList.filter(u => u.role === 'SALES_MANAGER' || u.role === 'ADMIN').map(u => ({ value: u.id, label: `${u.name} (${u.role})` }))}
                         className="w-full h-11"
                         allowClear
@@ -993,12 +997,12 @@ export default function Settings() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Thành viên</label>
+                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Members</label>
                       <Select
                         mode="multiple"
                         value={teamMembersInput}
                         onChange={setTeamMembersInput}
-                        placeholder="Chọn các thành viên kinh doanh"
+                        placeholder="Select Sales Members"
                         options={usersList.map(u => ({ value: u.id, label: `${u.name} (${u.role})` }))}
                         className="w-full min-h-11"
                         allowClear
@@ -1006,13 +1010,13 @@ export default function Settings() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Quy tắc phân chia tự động</label>
+                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">Auto Assignment Rule</label>
                       <Select
                         value={teamRuleInput}
                         onChange={setTeamRuleInput}
                         options={[
-                          { value: 'ROUND_ROBIN', label: 'Round Robin (Phân bổ xoay vòng)' },
-                          { value: 'MANUAL', label: 'Manual (Giao thủ công)' },
+                          { value: 'ROUND_ROBIN', label: 'Round Robin (Rotating assignment)' },
+                          { value: 'MANUAL', label: 'Manual (Assign manually)' },
                         ]}
                         className="w-full h-11"
                       />
@@ -1020,8 +1024,8 @@ export default function Settings() {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
-                    <Button onClick={() => setTeamModalOpen(false)} className="rounded-xl">Hủy</Button>
-                    <Button type="primary" onClick={handleSaveTeam} loading={createTeamMutation.isPending || updateTeamMutation.isPending} className="rounded-xl">Lưu</Button>
+                    <Button onClick={() => setTeamModalOpen(false)} className="rounded-xl">Cancel</Button>
+                    <Button type="primary" onClick={handleSaveTeam} loading={createTeamMutation.isPending || updateTeamMutation.isPending} className="rounded-xl">Save</Button>
                   </div>
                 </div>
               </div>
@@ -1032,9 +1036,9 @@ export default function Settings() {
         {activeSubTab === 'ai-governance' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Cấu hình AI Features & Agents Governance</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-fg)]">AI Features & Agents Governance</h3>
               <p className="text-xs text-[var(--color-muted-fg)] mt-1">
-                Quản lý các nhà cung cấp mô hình (LLM Providers), thiết lập API keys bảo mật, thiết kế sơ đồ Agents phân cấp và cấu hình luật kiểm soát.
+                Manage LLM Providers, securely configure API keys, design hierarchical Agent Tree, and set governance rules.
               </p>
             </div>
 
@@ -1042,8 +1046,8 @@ export default function Settings() {
             <div className="flex gap-4 border-b border-[var(--color-border)]/60 pb-px">
               {[
                 { id: 'providers', name: 'Providers & API Keys', icon: Server },
-                { id: 'agents', name: 'Sơ đồ Agent Tree', icon: Network },
-                { id: 'controls', name: 'Tính năng & Giới hạn', icon: Sliders },
+                { id: 'agents', name: 'Agent Tree Diagram', icon: Network },
+                { id: 'controls', name: 'Features & Limits', icon: Sliders },
               ].map((sub) => (
                 <button
                   key={sub.id}
@@ -1066,7 +1070,7 @@ export default function Settings() {
                 {/* Providers Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">Nhà cung cấp Mô hình (LLM Providers)</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">LLM Providers</h4>
                     <Button
                       size="small"
                       type="primary"
@@ -1074,7 +1078,7 @@ export default function Settings() {
                       onClick={handleOpenCreateProvider}
                       className="rounded-lg text-xs cursor-pointer"
                     >
-                      Thêm Provider
+                      Add Provider
                     </Button>
                   </div>
 
@@ -1101,10 +1105,10 @@ export default function Settings() {
 
                           <div className="flex items-center gap-2 border-t border-[var(--color-border)]/50 pt-3">
                             <span className="text-[9px] text-[var(--color-muted-fg)] flex-1">
-                              {status === 'success' && <Badge status="success" text="Kết nối OK" className="text-[10px]" />}
-                              {status === 'failed' && <Badge status="error" text="Lỗi kết nối" className="text-[10px]" />}
-                              {status === 'testing' && <Badge status="processing" text="Đang test..." className="text-[10px]" />}
-                              {!status && <Badge status="default" text="Chưa kiểm tra" className="text-[10px]" />}
+                              {status === 'success' && <Badge status="success" text="Connected" className="text-[10px]" />}
+                              {status === 'failed' && <Badge status="error" text="Connection Error" className="text-[10px]" />}
+                              {status === 'testing' && <Badge status="processing" text="Testing..." className="text-[10px]" />}
+                              {!status && <Badge status="default" text="Not Tested" className="text-[10px]" />}
                             </span>
                             <div className="flex gap-1.5">
                               <Button size="small" onClick={() => handleTestProvider(p.id)} className="text-[10px] rounded-lg cursor-pointer">Test</Button>
@@ -1114,10 +1118,10 @@ export default function Settings() {
                                 loading={scanningProviderId === p.id}
                                 className="text-[10px] rounded-lg cursor-pointer"
                               >
-                                Quét Models
+                                Scan Models
                               </Button>
-                              <Button size="small" onClick={() => handleOpenEditProvider(p)} className="text-[10px] rounded-lg cursor-pointer">Sửa</Button>
-                              <Button size="small" danger onClick={() => handleDeleteProvider(p.id)} className="text-[10px] rounded-lg cursor-pointer">Xóa</Button>
+                              <Button size="small" onClick={() => handleOpenEditProvider(p)} className="text-[10px] rounded-lg cursor-pointer">Edit</Button>
+                              <Button size="small" danger onClick={() => handleDeleteProvider(p.id)} className="text-[10px] rounded-lg cursor-pointer">Delete</Button>
                             </div>
                           </div>
                         </div>
@@ -1129,7 +1133,7 @@ export default function Settings() {
                 {/* API Keys Section */}
                 <div className="space-y-4 border-t border-[var(--color-border)]/60 pt-6">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">Quản lý API Keys (Mã hóa lưu trữ)</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">API Keys (Encrypted Storage)</h4>
                     <Button
                       size="small"
                       type="primary"
@@ -1137,23 +1141,23 @@ export default function Settings() {
                       onClick={() => handleOpenCreateKey()}
                       className="rounded-lg text-xs cursor-pointer"
                     >
-                      Thêm API Key
+                      Add API Key
                     </Button>
                   </div>
 
                   <SharedTable
                     dataSource={apiKeysList}
                     columns={[
-                      { title: 'Nhãn (Label)', dataIndex: 'label', key: 'label', render: (val) => <span className="font-semibold text-xs text-[var(--color-fg)]">{val}</span> },
+                      { title: 'Label', dataIndex: 'label', key: 'label', render: (val) => <span className="font-semibold text-xs text-[var(--color-fg)]">{val}</span> },
                       {
-                        title: 'Nhà cung cấp',
+                        title: 'Provider',
                         dataIndex: 'providerId' as any,
                         key: 'provider',
                         render: (_, record: any) => <span className="text-xs text-[var(--color-muted-fg)]">{record.provider?.name || '—'}</span>
                       },
                       { title: 'API Key', dataIndex: 'maskedKey', key: 'maskedKey', render: (val) => <span className="font-mono text-xs text-indigo-500">{val}</span> },
                       {
-                        title: 'Hoạt động',
+                        title: 'Status',
                         dataIndex: 'isActive',
                         key: 'isActive',
                         render: (active, record: any) => (
@@ -1169,11 +1173,11 @@ export default function Settings() {
                         )
                       },
                       {
-                        title: 'Hành động',
+                        title: 'Actions',
                         dataIndex: 'id' as any,
                         key: 'actions',
                         render: (_, record: any) => (
-                          <Button size="small" danger icon={<Trash2 size={12} />} onClick={() => handleDeleteKey(record.id)} className="rounded-lg cursor-pointer">Xóa</Button>
+                          <Button size="small" danger icon={<Trash2 size={12} />} onClick={() => handleDeleteKey(record.id)} className="rounded-lg cursor-pointer">Delete</Button>
                         )
                       }
                     ]}
@@ -1187,7 +1191,7 @@ export default function Settings() {
                 {/* Left Side: React Flow Canvas */}
                 <div className="xl:col-span-7 flex flex-col space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">Cấu trúc phân cấp mạng lưới Agents</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-fg)]">Agent Network Hierarchy</h4>
                     <div className="flex gap-2">
                       <Button
                         size="small"
@@ -1195,7 +1199,7 @@ export default function Settings() {
                         onClick={() => handleOpenCreateAgent()}
                         className="text-xs rounded-lg cursor-pointer"
                       >
-                        Thêm Agent gốc
+                        Add Root Agent
                       </Button>
                       {selectedAgentNode && (
                         <>
@@ -1205,7 +1209,7 @@ export default function Settings() {
                             onClick={() => handleOpenCreateAgent(selectedAgentNode.id)}
                             className="text-xs rounded-lg cursor-pointer"
                           >
-                            Thêm Subagent con
+                            Add Subagent
                           </Button>
                           <Button
                             size="small"
@@ -1214,7 +1218,7 @@ export default function Settings() {
                             onClick={() => handleDeleteAgent(selectedAgentNode.id)}
                             className="text-xs rounded-lg cursor-pointer"
                           >
-                            Xóa Agent
+                            Delete Agent
                           </Button>
                         </>
                       )}
@@ -1225,13 +1229,13 @@ export default function Settings() {
                     {agentsList.length === 0 ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
                         <Network size={32} className="text-[var(--color-muted-fg)] mb-2" />
-                        <p className="text-xs text-[var(--color-muted-fg)] font-semibold">Chưa có AI Agent nào được đăng ký</p>
+                        <p className="text-xs text-[var(--color-muted-fg)] font-semibold">No AI Agents registered yet</p>
                         <Button
                           size="small"
                           onClick={() => handleOpenCreateAgent()}
                           className="mt-3 text-xs rounded-lg cursor-pointer"
                         >
-                          Tạo Agent đầu tiên
+                          Create First Agent
                         </Button>
                       </div>
                     ) : (() => {
@@ -1389,14 +1393,14 @@ export default function Settings() {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-xs text-[var(--color-fg)]">Cấu hình Agent</h4>
+                          <h4 className="font-bold text-xs text-[var(--color-fg)]">Agent Configuration</h4>
                           <span className="text-[8px] font-bold px-2 py-0.5 bg-indigo-500/10 text-indigo-500 rounded-full">{selectedAgentNode.role}</span>
                         </div>
                         <p className="text-[10px] text-[var(--color-muted-fg)] mt-0.5">ID: {selectedAgentNode.slug}</p>
                       </div>
 
                       <div className="space-y-3">
-                        <FloatingInput label="Tên Agent" value={selectedAgentNode.name} onChange={(val) => setSelectedAgentNode({ ...selectedAgentNode, name: val })} />
+                        <FloatingInput label="Agent Name" value={selectedAgentNode.name} onChange={(val) => setSelectedAgentNode({ ...selectedAgentNode, name: val })} />
                         
                         <div className="flex flex-col gap-1.5">
                           <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">LLM Model</label>
@@ -1409,12 +1413,12 @@ export default function Settings() {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">API Key (Quyền kế thừa)</label>
+                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">API Key (Inheritance)</label>
                           <Select
                             value={selectedAgentNode.apiKeyId || ''}
                             onChange={(val) => setSelectedAgentNode({ ...selectedAgentNode, apiKeyId: val || null })}
                             options={[
-                              { value: '', label: 'Kế thừa từ Agent cha / Provider Default' },
+                              { value: '', label: 'Inherit from Parent Agent / Provider Default' },
                               ...apiKeysList.map(k => ({ value: k.id, label: `${k.provider?.name} (${k.label})` }))
                             ]}
                             className="w-full h-9"
@@ -1422,21 +1426,21 @@ export default function Settings() {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Quyền Tự trị (Autonomy)</label>
+                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Autonomy Level</label>
                           <Select
                             value={selectedAgentNode.autonomyLevel}
                             onChange={(val) => setSelectedAgentNode({ ...selectedAgentNode, autonomyLevel: val })}
                             options={[
-                              { value: 'FULL', label: 'FULL (Tự động thực thi)' },
-                              { value: 'SEMI', label: 'SEMI (Cần người duyệt)' },
-                              { value: 'MANUAL', label: 'MANUAL (Chỉ chạy khi click)' },
+                              { value: 'FULL', label: 'FULL (Auto execute)' },
+                              { value: 'SEMI', label: 'SEMI (Requires approval)' },
+                              { value: 'MANUAL', label: 'MANUAL (Run on click only)' },
                             ]}
                             className="w-full h-9"
                           />
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">System Prompt hướng dẫn</label>
+                          <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">System Prompt Instructions</label>
                           <textarea
                             value={selectedAgentNode.systemPrompt}
                             onChange={(e) => setSelectedAgentNode({ ...selectedAgentNode, systemPrompt: e.target.value })}
@@ -1459,7 +1463,7 @@ export default function Settings() {
                           }}
                           className="flex-1 rounded-lg text-xs cursor-pointer"
                         >
-                          Lưu thay đổi
+                          Save Changes
                         </Button>
                         <Button
                           size="small"
@@ -1469,14 +1473,14 @@ export default function Settings() {
                           }}
                           className="rounded-lg text-xs cursor-pointer"
                         >
-                          Đóng
+                          Close
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
                       <Bot size={24} className="text-[var(--color-muted-fg)] mb-2" />
-                      <p className="text-[10px] text-[var(--color-muted-fg)]">Nhấp vào một Agent trên sơ đồ để cấu hình các thuộc tính chi tiết, prompts hoặc ghi đè API Key.</p>
+                      <p className="text-[10px] text-[var(--color-muted-fg)]">Click an Agent on the diagram to configure detailed properties, prompts, or API Key overrides.</p>
                     </div>
                   )}
                 </div>
@@ -1555,115 +1559,115 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Modal: Thêm/Sửa Provider */}
+        {/* Modal: Add/Edit Provider */}
         <Modal
-          title={editingProvider ? 'Sửa thông tin Provider' : 'Thêm Provider mới'}
+          title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
           open={providerModalOpen}
           onOk={handleSaveProvider}
           onCancel={() => setProviderModalOpen(false)}
-          okText="Lưu"
-          cancelText="Hủy"
+          okText="Save"
+          cancelText="Cancel"
           className="rounded-2xl"
         >
           <div className="space-y-4 pt-3">
-            <FloatingInput label="Tên nhà cung cấp (Ví dụ: Ollama, Local LM)" value={providerNameInput} onChange={setProviderNameInput} />
+            <FloatingInput label="Provider Name (e.g., Ollama, Local LM)" value={providerNameInput} onChange={setProviderNameInput} />
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Phân loại Provider</label>
+              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Provider Type</label>
               <Select
                 value={providerTypeInput}
                 onChange={setProviderTypeInput}
                 options={[
                   { value: 'CLOUD', label: 'CLOUD (Groq, OpenAI, Gemini,...)' },
                   { value: 'LOCAL', label: 'LOCAL (Ollama, LM Studio,...)' },
-                  { value: 'CUSTOM', label: 'CUSTOM (Mạng riêng / Endpoint riêng)' },
+                  { value: 'CUSTOM', label: 'CUSTOM (Private Network / Private Endpoint)' },
                 ]}
                 className="w-full h-11"
               />
             </div>
 
-            <FloatingInput label="Base API URL (Ví dụ: http://localhost:11434/v1)" value={providerBaseUrlInput} onChange={setProviderBaseUrlInput} />
+            <FloatingInput label="Base API URL (e.g., http://localhost:11434/v1)" value={providerBaseUrlInput} onChange={setProviderBaseUrlInput} />
 
             <div className="flex items-center justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-surface)]">
               <div>
                 <p className="font-semibold text-xs text-[var(--color-fg)]">OpenAI Compatible Format</p>
-                <p className="text-[8px] text-[var(--color-muted-fg)]">Sử dụng chung cấu trúc payload /chat/completions chuẩn của OpenAI</p>
+                <p className="text-[8px] text-[var(--color-muted-fg)]">Uses OpenAI standard /chat/completions payload structure</p>
               </div>
               <Switch checked={providerCompatibleInput} onChange={setProviderCompatibleInput} />
             </div>
 
-            <FloatingInput label="Icon Slug định danh (Ví dụ: openai, groq, custom)" value={providerIconSlugInput} onChange={setProviderIconSlugInput} />
+            <FloatingInput label="Icon Slug (e.g., openai, groq, custom)" value={providerIconSlugInput} onChange={setProviderIconSlugInput} />
           </div>
         </Modal>
 
-        {/* Modal: Thêm API Key */}
+        {/* Modal: Add API Key */}
         <Modal
-          title="Thêm API Key bảo mật mới"
+          title="Add New Encrypted API Key"
           open={keyModalOpen}
           onOk={handleSaveKey}
           onCancel={() => setKeyModalOpen(false)}
-          okText="Thêm"
-          cancelText="Hủy"
+          okText="Add"
+          cancelText="Cancel"
           className="rounded-2xl"
         >
           <div className="space-y-4 pt-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Nhà cung cấp</label>
+              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Provider</label>
               <Select
                 value={keyProviderIdInput}
                 onChange={setKeyProviderIdInput}
                 options={providersList.map(p => ({ value: p.id, label: `${p.name} (${p.type})` }))}
-                placeholder="Chọn Provider cần gắn key"
+                placeholder="Select Provider for this key"
                 className="w-full h-11"
               />
             </div>
 
-            <FloatingInput label="Tên nhãn của khóa (Ví dụ: Prod Key, Test Key)" value={keyLabelInput} onChange={setKeyLabelInput} />
+            <FloatingInput label="Key Label (e.g., Prod Key, Test Key)" value={keyLabelInput} onChange={setKeyLabelInput} />
             
-            <FloatingInput label="API Key Secret (Sẽ được mã hóa AES-256)" type="password" value={keyValInput} onChange={setKeyValInput} />
+            <FloatingInput label="API Key Secret (Will be AES-256 encrypted)" type="password" value={keyValInput} onChange={setKeyValInput} />
           </div>
         </Modal>
 
-        {/* Modal: Thêm/Sửa Agent */}
+        {/* Modal: Add/Edit Agent */}
         <Modal
-          title={editingAgent ? 'Sửa thông tin Agent' : 'Tạo AI Agent mới'}
+          title={editingAgent ? 'Edit Agent' : 'Create New AI Agent'}
           open={agentModalOpen}
           onOk={handleSaveAgent}
           onCancel={() => setAgentModalOpen(false)}
-          okText="Lưu"
-          cancelText="Hủy"
+          okText="Save"
+          cancelText="Cancel"
           className="rounded-2xl"
           width={600}
         >
           <div className="space-y-4 pt-3">
             <div className="grid grid-cols-2 gap-4">
-              <FloatingInput label="Tên Agent (Ví dụ: Lead Qualifier)" value={agentNameInput} onChange={setAgentNameInput} />
-              <FloatingInput label="Slug định danh (Ví dụ: lead-qualifier)" value={agentSlugInput} onChange={setAgentSlugInput} />
+              <FloatingInput label="Agent Name (e.g., Lead Qualifier)" value={agentNameInput} onChange={setAgentNameInput} />
+              <FloatingInput label="Identifier Slug (e.g., lead-qualifier)" value={agentSlugInput} onChange={setAgentSlugInput} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Mô hình LLM</label>
+                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">LLM Model</label>
                 <Select
                   value={agentModelIdInput}
                   onChange={setAgentModelIdInput}
                   options={modelsList.map(m => ({ value: m.id, label: `${m.provider?.name} — ${m.modelName}` }))}
-                  placeholder="Chọn Model"
+                  placeholder="Select Model"
                   className="w-full h-11"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Phân vai (Role)</label>
+                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Role</label>
                 <Select
                   value={agentRoleInput}
                   onChange={setAgentRoleInput}
                   options={[
-                    { value: 'QUALIFIER', label: 'QUALIFIER (Tự động đánh giá Lead)' },
-                    { value: 'COACH', label: 'COACH (AI Coaching gợi ý bán hàng)' },
-                    { value: 'RISK_AUDITOR', label: 'RISK_AUDITOR (Phân tích rủi ro hợp đồng)' },
-                    { value: 'EMAIL_DRAFTER', label: 'EMAIL_DRAFTER (Tự động hóa soạn mail)' },
-                    { value: 'CUSTOM', label: 'CUSTOM (Tùy chỉnh khác)' },
+                    { value: 'QUALIFIER', label: 'QUALIFIER (Auto evaluate Lead)' },
+                    { value: 'COACH', label: 'COACH (AI Sales Coaching)' },
+                    { value: 'RISK_AUDITOR', label: 'RISK_AUDITOR (Contract Risk Analysis)' },
+                    { value: 'EMAIL_DRAFTER', label: 'EMAIL_DRAFTER (Automated Email Drafting)' },
+                    { value: 'CUSTOM', label: 'CUSTOM (Other)' },
                   ]}
                   className="w-full h-11"
                 />
@@ -1672,12 +1676,12 @@ export default function Settings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Agent quản lý (Cha)</label>
+                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">Parent Agent</label>
                 <Select
                   value={agentParentIdInput}
                   onChange={setAgentParentIdInput}
                   options={[
-                    { value: '', label: 'Không có (Đây là Agent gốc)' },
+                    { value: '', label: 'None (This is a Root Agent)' },
                     ...agentsList.map(a => ({ value: a.id, label: a.name }))
                   ]}
                   className="w-full h-11"
@@ -1685,12 +1689,12 @@ export default function Settings() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">API Key Overwrite (Ghi đè)</label>
+                <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">API Key Override</label>
                 <Select
                   value={agentApiKeyIdInput}
                   onChange={setAgentApiKeyIdInput}
                   options={[
-                    { value: '', label: 'Kế thừa từ Agent cha / Provider Default' },
+                    { value: '', label: 'Inherit from Parent Agent / Provider Default' },
                     ...apiKeysList.map(k => ({ value: k.id, label: `${k.provider?.name} (${k.label})` }))
                   ]}
                   className="w-full h-11"
@@ -1699,24 +1703,24 @@ export default function Settings() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">System Prompt hướng dẫn</label>
+              <label className="text-[9px] font-semibold text-[var(--color-muted-fg)] uppercase">System Prompt Instructions</label>
               <textarea
                 value={agentPromptInput}
                 onChange={(e) => setAgentPromptInput(e.target.value)}
-                placeholder="Ví dụ: Bạn là chuyên gia phân tích lead dựa trên phương pháp BANT..."
+                placeholder="Example: You are a lead analysis expert using the BANT methodology..."
                 className="w-full min-h-[120px] text-xs p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl outline-none focus:border-[var(--color-accent)] font-mono"
               />
             </div>
 
-            <FloatingInput label="Mô tả tóm tắt Agent" value={agentDescInput} onChange={setAgentDescInput} />
+            <FloatingInput label="Agent Summary Description" value={agentDescInput} onChange={setAgentDescInput} />
           </div>
         </Modal>
 
         {activeSubTab === 'integrations' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Cấu hình Tích hợp Dịch vụ</h3>
-              <p className="text-xs text-[var(--color-muted-fg)] mt-1">Kết nối và đồng bộ dữ liệu với các nền tảng và dịch vụ bên thứ ba.</p>
+              <h3 className="text-sm font-semibold text-[var(--color-fg)]">Service Integration Configuration</h3>
+              <p className="text-xs text-[var(--color-muted-fg)] mt-1">Connect and synchronize data with third-party platforms and services.</p>
             </div>
 
             <div className="flex gap-6 min-h-[480px] border-t border-[var(--color-border)] pt-6">
@@ -1726,7 +1730,7 @@ export default function Settings() {
                   { id: 'chatwoot', name: 'Chatwoot Inbox', icon: MessageSquare, desc: 'Omnichannel Inbox' },
                   { id: 'docusign', name: 'DocuSign Signature', icon: PenTool, desc: 'E-Signature Hub' },
                   { id: 'resend', name: 'Resend SMTP', icon: Mail, desc: 'Mail Gateway' },
-                  { id: 'erp', name: 'Đồng bộ ERP', icon: RefreshCw, desc: 'XML-RPC Connection' },
+                  { id: 'erp', name: 'ERP Sync', icon: RefreshCw, desc: 'XML-RPC Connection' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -1754,11 +1758,11 @@ export default function Settings() {
                     <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-4 border border-[var(--color-border)] rounded-2xl">
                       <div>
                         <h4 className="font-bold text-sm text-[var(--color-fg)]">Chatwoot Inbox</h4>
-                        <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ hội thoại, tin nhắn đa kênh (Facebook, Zalo...)</p>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">Multi-channel conversation sync (Facebook, Zalo...)</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {chatwootStatus === 'success' && <Badge status="success" text="Kết nối thành công" className="text-xs" />}
-                        {chatwootStatus === 'failed' && <Badge status="error" text="Lỗi kết nối" className="text-xs" />}
+                        {chatwootStatus === 'success' && <Badge status="success" text="Connected" className="text-xs" />}
+                        {chatwootStatus === 'failed' && <Badge status="error" text="Connection Error" className="text-xs" />}
                         <Button size="small" onClick={testChatwootConnection} className="text-xs rounded-lg cursor-pointer">Test Connection</Button>
                       </div>
                     </div>
@@ -1775,11 +1779,11 @@ export default function Settings() {
                     <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-4 border border-[var(--color-border)] rounded-2xl">
                       <div>
                         <h4 className="font-bold text-sm text-[var(--color-fg)]">DocuSign E-Signature Hub</h4>
-                        <p className="text-[10px] text-[var(--color-muted-fg)]">Tự động hóa chữ ký điện tử trên Hợp đồng CRM</p>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">E-signature automation on CRM Contracts</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {docusignStatus === 'success' && <Badge status="success" text="Kết nối thành công" className="text-xs" />}
-                        {docusignStatus === 'failed' && <Badge status="error" text="Lỗi kết nối" className="text-xs" />}
+                        {docusignStatus === 'success' && <Badge status="success" text="Connected" className="text-xs" />}
+                        {docusignStatus === 'failed' && <Badge status="error" text="Connection Error" className="text-xs" />}
                         <Button size="small" onClick={testDocuSignConnection} className="text-xs rounded-lg cursor-pointer">Test Connection</Button>
                       </div>
                     </div>
@@ -1798,11 +1802,11 @@ export default function Settings() {
                     <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-4 border border-[var(--color-border)] rounded-2xl">
                       <div>
                         <h4 className="font-bold text-sm text-[var(--color-fg)]">Resend SMTP Gateway</h4>
-                        <p className="text-[10px] text-[var(--color-muted-fg)]">Gửi email báo giá và hợp đồng tự động</p>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">Automated quotation and contract email sending</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {resendStatus === 'success' && <Badge status="success" text="Kết nối thành công" className="text-xs" />}
-                        {resendStatus === 'failed' && <Badge status="error" text="Lỗi kết nối" className="text-xs" />}
+                        {resendStatus === 'success' && <Badge status="success" text="Connected" className="text-xs" />}
+                        {resendStatus === 'failed' && <Badge status="error" text="Connection Error" className="text-xs" />}
                         <Button size="small" onClick={testResendConnection} className="text-xs rounded-lg cursor-pointer">Test Connection</Button>
                       </div>
                     </div>
@@ -1818,12 +1822,12 @@ export default function Settings() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-4 border border-[var(--color-border)] rounded-2xl">
                       <div>
-                        <h4 className="font-bold text-sm text-[var(--color-fg)]">Đồng bộ Hệ thống ERP</h4>
-                        <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ 2 chiều dữ liệu khách hàng, cơ hội, báo giá, hóa đơn thanh toán qua XML-RPC</p>
+                        <h4 className="font-bold text-sm text-[var(--color-fg)]">ERP System Sync</h4>
+                        <p className="text-[10px] text-[var(--color-muted-fg)]">Bi-directional sync of customers, opportunities, quotations, and payment invoices via XML-RPC</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {erpStatus === 'success' && <Badge status="success" text="Kết nối thành công" className="text-xs" />}
-                        {erpStatus === 'failed' && <Badge status="error" text="Lỗi kết nối" className="text-xs" />}
+                        {erpStatus === 'success' && <Badge status="success" text="Connected" className="text-xs" />}
+                        {erpStatus === 'failed' && <Badge status="error" text="Connection Error" className="text-xs" />}
                         <Button size="small" onClick={handleTestErpConnection} className="text-xs rounded-lg cursor-pointer">Test Connection</Button>
                       </div>
                     </div>
@@ -1835,19 +1839,19 @@ export default function Settings() {
                     </div>
 
                     <div className="border-t border-[var(--color-border)] pt-4 space-y-4">
-                      <h5 className="font-semibold text-xs text-[var(--color-fg)]">Đồng bộ & Tự động hóa Phân hệ ERP</h5>
+                      <h5 className="font-semibold text-xs text-[var(--color-fg)]">ERP Module Sync & Automation</h5>
                       <div className="grid grid-cols-2 gap-4">
                         {/* Customers */}
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Khách hàng & Liên hệ</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ doanh nghiệp, liên hệ cá nhân</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Customers & Contacts</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync companies and individual contacts</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('customers')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncCustomers} onChange={(val) => settings.updateSettings({ erpAutoSyncCustomers: val })} />
                           </div>
                         </div>
@@ -1856,13 +1860,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Đầu mối (Leads)</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ thông tin leads mới</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Leads</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync new lead information</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('leads')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncLeads} onChange={(val) => settings.updateSettings({ erpAutoSyncLeads: val })} />
                           </div>
                         </div>
@@ -1871,13 +1875,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Cơ hội bán hàng</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ pipeline cơ hội</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Sales Opportunities</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync opportunity pipeline</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('opportunities')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncOpportunities} onChange={(val) => settings.updateSettings({ erpAutoSyncOpportunities: val })} />
                           </div>
                         </div>
@@ -1886,13 +1890,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Báo giá</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ báo giá cố định & scope items</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Quotations</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync fixed quotations and scope items</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('quotations')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncQuotations} onChange={(val) => settings.updateSettings({ erpAutoSyncQuotations: val })} />
                           </div>
                         </div>
@@ -1901,13 +1905,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Thanh toán & Hóa đơn</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ hóa đơn và trạng thái thanh toán</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Payments & Invoices</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync invoices and payment status</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('payments')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncPayments} onChange={(val) => settings.updateSettings({ erpAutoSyncPayments: val })} />
                           </div>
                         </div>
@@ -1916,13 +1920,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Lịch họp & Sự kiện</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ lịch họp, sự kiện khách hàng</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Meetings & Events</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync meeting schedules and customer events</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('meetings')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncMeetings} onChange={(val) => settings.updateSettings({ erpAutoSyncMeetings: val })} />
                           </div>
                         </div>
@@ -1931,13 +1935,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Nhóm bán hàng</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ đội ngũ và phân phối việc</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Sales Teams</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync teams and task distribution</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('sales-teams')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncSalesTeams} onChange={(val) => settings.updateSettings({ erpAutoSyncSalesTeams: val })} />
                           </div>
                         </div>
@@ -1946,13 +1950,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Chiến dịch & Nguồn UTM</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ UTM source, campaign</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Campaigns & UTM Sources</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync UTM sources and campaigns</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('utm')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncUtm} onChange={(val) => settings.updateSettings({ erpAutoSyncUtm: val })} />
                           </div>
                         </div>
@@ -1961,13 +1965,13 @@ export default function Settings() {
                         <div className="flex flex-col justify-between p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-muted-bg)]/20 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-[var(--color-fg)]">Nhật ký hoạt động</span>
-                              <p className="text-[10px] text-[var(--color-muted-fg)]">Đồng bộ cuộc gọi, email, hoạt động</p>
+                              <span className="text-xs font-semibold text-[var(--color-fg)]">Activity Log</span>
+                              <p className="text-[10px] text-[var(--color-muted-fg)]">Sync calls, emails, activities</p>
                             </div>
                             <Button size="small" onClick={() => handleSyncErp('activities')} className="text-xs rounded-lg cursor-pointer">Sync Now</Button>
                           </div>
                           <div className="flex justify-between items-center border-t border-[var(--color-border)]/50 pt-2">
-                            <span className="text-[10px] text-[var(--color-muted-fg)]">Tự động đồng bộ</span>
+                            <span className="text-[10px] text-[var(--color-muted-fg)]">Auto Sync</span>
                             <Switch size="small" checked={settings.erpAutoSyncActivities} onChange={(val) => settings.updateSettings({ erpAutoSyncActivities: val })} />
                           </div>
                         </div>

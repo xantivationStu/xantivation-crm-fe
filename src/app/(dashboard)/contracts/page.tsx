@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Select, Tag, message, Drawer, Spin } from 'antd';
 import { Search, ChevronRight, PenTool, AlertCircle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
@@ -23,23 +24,25 @@ interface ContractRecord {
   companyName: string;
 }
 
-const typeOptions = [
-  { value: 'SERVICE_AGREEMENT', label: 'Service Agreement' },
-  { value: 'NDA', label: 'NDA' },
-  { value: 'SOW', label: 'SOW' },
-  { value: 'AMENDMENT', label: 'Amendment' },
-];
-
-const statusOptions = [
-  { value: 'DRAFT', label: 'Draft' },
-  { value: 'SENT', label: 'Sent' },
-  { value: 'SIGNED', label: 'Signed' },
-  { value: 'EXPIRED', label: 'Expired' },
-  { value: 'DECLINED', label: 'Declined' },
-  { value: 'VOIDED', label: 'Voided' },
-];
-
 export default function Contracts() {
+  const { t } = useTranslation();
+
+  const typeOptions = [
+    { value: 'SERVICE_AGREEMENT', label: t('contracts.typeServiceAgreement') },
+    { value: 'NDA', label: t('contracts.typeNda') },
+    { value: 'SOW', label: t('contracts.typeSow') },
+    { value: 'AMENDMENT', label: t('contracts.typeAmendment') },
+  ];
+
+  const statusOptions = [
+    { value: 'DRAFT', label: t('contracts.statusDraft') },
+    { value: 'SENT', label: t('contracts.statusSent') },
+    { value: 'SIGNED', label: t('contracts.statusSigned') },
+    { value: 'EXPIRED', label: t('contracts.statusExpired') },
+    { value: 'DECLINED', label: t('contracts.statusDeclined') },
+    { value: 'VOIDED', label: t('contracts.statusVoided') },
+  ];
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');
@@ -86,7 +89,7 @@ export default function Contracts() {
 
   const columns: ColumnProps<ContractRecord>[] = [
     {
-      title: 'Mã hợp đồng',
+      title: t('contracts.contractCode'),
       dataIndex: 'code',
       key: 'code',
       render: (val, rec) => (
@@ -99,7 +102,7 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Tiêu đề & Khách hàng',
+      title: t('contracts.titleCustomer'),
       dataIndex: 'title',
       key: 'title',
       render: (val, rec) => (
@@ -112,14 +115,14 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Loại',
+      title: t('contracts.type'),
       dataIndex: 'contractType',
       key: 'contractType',
       render: (val) => {
-        let typeText = 'Service Agreement';
-        if (val === 'NDA') typeText = 'NDA';
-        if (val === 'SOW') typeText = 'SOW';
-        if (val === 'AMENDMENT') typeText = 'Amendment';
+        let typeText = t('contracts.typeServiceAgreement');
+        if (val === 'NDA') typeText = t('contracts.typeNda');
+        if (val === 'SOW') typeText = t('contracts.typeSow');
+        if (val === 'AMENDMENT') typeText = t('contracts.typeAmendment');
         return (
           <span className="text-xs px-2 py-0.5 rounded bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-fg)]">
             {typeText}
@@ -128,7 +131,7 @@ export default function Contracts() {
       },
     },
     {
-      title: 'Giá trị',
+      title: t('contracts.value'),
       dataIndex: 'contractValue',
       key: 'contractValue',
       render: (val: number) => (
@@ -138,7 +141,7 @@ export default function Contracts() {
       ),
     },
     {
-      title: 'Trạng thái',
+      title: t('contracts.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -152,13 +155,13 @@ export default function Contracts() {
       },
     },
     {
-      title: 'Hạn ký',
+      title: t('contracts.signingDeadline'),
       dataIndex: 'signingDeadline',
       key: 'signingDeadline',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Thao tác',
+      title: t('contracts.actions'),
       dataIndex: 'id',
       key: 'actions',
       render: (_, rec) => (
@@ -169,14 +172,14 @@ export default function Contracts() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white transition-all cursor-pointer"
             >
               <PenTool size={12} />
-              <span>Ký số</span>
+              <span>{t('contracts.signDigitally')}</span>
             </button>
           )}
           <Link
             href={`/contracts/${rec.id}`}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
-            <span>Quản lý</span>
+            <span>{t('contracts.manage')}</span>
             <ChevronRight size={12} />
           </Link>
         </div>
@@ -192,9 +195,9 @@ export default function Contracts() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Hợp đồng điện tử (Contracts)</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('contracts.title')}</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Theo dõi chữ ký số DocuSign, kích hoạt thanh toán tự động và lưu trữ pháp lý thương mại.
+            {t('contracts.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -203,7 +206,7 @@ export default function Contracts() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Tìm kiếm hợp đồng..."
+              placeholder={t('contracts.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -220,7 +223,7 @@ export default function Contracts() {
             }`}
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span>{t('contracts.filters')}</span>
             {activeFiltersCount > 0 && (
               <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
                 {activeFiltersCount}
@@ -229,7 +232,7 @@ export default function Contracts() {
           </button>
 
           <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium">
-            Tự động tạo từ Thương vụ được duyệt (CLOSED_WON)
+            {t('contracts.autoCreate')}
           </div>
         </div>
       </div>
@@ -238,7 +241,7 @@ export default function Contracts() {
       <Drawer
         title={
           <div className="flex items-center justify-between w-full pr-4">
-            <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
+            <span className="text-base font-bold text-[var(--color-fg)]">{t('contracts.advancedFilters')}</span>
             {activeFiltersCount > 0 && (
               <button
                 onClick={() => {
@@ -270,14 +273,14 @@ export default function Contracts() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Trạng thái hợp đồng
+              {t('contracts.contractStatus')}
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả trạng thái' },
+                { value: 'ALL', label: t('contracts.allStatuses') },
                 ...statusOptions,
               ]}
             />
@@ -285,14 +288,14 @@ export default function Contracts() {
 
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Loại hợp đồng
+              {t('contracts.contractType')}
             </label>
             <Select
               value={filterType}
               onChange={setFilterType}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả loại' },
+                { value: 'ALL', label: t('contracts.allTypes') },
                 ...typeOptions,
               ]}
             />
@@ -303,7 +306,7 @@ export default function Contracts() {
       {isLoading ? (
         <div className="py-24 flex flex-col justify-center items-center gap-3">
           <Spin size="large" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading contracts list...</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('contracts.loading')}</span>
         </div>
       ) : (
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">

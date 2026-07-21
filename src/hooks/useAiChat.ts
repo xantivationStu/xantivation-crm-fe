@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAiHubStore } from '@/stores/ai-hub.store';
 import { aiChatService } from '@/services/ai-chat.service';
+import i18n from '@/lib/i18n';
 import { AiMessage, AiAgentType, AgentStatus } from '@/types/ai-hub.types';
 
 export function useAiChat() {
@@ -49,7 +50,7 @@ export function useAiChat() {
           const errorMsg: AiMessage = {
             id: Math.random().toString(),
             role: 'assistant',
-            content: 'Đã xảy ra lỗi kết nối với máy chủ AI. Vui lòng thử lại.',
+            content: i18n.t('hooks.aiChat.connectionError'),
             agentType: currentAgent,
             createdAt: new Date().toISOString(),
           };

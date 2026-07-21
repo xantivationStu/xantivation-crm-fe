@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Select, Tag, message, Drawer, Spin, Button } from 'antd';
 import { Search, ChevronRight, CreditCard, AlertTriangle, FileText, SlidersHorizontal } from 'lucide-react';
 import SharedTable from '@/components/SharedTable';
@@ -21,14 +22,16 @@ interface PaymentRecord {
   contractTitle: string;
 }
 
-const statusOptions = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'OVERDUE', label: 'Overdue' },
-  { value: 'CANCELLED', label: 'Cancelled' },
-];
-
 export default function Payments() {
+  const { t } = useTranslation();
+
+  const statusOptions = [
+    {value: 'PENDING', label: t('payments.statusPending')},
+    { value: 'PAID', label: t('payments.statusPaid') },
+    { value: 'OVERDUE', label: t('payments.statusOverdue') },
+    { value: 'CANCELLED', label: t('payments.statusCancelled') },
+  ];
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -72,7 +75,7 @@ export default function Payments() {
 
   const columns: ColumnProps<PaymentRecord>[] = [
     {
-      title: 'Mã Hóa đơn',
+      title: t('payments.invoiceCode'),
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
       render: (val, rec) => (
@@ -85,7 +88,7 @@ export default function Payments() {
       ),
     },
     {
-      title: 'Đợt thanh toán',
+      title: t('payments.paymentMilestone'),
       dataIndex: 'milestoneName',
       key: 'milestoneName',
       render: (val, rec) => (
@@ -93,12 +96,12 @@ export default function Payments() {
           <Link href={`/payments/${rec.id}`} className="font-semibold text-[var(--color-fg)] hover:underline block mb-0.5">
             {val}
           </Link>
-          <span className="text-[10px] text-[var(--color-muted-fg)] font-mono">Tỷ lệ: {rec.milestonePercentage}%</span>
+          <span className="text-[10px] text-[var(--color-muted-fg)] font-mono">Percentage: {rec.milestonePercentage}%</span>
         </div>
       ),
     },
     {
-      title: 'Số tiền',
+      title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
@@ -108,7 +111,7 @@ export default function Payments() {
       ),
     },
     {
-      title: 'Trạng thái',
+      title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -121,19 +124,19 @@ export default function Payments() {
       },
     },
     {
-      title: 'Hạn thanh toán',
+      title: t('payments.dueDate'),
       dataIndex: 'dueDate',
       key: 'dueDate',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || 'N/A'}</span>,
     },
     {
-      title: 'Ngày thanh toán',
+      title: t('payments.paymentDate'),
       dataIndex: 'paidAt',
       key: 'paidAt',
       render: (val) => <span className="text-xs font-mono text-[var(--color-muted-fg)]">{val || '-'}</span>,
     },
     {
-      title: 'Thao tác',
+      title: t('payments.actions'),
       dataIndex: 'id',
       key: 'action',
       render: (_, rec) => (
@@ -146,14 +149,14 @@ export default function Payments() {
               loading={confirmPaymentMutation.isPending}
               className="text-[10px] rounded-lg cursor-pointer"
             >
-              Xác nhận
+              {t('payments.confirm')}
             </Button>
           )}
           <Link
             href={`/payments/${rec.id}`}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface)] text-[var(--color-muted-fg)] hover:text-[var(--color-fg)] transition-all cursor-pointer"
           >
-            <span>Chi tiết</span>
+            <span>{t('payments.details')}</span>
             <ChevronRight size={12} />
           </Link>
         </div>
@@ -168,9 +171,9 @@ export default function Payments() {
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">Hóa đơn & Thanh toán (Payments)</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-fg)]">{t('payments.title')}</h1>
           <p className="text-sm text-[var(--color-muted-fg)] mt-1">
-            Theo dõi dòng tiền thực thu, quản lý công nợ khách hàng và lịch sử thanh toán hóa đơn.
+            {t('payments.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -179,7 +182,7 @@ export default function Payments() {
             <Search size={15} className="text-[var(--color-muted-fg)]" />
             <input
               type="text"
-              placeholder="Tìm hóa đơn, mốc thanh toán..."
+              placeholder={t('payments.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-xs text-[var(--color-fg)] placeholder-[var(--color-muted-fg)] w-full"
@@ -196,7 +199,7 @@ export default function Payments() {
             }`}
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span>{t('payments.filters')}</span>
             {activeFiltersCount > 0 && (
               <span className="w-4.5 h-4.5 rounded-full bg-[var(--color-accent)] text-white text-[9px] flex items-center justify-center font-bold animate-pulse">
                 {activeFiltersCount}
@@ -205,7 +208,7 @@ export default function Payments() {
           </button>
 
           <div className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-3 py-2 rounded-xl border border-[var(--color-accent)]/20 font-medium font-mono">
-            Auto-generated from Milestones of Signed Contracts
+            {t('payments.autoGenerated')}
           </div>
         </div>
       </div>
@@ -214,7 +217,7 @@ export default function Payments() {
       <Drawer
         title={
           <div className="flex items-center justify-between w-full pr-4">
-            <span className="text-base font-bold text-[var(--color-fg)]">Advanced Filters</span>
+            <span className="text-base font-bold text-[var(--color-fg)]">{t('payments.advancedFilters')}</span>
             {activeFiltersCount > 0 && (
               <button
                 onClick={() => setFilterStatus('ALL')}
@@ -243,14 +246,14 @@ export default function Payments() {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-muted-fg)]">
-              Trạng thái thanh toán
+              {t('payments.paymentStatus')}
             </label>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               className="w-full h-11"
               options={[
-                { value: 'ALL', label: 'Tất cả trạng thái' },
+                { value: 'ALL', label: t('payments.allStatuses') },
                 ...statusOptions,
               ]}
             />
@@ -261,7 +264,7 @@ export default function Payments() {
       {isLoading ? (
         <div className="py-24 flex flex-col justify-center items-center gap-3">
           <Spin size="large" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Loading payments list...</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('payments.loading')}</span>
         </div>
       ) : (
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-sm">

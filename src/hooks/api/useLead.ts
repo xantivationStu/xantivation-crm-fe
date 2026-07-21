@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Lead, CreateLeadDto, UpdateLeadDto, LeadActivity } from '@/types/lead.types';
 import { PaginationQuery, PaginatedResponse, BaseResponse } from '@/types/api.types';
+import i18n from '@/lib/i18n';
 import { message } from 'antd';
 
 export function useLeads(query?: PaginationQuery) {
@@ -45,10 +46,10 @@ export function useCreateLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      message.success('Tạo Lead thành công!');
+      message.success(i18n.t('hooks.lead.createdSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tạo Lead thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.lead.creationFailed'));
     },
   });
 }
@@ -63,10 +64,10 @@ export function useUpdateLead() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['lead', variables.id] });
-      message.success('Cập nhật Lead thành công!');
+      message.success(i18n.t('hooks.lead.updatedSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Cập nhật Lead thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.lead.updateFailed'));
     },
   });
 }
@@ -83,10 +84,10 @@ export function useConvertLead(id: string) {
       queryClient.invalidateQueries({ queryKey: ['lead', id] });
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      message.success('Chuyển đổi Lead thành công!');
+      message.success(i18n.t('hooks.lead.convertedSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Chuyển đổi Lead thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.lead.conversionFailed'));
     },
   });
 }
@@ -100,7 +101,7 @@ export function useAddLeadActivity(leadId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lead-activities', leadId] });
-      message.success('Ghi chú hoạt động thành công!');
+      message.success(i18n.t('hooks.lead.activityRecorded'));
     },
   });
 }
@@ -114,10 +115,10 @@ export function useDeleteLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      message.success('Xóa Lead thành công!');
+      message.success(i18n.t('hooks.lead.deletedSuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Xóa Lead thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.lead.deletionFailed'));
     },
   });
 }
@@ -132,10 +133,10 @@ export function useAutoQualifyLead(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['lead', id] });
-      message.success('Đánh giá tự động Lead thành công!');
+      message.success(i18n.t('hooks.lead.autoQualifySuccess'));
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Đánh giá tự động Lead thất bại!');
+      message.error(error.response?.data?.message || i18n.t('hooks.lead.autoQualifyFailed'));
     },
   });
 }

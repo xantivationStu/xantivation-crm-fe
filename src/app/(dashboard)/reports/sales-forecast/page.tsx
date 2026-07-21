@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Table, Select, Skeleton } from 'antd';
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { useSalesForecast } from '@/hooks/api/useReport';
@@ -9,6 +10,7 @@ import { Filter, TrendingUp, Calendar, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function SalesForecast() {
+  const { t } = useTranslation();
   const [horizon, setHorizon] = useState(30);
   const { data, isLoading } = useSalesForecast({ horizon });
 
@@ -16,24 +18,24 @@ export default function SalesForecast() {
 
   const tableColumns = [
     {
-      title: 'Mã cơ hội',
+      title: t('reports.oppCode'),
       dataIndex: 'code',
       key: 'code',
       render: (val: string) => <span className="font-mono text-xs">{val}</span>,
     },
     {
-      title: 'Tên Cơ hội',
+      title: t('reports.oppName'),
       dataIndex: 'name',
       key: 'name',
       render: (val: string) => <span className="font-semibold text-[var(--color-fg)]">{val}</span>,
     },
     {
-      title: 'Khách hàng',
+      title: t('reports.customer'),
       dataIndex: 'account',
       key: 'account',
     },
     {
-      title: 'Giai đoạn',
+      title: t('reports.stage'),
       dataIndex: 'stage',
       key: 'stage',
       render: (stage: string) => (
@@ -43,20 +45,20 @@ export default function SalesForecast() {
       ),
     },
     {
-      title: 'Xác suất (%)',
+      title: t('reports.probability'),
       dataIndex: 'probability',
       key: 'probability',
       align: 'center' as const,
       render: (val: number) => <span className="font-mono">{val}%</span>,
     },
     {
-      title: 'Giá trị dự kiến (VND)',
+      title: t('reports.expectedValue'),
       dataIndex: 'amount',
       key: 'amount',
       render: (val: number) => <span className="font-mono">{formatVND(val)}</span>,
     },
     {
-      title: 'Giá trị Trọng số (VND)',
+      title: t('reports.weightedValue'),
       dataIndex: 'weightedValue',
       key: 'weightedValue',
       render: (val: number) => <span className="font-mono text-emerald-500 font-semibold">{formatVND(val)}</span>,
@@ -68,22 +70,22 @@ export default function SalesForecast() {
       {/* Header and Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">Dự báo Doanh số</h1>
-          <p className="text-sm text-[var(--color-muted-fg)]">Dự đoán doanh thu tiềm năng dựa trên trọng số cơ hội trong đường ống.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-fg)]">{t('reports.salesForecastTitle')}</h1>
+          <p className="text-sm text-[var(--color-muted-fg)]">{t('reports.salesForecastDesc')}</p>
         </div>
         
         <div className="flex items-center gap-3 bg-[var(--color-bg-tint)] border border-[var(--color-border)] px-4 py-2 rounded-xl">
           <Filter size={14} className="text-[var(--color-muted-fg)]" />
-          <span className="text-xs text-[var(--color-muted-fg)] font-mono">Thời hạn dự báo:</span>
+          <span className="text-xs text-[var(--color-muted-fg)] font-mono">{t('reports.forecastPeriod')}</span>
           <Select
             value={horizon}
             onChange={setHorizon}
             bordered={false}
             dropdownStyle={{ minWidth: 120 }}
             options={[
-              { value: 30, label: '30 ngày tới' },
-              { value: 60, label: '60 ngày tới' },
-              { value: 90, label: '90 ngày tới' },
+              { value: 30, label: t('reports.period30d') },
+              { value: 60, label: t('reports.period60d') },
+              { value: 90, label: t('reports.period90d') },
             ]}
             className="text-xs text-[var(--color-fg)] font-semibold"
           />
@@ -94,7 +96,7 @@ export default function SalesForecast() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Forecast trend line chart */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Dự báo doanh thu vs Doanh số thực tế</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.forecastVsActual')}</h3>
           {isLoading ? (
             <Skeleton active paragraph={{ rows: 5 }} />
           ) : (
@@ -114,7 +116,7 @@ export default function SalesForecast() {
                   <XAxis dataKey="period" stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
-                    formatter={(value: any) => [formatVND(Number(value)), 'Giá trị']}
+                    formatter={(value: any) => [formatVND(Number(value)), 'Value']}
                     contentStyle={{
                       backgroundColor: 'var(--color-bg-tint)',
                       borderColor: 'var(--color-border)',
@@ -123,8 +125,8 @@ export default function SalesForecast() {
                     }}
                   />
                   <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Area name="Doanh thu dự báo" type="monotone" dataKey="weightedValue" stroke="#4F46E5" strokeWidth={2} fillOpacity={1} fill="url(#foreGrad)" />
-                  <Area name="Doanh số thực tế" type="monotone" dataKey="actualValue" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#actGrad)" />
+                  <Area name={t('reports.forecastRevenue')} type="monotone" dataKey="weightedValue" stroke="#4F46E5" strokeWidth={2} fillOpacity={1} fill="url(#foreGrad)" />
+                  <Area name={t('reports.actualSales')} type="monotone" dataKey="actualValue" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#actGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -133,7 +135,7 @@ export default function SalesForecast() {
 
         {/* Stacked bar breakdown */}
         <div className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl p-6">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Trọng số Pipeline theo Giai đoạn</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.pipelineWeighted')}</h3>
           {isLoading ? (
             <Skeleton active paragraph={{ rows: 5 }} />
           ) : (
@@ -143,7 +145,7 @@ export default function SalesForecast() {
                   <XAxis dataKey="period" stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="var(--color-muted-fg)" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
-                    formatter={(value: any) => [formatVND(Number(value)), 'Trọng số']}
+                    formatter={(value: any) => [formatVND(Number(value)), 'Weighted']}
                     contentStyle={{
                       backgroundColor: 'var(--color-bg-tint)',
                       borderColor: 'var(--color-border)',
@@ -151,7 +153,7 @@ export default function SalesForecast() {
                       color: 'var(--color-fg)'
                     }}
                   />
-                  <Bar name="Doanh thu trọng số" dataKey="weightedValue" fill="#818CF8" radius={[4, 4, 0, 0]} />
+                  <Bar name={t('reports.weightedRevenue')} dataKey="weightedValue" fill="#818CF8" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -166,7 +168,7 @@ export default function SalesForecast() {
         transition={{ duration: 0.45 }}
       >
         <Card className="bg-[var(--color-bg-tint)] border border-[var(--color-border)] rounded-2xl">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">Top cơ hội đóng góp trọng số doanh thu lớn nhất</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-[var(--color-muted-fg)] mb-6">{t('reports.topOpportunities')}</h3>
           <Table
             dataSource={report?.topOpportunities}
             columns={tableColumns}
